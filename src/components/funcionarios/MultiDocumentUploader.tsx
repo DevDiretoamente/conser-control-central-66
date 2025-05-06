@@ -6,24 +6,31 @@ import { Upload, FileText, X, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MultiDocumentUploaderProps {
-  label: string;
+  label?: string;
   description?: string;
   allowedTypes?: string;
   maxSize?: number; // in MB
   onFilesChange?: (files: File[]) => void;
+  onChange?: (files: File[]) => void; // Added for backward compatibility
+  value?: File[] | null; // Added to support the value prop
   maxFiles?: number;
 }
 
 const MultiDocumentUploader: React.FC<MultiDocumentUploaderProps> = ({
-  label,
+  label = "Documentos",
   description = "PDF, JPG ou PNG até 10MB",
   allowedTypes = ".pdf,.jpg,.jpeg,.png",
   maxSize = 10,
   onFilesChange,
+  onChange, // Add the new prop
+  value: externalValue, // Rename to avoid conflicts
   maxFiles = 5
 }) => {
-  const [files, setFiles] = useState<File[]>([]);
+  const [internalFiles, setInternalFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  
+  // Use either the external value (if provided) or the internal state
+  const files = externalValue !== undefined ? (externalValue || []) : internalFiles;
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -81,10 +88,13 @@ const MultiDocumentUploader: React.FC<MultiDocumentUploaderProps> = ({
     
     if (validFiles.length > 0) {
       const updatedFiles = [...files, ...validFiles];
-      setFiles(updatedFiles);
+      setInternalFiles(updatedFiles);
       
       if (onFilesChange) {
         onFilesChange(updatedFiles);
+      }
+      if (onChange) {
+        onChange(updatedFiles);
       }
       
       toast.success(`${validFiles.length} documento(s) adicionado(s) com sucesso!`);
@@ -94,16 +104,19 @@ const MultiDocumentUploader: React.FC<MultiDocumentUploaderProps> = ({
   const removeFile = (index: number) => {
     const updatedFiles = [...files];
     updatedFiles.splice(index, 1);
-    setFiles(updatedFiles);
+    setInternalFiles(updatedFiles);
     
     if (onFilesChange) {
       onFilesChange(updatedFiles);
+    }
+    if (onChange) {
+      onChange(updatedFiles);
     }
   };
 
   return (
     <div className="w-full">
-      <p className="text-sm font-medium mb-2">{label}</p>
+      {label && <p className="text-sm font-medium mb-2">{label}</p>}
       
       <div
         onDragOver={handleDragOver}

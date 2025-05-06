@@ -11,6 +11,8 @@ interface DocumentUploaderProps {
   allowedTypes?: string;
   maxSize?: number; // in MB
   onFileChange?: (file: File | null) => void;
+  onChange?: (file: File | null) => void; // Added for backward compatibility
+  value?: File | null; // Added to support the value prop
 }
 
 const DocumentUploader: React.FC<DocumentUploaderProps> = ({
@@ -18,10 +20,15 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({
   description = "PDF até 10MB",
   allowedTypes = ".pdf",
   maxSize = 10,
-  onFileChange
+  onFileChange,
+  onChange, // Add the new prop
+  value: externalValue, // Rename to avoid conflicts
 }) => {
-  const [file, setFile] = useState<File | null>(null);
+  const [internalFile, setInternalFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  
+  // Use either the external value (if provided) or the internal state
+  const file = externalValue !== undefined ? externalValue : internalFile;
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -65,18 +72,24 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({
       return;
     }
     
-    setFile(file);
+    setInternalFile(file);
     if (onFileChange) {
       onFileChange(file);
+    }
+    if (onChange) {
+      onChange(file);
     }
     
     toast.success('Documento adicionado com sucesso!');
   };
 
   const removeFile = () => {
-    setFile(null);
+    setInternalFile(null);
     if (onFileChange) {
       onFileChange(null);
+    }
+    if (onChange) {
+      onChange(null);
     }
   };
 

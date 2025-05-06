@@ -1081,26 +1081,22 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
                     <div className="space-y-4">
                       <DocumentUploader
                         label="RG*"
-                        onChange={(file) => handleDocumentChange('rgFile', file)}
-                        value={documentFiles.rgFile}
+                        onFileChange={(file) => handleDocumentChange('rgFile', file)}
                       />
                       
                       <DocumentUploader
                         label="CPF*"
-                        onChange={(file) => handleDocumentChange('cpfFile', file)}
-                        value={documentFiles.cpfFile}
+                        onFileChange={(file) => handleDocumentChange('cpfFile', file)}
                       />
                       
                       <DocumentUploader
                         label="Comprovante de Residência*"
-                        onChange={(file) => handleDocumentChange('comprovanteResidencia', file)}
-                        value={documentFiles.comprovanteResidencia}
+                        onFileChange={(file) => handleDocumentChange('comprovanteResidencia', file)}
                       />
                       
                       <DocumentUploader
                         label="Foto*"
-                        onChange={(file) => handleDocumentChange('fotoFile', file)}
-                        value={documentFiles.fotoFile}
+                        onFileChange={(file) => handleDocumentChange('fotoFile', file)}
                       />
                     </div>
                   </div>
@@ -1111,27 +1107,23 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
                     <div className="space-y-4">
                       <DocumentUploader
                         label="CNH"
-                        onChange={(file) => handleDocumentChange('cnhFile', file)}
-                        value={documentFiles.cnhFile}
+                        onFileChange={(file) => handleDocumentChange('cnhFile', file)}
                       />
                       
                       <DocumentUploader
                         label="CTPS"
-                        onChange={(file) => handleDocumentChange('ctpsFile', file)}
-                        value={documentFiles.ctpsFile}
+                        onFileChange={(file) => handleDocumentChange('ctpsFile', file)}
                       />
                       
                       <DocumentUploader
                         label="Exame Médico"
-                        onChange={(file) => handleDocumentChange('exameMedicoFile', file)}
-                        value={documentFiles.exameMedicoFile}
+                        onFileChange={(file) => handleDocumentChange('exameMedicoFile', file)}
                       />
                       
                       <h3 className="text-lg font-medium my-4">Outros Documentos</h3>
                       
                       <MultiDocumentUploader
-                        onChange={handleMultiDocumentChange}
-                        value={documentFiles.outrosDocumentos}
+                        onFilesChange={handleMultiDocumentChange}
                       />
                     </div>
                   </div>
