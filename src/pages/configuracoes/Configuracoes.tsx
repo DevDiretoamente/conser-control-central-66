@@ -1,35 +1,289 @@
 
 import React from 'react';
+import { Settings, Building, Users, Truck, Briefcase, FileText } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Settings } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
+import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from '@/components/ui/menubar';
 
 const ConfiguracoesPage: React.FC = () => {
+  const saveSettings = (module: string) => {
+    toast.success(`Configurações de ${module} salvas com sucesso!`);
+  };
+
   return (
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Configurações</h1>
         <p className="text-muted-foreground">
-          Configurações do sistema
+          Gerencie as configurações do sistema
         </p>
       </div>
 
-      <div className="mt-8 text-center">
-        <div className="inline-flex items-center justify-center p-8 rounded-full bg-muted">
-          <Settings className="h-10 w-10 text-muted-foreground" />
-        </div>
-        <h3 className="mt-4 text-lg font-medium">Módulo em Desenvolvimento</h3>
-        <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
-          O módulo de Configurações está em desenvolvimento e será disponibilizado em breve.
-        </p>
-        <Button 
-          variant="outline" 
-          className="mt-4"
-          onClick={() => toast.info("Funcionalidade em desenvolvimento")}
-        >
-          Solicitar Notificação
-        </Button>
-      </div>
+      <Tabs defaultValue="geral" className="space-y-4">
+        <TabsList className="grid grid-cols-2 md:grid-cols-6 gap-2">
+          <TabsTrigger value="geral" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            <span className="hidden md:inline">Geral</span>
+          </TabsTrigger>
+          <TabsTrigger value="rh" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden md:inline">RH</span>
+          </TabsTrigger>
+          <TabsTrigger value="obras" className="flex items-center gap-2">
+            <Building className="h-4 w-4" />
+            <span className="hidden md:inline">Obras</span>
+          </TabsTrigger>
+          <TabsTrigger value="frota" className="flex items-center gap-2">
+            <Truck className="h-4 w-4" />
+            <span className="hidden md:inline">Frota</span>
+          </TabsTrigger>
+          <TabsTrigger value="patrimonio" className="flex items-center gap-2">
+            <Briefcase className="h-4 w-4" />
+            <span className="hidden md:inline">Patrimônio</span>
+          </TabsTrigger>
+          <TabsTrigger value="financeiro" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            <span className="hidden md:inline">Financeiro</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="geral">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações Gerais</CardTitle>
+              <CardDescription>
+                Personalize as configurações gerais do sistema.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <FormLabel>Nome da Empresa</FormLabel>
+                  <Input defaultValue="CONSERVIAS TRANSPORTES E PAVIMENTAÇÃO LTDA" />
+                  <FormDescription>
+                    Nome que será exibido nos relatórios e documentos.
+                  </FormDescription>
+                </div>
+
+                <div className="space-y-2">
+                  <FormLabel>Email para Notificações</FormLabel>
+                  <Input type="email" defaultValue="admin@conservias.com" />
+                  <FormDescription>
+                    Email principal para receber notificações do sistema.
+                  </FormDescription>
+                </div>
+
+                <div className="space-y-2">
+                  <FormLabel>Tema</FormLabel>
+                  <Menubar>
+                    <MenubarMenu>
+                      <MenubarTrigger className="w-full justify-start">Padrão</MenubarTrigger>
+                      <MenubarContent>
+                        <MenubarItem>Padrão</MenubarItem>
+                        <MenubarItem>Escuro</MenubarItem>
+                        <MenubarItem>Claro</MenubarItem>
+                      </MenubarContent>
+                    </MenubarMenu>
+                  </Menubar>
+                  <FormDescription>
+                    Escolha o tema visual do sistema.
+                  </FormDescription>
+                </div>
+              </div>
+              
+              <Button onClick={() => saveSettings('Geral')}>Salvar Configurações</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="rh">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações de Recursos Humanos</CardTitle>
+              <CardDescription>
+                Personalize as configurações do módulo de RH.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <FormLabel>Valor do Vale Refeição</FormLabel>
+                  <Input type="number" defaultValue="450" />
+                  <FormDescription>
+                    Valor mensal do vale refeição em reais.
+                  </FormDescription>
+                </div>
+
+                <div className="space-y-2">
+                  <FormLabel>Valor do Lanche</FormLabel>
+                  <Input type="number" defaultValue="5" />
+                  <FormDescription>
+                    Valor do lanche diário em reais.
+                  </FormDescription>
+                </div>
+
+                <div className="space-y-2">
+                  <FormLabel>Dias de Antecedência para Alerta de ASO</FormLabel>
+                  <Input type="number" defaultValue="30" />
+                  <FormDescription>
+                    Quantos dias antes do vencimento o sistema deve alertar sobre ASOs.
+                  </FormDescription>
+                </div>
+              </div>
+              
+              <Button onClick={() => saveSettings('RH')}>Salvar Configurações</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="obras">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações de Obras</CardTitle>
+              <CardDescription>
+                Personalize as configurações do módulo de Obras.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <FormLabel>Dias de Antecedência para Alerta de Término de Obra</FormLabel>
+                  <Input type="number" defaultValue="15" />
+                  <FormDescription>
+                    Quantos dias antes do prazo final o sistema deve alertar sobre obras a vencer.
+                  </FormDescription>
+                </div>
+                
+                <div className="space-y-2">
+                  <FormLabel>Percentual Mínimo de Progresso Esperado</FormLabel>
+                  <Input type="number" defaultValue="90" />
+                  <FormDescription>
+                    Percentual mínimo esperado ao se aproximar da data de conclusão.
+                  </FormDescription>
+                </div>
+              </div>
+              
+              <Button onClick={() => saveSettings('Obras')}>Salvar Configurações</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="frota">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações de Frota</CardTitle>
+              <CardDescription>
+                Personalize as configurações do módulo de Frota.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <FormLabel>Quilometragem para Revisão de Veículos Leves</FormLabel>
+                  <Input type="number" defaultValue="10000" />
+                  <FormDescription>
+                    Quilometragem padrão para agendar revisões de veículos leves.
+                  </FormDescription>
+                </div>
+
+                <div className="space-y-2">
+                  <FormLabel>Quilometragem para Revisão de Veículos Pesados</FormLabel>
+                  <Input type="number" defaultValue="15000" />
+                  <FormDescription>
+                    Quilometragem padrão para agendar revisões de veículos pesados.
+                  </FormDescription>
+                </div>
+
+                <div className="space-y-2">
+                  <FormLabel>Dias de Antecedência para Alerta de Documentos</FormLabel>
+                  <Input type="number" defaultValue="30" />
+                  <FormDescription>
+                    Quantos dias antes do vencimento o sistema deve alertar sobre documentos de veículos.
+                  </FormDescription>
+                </div>
+              </div>
+              
+              <Button onClick={() => saveSettings('Frota')}>Salvar Configurações</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="patrimonio">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações de Patrimônio</CardTitle>
+              <CardDescription>
+                Personalize as configurações do módulo de Patrimônio.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <FormLabel>Prefixo para Número de Plaqueta</FormLabel>
+                  <Input defaultValue="CONSERV-" />
+                  <FormDescription>
+                    Prefixo usado para identificação de bens patrimoniais.
+                  </FormDescription>
+                </div>
+
+                <div className="space-y-2">
+                  <FormLabel>Responsável pela Gestão Patrimonial</FormLabel>
+                  <Input defaultValue="Administrador" />
+                  <FormDescription>
+                    Responsável principal pela gestão de patrimônio.
+                  </FormDescription>
+                </div>
+              </div>
+              
+              <Button onClick={() => saveSettings('Patrimônio')}>Salvar Configurações</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="financeiro">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações Financeiras</CardTitle>
+              <CardDescription>
+                Personalize as configurações do módulo Financeiro.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <FormLabel>Dias de Antecedência para Alerta de Contas a Pagar</FormLabel>
+                  <Input type="number" defaultValue="5" />
+                  <FormDescription>
+                    Quantos dias antes do vencimento o sistema deve alertar sobre contas a pagar.
+                  </FormDescription>
+                </div>
+
+                <div className="space-y-2">
+                  <FormLabel>Dias para Considerar Pagamento em Atraso</FormLabel>
+                  <Input type="number" defaultValue="1" />
+                  <FormDescription>
+                    Após quantos dias do vencimento um pagamento é considerado em atraso.
+                  </FormDescription>
+                </div>
+
+                <div className="space-y-2">
+                  <FormLabel>Email para Relatórios Financeiros</FormLabel>
+                  <Input type="email" defaultValue="financeiro@conservias.com" />
+                  <FormDescription>
+                    Email para envio de relatórios financeiros periódicos.
+                  </FormDescription>
+                </div>
+              </div>
+              
+              <Button onClick={() => saveSettings('Financeiro')}>Salvar Configurações</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
