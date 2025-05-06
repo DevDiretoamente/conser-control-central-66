@@ -21,7 +21,7 @@ const Dashboard = () => {
           title="Recursos Humanos"
           description="Gestão de funcionários"
           icon={<Users size={24} />}
-          to="/"
+          to="/funcionarios"
           value="5"
           color="primary"
           footer="10 ASOs a vencer nos próximos 30 dias"

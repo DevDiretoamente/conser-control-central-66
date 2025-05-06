@@ -9,7 +9,8 @@ import {
   Briefcase,
   FileText,
   Settings,
-  Truck
+  Truck,
+  LayoutDashboard
 } from 'lucide-react';
 
 interface SidebarItemProps {
@@ -73,7 +74,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
             </h2>
           )}
           <div className="space-y-1">
-            <SidebarItem to="/" icon={Users} label="Recursos Humanos" isCollapsed={isCollapsed} />
+            <SidebarItem to="/" icon={LayoutDashboard} label="Dashboard" isCollapsed={isCollapsed} />
+            <SidebarItem to="/funcionarios" icon={Users} label="Recursos Humanos" isCollapsed={isCollapsed} />
             <SidebarItem to="/obras" icon={Building} label="Obras" isCollapsed={isCollapsed} />
             <SidebarItem to="/frota" icon={Truck} label="Frota" isCollapsed={isCollapsed} />
             <SidebarItem to="/patrimonio" icon={Briefcase} label="Patrimônio" isCollapsed={isCollapsed} />
