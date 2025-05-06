@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -979,3 +980,245 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
                         </FormItem>
                       )}
                     />
+                    
+                    <FormField
+                      control={form.control}
+                      name="cnh.validade"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Validade</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "w-full pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "dd/MM/yyyy")
+                                  ) : (
+                                    <span>Selecione uma data</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                initialFocus
+                                className="pointer-events-auto"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* Dados Bancários */}
+            {activeTab === "dados-bancarios" && (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="dadosBancarios.banco"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Banco*</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Banco" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="dadosBancarios.agencia"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Agência*</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Agência" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="dadosBancarios.conta"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Conta*</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Conta" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="dadosBancarios.tipoConta"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tipo de Conta*</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="corrente">Conta Corrente</SelectItem>
+                              <SelectItem value="poupanca">Conta Poupança</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* Uniformes */}
+            {activeTab === "uniformes" && (
+              <Card>
+                <CardContent className="pt-6">
+                  <UniformeTab form={form} />
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* Documentos */}
+            {activeTab === "documentos" && (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <DocumentUploader 
+                      label="RG" 
+                      onFileChange={(file) => handleDocumentChange('rgFile', file)}
+                      currentFile={documentFiles.rgFile}
+                    />
+                    
+                    <DocumentUploader 
+                      label="CPF" 
+                      onFileChange={(file) => handleDocumentChange('cpfFile', file)}
+                      currentFile={documentFiles.cpfFile}
+                    />
+                    
+                    <DocumentUploader 
+                      label="Comprovante de Residência" 
+                      onFileChange={(file) => handleDocumentChange('comprovanteResidencia', file)}
+                      currentFile={documentFiles.comprovanteResidencia}
+                    />
+                    
+                    <DocumentUploader 
+                      label="Foto" 
+                      onFileChange={(file) => handleDocumentChange('fotoFile', file)}
+                      currentFile={documentFiles.fotoFile}
+                    />
+                    
+                    <DocumentUploader 
+                      label="CTPS" 
+                      onFileChange={(file) => handleDocumentChange('ctpsFile', file)}
+                      currentFile={documentFiles.ctpsFile}
+                    />
+                    
+                    <DocumentUploader 
+                      label="CNH" 
+                      onFileChange={(file) => handleDocumentChange('cnhFile', file)}
+                      currentFile={documentFiles.cnhFile}
+                    />
+                    
+                    <DocumentUploader 
+                      label="Exame Médico" 
+                      onFileChange={(file) => handleDocumentChange('exameMedicoFile', file)}
+                      currentFile={documentFiles.exameMedicoFile}
+                    />
+                    
+                    <MultiDocumentUploader 
+                      onFilesChange={handleMultiDocumentChange}
+                      currentFiles={documentFiles.outrosDocumentos}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* Dependentes */}
+            {activeTab === "dependentes" && (
+              <Card>
+                <CardContent className="pt-6">
+                  <DependentesTab form={form} />
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* Navigation buttons */}
+            <div className="flex justify-between mt-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={navigateToPreviousTab}
+                disabled={activeTab === "dados-pessoais"}
+              >
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                Anterior
+              </Button>
+              
+              <div className="space-x-2">
+                {activeTab === "dependentes" ? (
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? (
+                      <div className="flex items-center">
+                        <span className="animate-spin mr-2">⌛</span>
+                        Salvando...
+                      </div>
+                    ) : (
+                      <>
+                        <CircleCheck className="mr-2 h-4 w-4" />
+                        Salvar Funcionário
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={navigateToNextTab}
+                    variant="default"
+                  >
+                    Próximo
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </Form>
+  );
+};
+
+export default FuncionarioForm;
