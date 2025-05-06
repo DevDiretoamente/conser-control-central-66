@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Truck, AlertTriangle, Calendar, PlusCircle, Fuel, Tool } from 'lucide-react';
+import { Truck, AlertTriangle, Calendar, PlusCircle, Fuel, Wrench } from 'lucide-react';
 import { toast } from 'sonner';
 
 const FrotaPage: React.FC = () => {
@@ -43,7 +42,7 @@ const FrotaPage: React.FC = () => {
           <CardContent>
             <div className="flex items-center justify-between">
               <div className="text-2xl font-bold">3</div>
-              <Tool className="h-6 w-6 text-conserv-warning" />
+              <Wrench className="h-6 w-6 text-conserv-warning" />
             </div>
           </CardContent>
         </Card>
