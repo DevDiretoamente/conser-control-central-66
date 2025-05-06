@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Upload, FileText, X, Plus } from 'lucide-react';
+import { Upload, FileText, Plus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MultiDocumentUploaderProps {
@@ -10,27 +10,25 @@ interface MultiDocumentUploaderProps {
   description?: string;
   allowedTypes?: string;
   maxSize?: number; // in MB
-  onFilesChange?: (files: File[]) => void;
+  onFilesChange: (files: File[]) => void;
   onChange?: (files: File[]) => void; // Added for backward compatibility
-  value?: File[] | null; // Added to support the value prop
-  maxFiles?: number;
+  value?: File[];
 }
 
 const MultiDocumentUploader: React.FC<MultiDocumentUploaderProps> = ({
-  label = "Documentos",
-  description = "PDF, JPG ou PNG até 10MB",
-  allowedTypes = ".pdf,.jpg,.jpeg,.png",
+  label = "Documentos Adicionais",
+  description = "PDF até 10MB",
+  allowedTypes = ".pdf",
   maxSize = 10,
   onFilesChange,
-  onChange, // Add the new prop
-  value: externalValue, // Rename to avoid conflicts
-  maxFiles = 5
+  onChange,
+  value: externalFiles,
 }) => {
   const [internalFiles, setInternalFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   
-  // Use either the external value (if provided) or the internal state
-  const files = externalValue !== undefined ? (externalValue || []) : internalFiles;
+  // Use either the external files (if provided) or the internal state
+  const files = externalFiles || internalFiles;
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -45,54 +43,46 @@ const MultiDocumentUploader: React.FC<MultiDocumentUploaderProps> = ({
     e.preventDefault();
     setIsDragging(false);
     
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFiles(Array.from(e.dataTransfer.files));
+    if (e.dataTransfer.files) {
+      const newFiles = Array.from(e.dataTransfer.files);
+      handleFiles(newFiles);
     }
   };
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      handleFiles(Array.from(e.target.files));
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      handleFiles(newFiles);
     }
   };
 
   const handleFiles = (newFiles: File[]) => {
-    if (files.length + newFiles.length > maxFiles) {
-      toast.error(`Você pode adicionar no máximo ${maxFiles} arquivos`);
-      return;
-    }
-
-    const validFiles: File[] = [];
-    
-    for (const file of newFiles) {
+    // Filter files based on type and size
+    const validFiles = newFiles.filter(file => {
       // Check file type
-      const fileType = file.name.split('.').pop()?.toLowerCase();
       const fileTypeValid = allowedTypes
         .split(',')
-        .some(type => type.includes(fileType || ''));
+        .some(type => file.name.toLowerCase().endsWith(type.replace('.', '').toLowerCase()));
       
       if (!fileTypeValid) {
-        toast.error(`Tipo de arquivo não permitido: ${file.name}. Formatos aceitos: ${allowedTypes}`);
-        continue;
+        toast.error(`Arquivo "${file.name}": tipo não permitido. Formatos aceitos: ${allowedTypes}`);
+        return false;
       }
       
       // Check file size
       const fileSizeInMB = file.size / (1024 * 1024);
       if (fileSizeInMB > maxSize) {
-        toast.error(`O arquivo "${file.name}" é muito grande. Tamanho máximo: ${maxSize}MB`);
-        continue;
+        toast.error(`Arquivo "${file.name}" é muito grande. Tamanho máximo: ${maxSize}MB`);
+        return false;
       }
-
-      validFiles.push(file);
-    }
+      
+      return true;
+    });
     
     if (validFiles.length > 0) {
       const updatedFiles = [...files, ...validFiles];
       setInternalFiles(updatedFiles);
-      
-      if (onFilesChange) {
-        onFilesChange(updatedFiles);
-      }
+      onFilesChange(updatedFiles);
       if (onChange) {
         onChange(updatedFiles);
       }
@@ -105,10 +95,7 @@ const MultiDocumentUploader: React.FC<MultiDocumentUploaderProps> = ({
     const updatedFiles = [...files];
     updatedFiles.splice(index, 1);
     setInternalFiles(updatedFiles);
-    
-    if (onFilesChange) {
-      onFilesChange(updatedFiles);
-    }
+    onFilesChange(updatedFiles);
     if (onChange) {
       onChange(updatedFiles);
     }
@@ -116,7 +103,7 @@ const MultiDocumentUploader: React.FC<MultiDocumentUploaderProps> = ({
 
   return (
     <div className="w-full">
-      {label && <p className="text-sm font-medium mb-2">{label}</p>}
+      <p className="text-sm font-medium mb-2">{label}</p>
       
       <div
         onDragOver={handleDragOver}
@@ -129,21 +116,21 @@ const MultiDocumentUploader: React.FC<MultiDocumentUploaderProps> = ({
         )}
       >
         <div className="text-center">
-          <Upload className="mx-auto h-8 w-8 text-gray-400" />
-          <div className="mt-2 flex text-sm leading-6 text-gray-600">
+          <Upload className="mx-auto h-10 w-10 text-gray-400" />
+          <div className="mt-4 flex text-sm leading-6 text-gray-600">
             <label
               htmlFor="multi-file-upload"
               className="relative cursor-pointer rounded-md bg-white font-semibold text-conserv-primary hover:text-conserv-primary/80"
             >
-              <span>Selecione arquivos</span>
+              <span>Adicionar arquivos</span>
               <input
                 id="multi-file-upload"
                 name="multi-file-upload"
                 type="file"
                 className="sr-only"
                 accept={allowedTypes}
-                multiple
                 onChange={handleFileInput}
+                multiple
               />
             </label>
             <p className="pl-1">ou arraste e solte</p>
@@ -151,48 +138,35 @@ const MultiDocumentUploader: React.FC<MultiDocumentUploaderProps> = ({
           <p className="text-xs leading-5 text-gray-600">
             {description}
           </p>
-          <p className="text-xs leading-5 text-gray-600 mt-1">
-            Máximo: {maxFiles} arquivos
-          </p>
         </div>
       </div>
 
       {files.length > 0 && (
-        <div className="mt-4 space-y-2">
-          <p className="text-sm font-medium">Arquivos ({files.length}/{maxFiles})</p>
-          {files.map((file, index) => (
-            <div key={index} className="rounded-lg border border-gray-200 p-3 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <FileText className="h-6 w-6 text-red-500" />
-                <div>
-                  <p className="text-sm font-medium truncate max-w-[200px]">{file.name}</p>
-                  <p className="text-xs text-gray-500">
-                    {(file.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
+        <div className="mt-4">
+          <p className="text-sm font-medium mb-2">Arquivos selecionados ({files.length})</p>
+          <div className="space-y-2">
+            {files.map((file, index) => (
+              <div key={index} className="rounded-lg border border-gray-200 p-3 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <FileText className="h-6 w-6 text-red-500" />
+                  <div>
+                    <p className="text-sm font-medium truncate max-w-[200px]">{file.name}</p>
+                    <p className="text-xs text-gray-500">
+                      {(file.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => removeFile(index)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                onClick={() => removeFile(index)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-          
-          {files.length < maxFiles && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-2 w-full"
-              onClick={() => document.getElementById('multi-file-upload')?.click()}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Adicionar mais arquivos
-            </Button>
-          )}
+            ))}
+          </div>
         </div>
       )}
     </div>
