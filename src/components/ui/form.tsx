@@ -54,28 +54,26 @@ const useFormField = () => {
     throw new Error("useFormField should be used within <FormItem>")
   }
 
-  // Check if we're inside a form context
-  let formContext = null
+  // Default field state with empty values
   let fieldState = { invalid: false, isDirty: false, isTouched: false, error: undefined }
   
+  // Safely try to access form context
+  let formContext;
   try {
     formContext = useFormContext()
   } catch (e) {
-    // Not within a FormProvider
-    return {
-      id: itemContext.id,
-      name: fieldContext.name,
-      formItemId: `${itemContext.id}-form-item`,
-      formDescriptionId: `${itemContext.id}-form-item-description`,
-      formMessageId: `${itemContext.id}-form-item-message`,
-      ...fieldState,
-    }
+    // Not within a FormProvider, return default values
   }
 
-  // If we have a form context, get the field state
+  // If form context exists, get the field state
   if (formContext) {
-    const { getFieldState, formState } = formContext
-    fieldState = getFieldState(fieldContext.name, formState)
+    try {
+      const { getFieldState, formState } = formContext
+      fieldState = getFieldState(fieldContext.name, formState)
+    } catch (e) {
+      // If there's an error getting field state, use defaults
+      console.warn("Error getting field state:", e)
+    }
   }
 
   const { id } = itemContext
