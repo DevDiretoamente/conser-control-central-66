@@ -38,11 +38,11 @@ const FuncionarioFilter: React.FC<FuncionarioFilterProps> = ({
   };
 
   const resetFilters = () => {
-    const resetValues = {
+    const resetValues: FuncionarioFilterValues = {
       search: '',
       cargo: undefined,
       departamento: undefined,
-      statusAso: 'todos',
+      statusAso: 'todos' as const,
     };
     setLocalValues(resetValues);
     onChange(resetValues);
@@ -96,8 +96,10 @@ const FuncionarioFilter: React.FC<FuncionarioFilterProps> = ({
         </Select>
 
         <Select
-          value={localValues.statusAso}
-          onValueChange={(value: any) => handleChange('statusAso', value)}
+          value={localValues.statusAso || 'todos'}
+          onValueChange={(value: 'todos' | 'valido' | 'vencido' | 'vence-em-breve') => 
+            handleChange('statusAso', value)
+          }
         >
           <SelectTrigger>
             <SelectValue placeholder="Status do ASO" />
