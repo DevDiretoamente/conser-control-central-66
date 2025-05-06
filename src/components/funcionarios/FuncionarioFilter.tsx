@@ -40,8 +40,8 @@ const FuncionarioFilter: React.FC<FuncionarioFilterProps> = ({
   const resetFilters = () => {
     const resetValues: FuncionarioFilterValues = {
       search: '',
-      cargo: undefined,
-      departamento: undefined,
+      cargo: '',
+      departamento: '',
       statusAso: 'todos' as const,
     };
     setLocalValues(resetValues);

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import FuncionarioListItem, { Funcionario } from '@/components/funcionarios/FuncionarioListItem';
 import FuncionarioFilter, { FuncionarioFilterValues } from '@/components/funcionarios/FuncionarioFilter';
-import { Users, PlusCircle, FileOutput } from 'lucide-react';
+import { Users, PlusCircle, FileOutput, FileText, UserPlus, Edit, Trash } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -198,7 +198,7 @@ const ListaFuncionarios: React.FC = () => {
       />
 
       {filteredFuncionarios.length > 0 ? (
-        <div>
+        <div className="space-y-4">
           {filteredFuncionarios.map((funcionario) => (
             <FuncionarioListItem
               key={funcionario.id}
@@ -218,7 +218,7 @@ const ListaFuncionarios: React.FC = () => {
             <p>Tente ajustar os filtros ou cadastre um novo funcionário.</p>
             <Button className="mt-4" asChild>
               <Link to="/funcionarios/novo">
-                <PlusCircle className="mr-2 h-4 w-4" />
+                <UserPlus className="mr-2 h-4 w-4" />
                 Novo Funcionário
               </Link>
             </Button>
