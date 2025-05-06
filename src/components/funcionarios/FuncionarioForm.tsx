@@ -25,6 +25,11 @@ import { CalendarIcon } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { validateCPF, formatCPF } from '@/utils/validators';
 import DocumentUploader from './DocumentUploader';
+import MultiDocumentUploader from './MultiDocumentUploader';
+import DependentesTab from './DependentesTab';
+import FuncaoTab from './FuncaoTab';
+import UniformeTab from './UniformeTab';
+import { Funcionario } from '@/types/funcionario';
 
 // Custom validator for CPF
 const cpfValidator = z.string().refine(validateCPF, {
@@ -61,6 +66,7 @@ const contatoSchema = z.object({
 });
 
 const dadosProfissionaisSchema = z.object({
+  funcaoId: z.string().optional(),
   cargo: z.string().min(1, { message: 'Cargo é obrigatório' }),
   salario: z.number().min(0, { message: 'Salário deve ser maior que zero' }),
   dataAdmissao: z.date({ required_error: 'Data de admissão é obrigatória' }),
@@ -89,7 +95,16 @@ const documentosSchema = z.object({
   cpfFile: z.any().optional(),
   comprovanteResidencia: z.any().optional(),
   fotoFile: z.any().optional(),
-  outrosDocumentos: z.any().optional(),
+  cnhFile: z.any().optional(),
+  ctpsFile: z.any().optional(),
+  exameMedicoFile: z.any().optional(),
+  outrosDocumentos: z.array(z.any()).optional(),
+});
+
+const tamanhoUniformeSchema = z.object({
+  camisa: z.string().optional(),
+  calca: z.string().optional(),
+  calcado: z.number().optional(),
 });
 
 const funcionarioSchema = z.object({
@@ -100,14 +115,30 @@ const funcionarioSchema = z.object({
   cnh: cnhSchema,
   dadosBancarios: dadosBancariosSchema,
   documentos: documentosSchema,
+  dependentes: z.array(
+    z.object({
+      nome: z.string().min(1, { message: 'Nome é obrigatório' }),
+      dataNascimento: z.date({ required_error: 'Data de nascimento é obrigatória' }),
+      parentesco: z.string().min(1, { message: 'Parentesco é obrigatório' }),
+      cpf: z.string().optional(),
+      documentos: z.object({
+        certidaoNascimento: z.any().optional(),
+        outrosDocumentos: z.array(z.any()).optional(),
+      }),
+    })
+  ).optional(),
+  tamanhoUniforme: tamanhoUniformeSchema,
+  episEntregues: z.array(z.any()).optional(),
+  uniformesEntregues: z.array(z.any()).optional(),
+  examesRealizados: z.array(z.any()).optional(),
 });
 
 type FuncionarioFormValues = z.infer<typeof funcionarioSchema>;
 
 interface FuncionarioFormProps {
   funcionarioId?: string;
-  defaultValues?: Partial<FuncionarioFormValues>;
-  onSuccess?: (data: FuncionarioFormValues) => void;
+  defaultValues?: Partial<Funcionario>;
+  onSuccess?: (data: any) => void;
 }
 
 const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
@@ -122,10 +153,13 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
     cpfFile: null as File | null,
     comprovanteResidencia: null as File | null,
     fotoFile: null as File | null,
-    outrosDocumentos: null as File | null,
+    cnhFile: null as File | null,
+    ctpsFile: null as File | null,
+    exameMedicoFile: null as File | null,
+    outrosDocumentos: [] as File[],
   });
 
-  const form = useForm<FuncionarioFormValues>({
+  const form = useForm<Funcionario>({
     resolver: zodResolver(funcionarioSchema),
     defaultValues: defaultValues || {
       dadosPessoais: {
@@ -154,6 +188,7 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
         email: '',
       },
       dadosProfissionais: {
+        funcaoId: '',
         cargo: '',
         salario: 0,
         dataAdmissao: undefined,
@@ -179,8 +214,20 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
         cpfFile: null,
         comprovanteResidencia: null,
         fotoFile: null,
-        outrosDocumentos: null,
+        cnhFile: null,
+        ctpsFile: null,
+        exameMedicoFile: null,
+        outrosDocumentos: [],
       },
+      dependentes: [],
+      tamanhoUniforme: {
+        camisa: '',
+        calca: '',
+        calcado: undefined,
+      },
+      episEntregues: [],
+      uniformesEntregues: [],
+      examesRealizados: [],
     },
   });
 
@@ -191,6 +238,15 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
     }));
     
     form.setValue(`documentos.${documentKey}` as any, file);
+  };
+
+  const handleMultiDocumentChange = (files: File[]) => {
+    setDocumentFiles(prev => ({
+      ...prev,
+      outrosDocumentos: files
+    }));
+    
+    form.setValue('documentos.outrosDocumentos', files as any);
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -220,12 +276,12 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
     }
   };
 
-  const onSubmit = async (data: FuncionarioFormValues) => {
+  const onSubmit = async (data: Funcionario) => {
     try {
       setIsLoading(true);
       
       // Add document files to data
-      data.documentos = documentFiles;
+      data.documentos = documentFiles as any;
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -251,14 +307,17 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Tabs defaultValue="dados-pessoais" className="w-full">
-          <TabsList className="mb-4 grid grid-cols-2 md:grid-cols-7">
+          <TabsList className="mb-4 grid grid-cols-2 md:grid-cols-9">
             <TabsTrigger value="dados-pessoais">Dados Pessoais</TabsTrigger>
             <TabsTrigger value="endereco">Endereço</TabsTrigger>
             <TabsTrigger value="contato">Contato</TabsTrigger>
+            <TabsTrigger value="funcao">Função</TabsTrigger>
             <TabsTrigger value="dados-profissionais">Dados Profissionais</TabsTrigger>
             <TabsTrigger value="cnh">CNH</TabsTrigger>
             <TabsTrigger value="dados-bancarios">Dados Bancários</TabsTrigger>
+            <TabsTrigger value="uniformes">Uniformes</TabsTrigger>
             <TabsTrigger value="documentos">Documentos</TabsTrigger>
+            <TabsTrigger value="dependentes">Dependentes</TabsTrigger>
           </TabsList>
           
           {/* Dados Pessoais */}
@@ -638,11 +697,41 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
             </Card>
           </TabsContent>
           
+          {/* Função */}
+          <TabsContent value="funcao">
+            <FuncaoTab form={form} />
+          </TabsContent>
+          
           {/* Dados Profissionais */}
           <TabsContent value="dados-profissionais">
             <Card>
               <CardContent className="pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="dadosProfissionais.funcaoId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Função</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="">Selecione uma função</SelectItem>
+                            {/* Add options for functions */}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
                   <FormField
                     control={form.control}
                     name="dadosProfissionais.cargo"
@@ -1028,6 +1117,11 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
             </Card>
           </TabsContent>
           
+          {/* Uniformes */}
+          <TabsContent value="uniformes">
+            <UniformeTab form={form} />
+          </TabsContent>
+          
           {/* Documentos */}
           <TabsContent value="documentos">
             <Card>
@@ -1060,11 +1154,28 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
                   />
                   
                   <DocumentUploader 
-                    label="Outros Documentos"
+                    label="Carteira de Trabalho"
                     description="PDF, JPG ou PNG até 10MB"
                     allowedTypes=".pdf,.jpg,.jpeg,.png"
-                    onFileChange={(file) => handleDocumentChange('outrosDocumentos', file)}
+                    onFileChange={(file) => handleDocumentChange('ctpsFile', file)}
                   />
+                  
+                  <DocumentUploader 
+                    label="Atestado de Saúde Ocupacional"
+                    description="PDF, JPG ou PNG até 10MB"
+                    allowedTypes=".pdf,.jpg,.jpeg,.png"
+                    onFileChange={(file) => handleDocumentChange('exameMedicoFile', file)}
+                  />
+                  
+                  <div className="col-span-2 mt-4">
+                    <MultiDocumentUploader 
+                      label="Outros Documentos"
+                      description="PDF, JPG ou PNG até 10MB por arquivo"
+                      allowedTypes=".pdf,.jpg,.jpeg,.png"
+                      onFilesChange={handleMultiDocumentChange}
+                      maxFiles={10}
+                    />
+                  </div>
                 </div>
                 
                 <div className="flex justify-end mt-6">
@@ -1080,7 +1191,23 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
               </CardContent>
             </Card>
           </TabsContent>
+          
+          {/* Dependentes */}
+          <TabsContent value="dependentes">
+            <DependentesTab form={form} />
+          </TabsContent>
         </Tabs>
+        
+        <div className="flex justify-end mt-6">
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                Salvando...
+              </span>
+            ) : isEditMode ? 'Atualizar Funcionário' : 'Cadastrar Funcionário'}
+          </Button>
+        </div>
       </form>
     </Form>
   );
