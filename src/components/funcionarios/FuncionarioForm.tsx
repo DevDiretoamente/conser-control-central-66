@@ -977,4 +977,3 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
                               disabled={(date) => date < new Date()}
                               initialFocus
                               className="pointer-events-auto"
-                            />
