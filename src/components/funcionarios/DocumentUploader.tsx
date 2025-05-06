@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Upload, File, X, FileText } from 'lucide-react';
+import { Upload, FileText, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface DocumentUploaderProps {
@@ -15,8 +15,8 @@ interface DocumentUploaderProps {
 
 const DocumentUploader: React.FC<DocumentUploaderProps> = ({
   label,
-  description = "PNG, JPG, PDF até 10MB",
-  allowedTypes = ".pdf,.png,.jpg,.jpeg",
+  description = "PDF até 10MB",
+  allowedTypes = ".pdf",
   maxSize = 10,
   onFileChange
 }) => {
@@ -80,15 +80,6 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({
     }
   };
 
-  const getFileIcon = () => {
-    if (!file) return null;
-    
-    if (file.type.includes('pdf')) {
-      return <FileText className="h-8 w-8 text-red-500" />;
-    }
-    return <File className="h-8 w-8 text-blue-500" />;
-  };
-
   return (
     <div className="w-full">
       <p className="text-sm font-medium mb-2">{label}</p>
@@ -131,7 +122,7 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({
       ) : (
         <div className="mt-2 rounded-lg border border-gray-200 p-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            {getFileIcon()}
+            <FileText className="h-8 w-8 text-red-500" />
             <div>
               <p className="text-sm font-medium truncate max-w-[200px]">{file.name}</p>
               <p className="text-xs text-gray-500">
