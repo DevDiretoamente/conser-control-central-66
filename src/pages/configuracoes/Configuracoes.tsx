@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { FormItem, FormLabel, FormDescription } from '@/components/ui/form';
+import { Form, FormItem, FormLabel, FormDescription } from '@/components/ui/form';
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from '@/components/ui/menubar';
 
 const ConfiguracoesPage: React.FC = () => {

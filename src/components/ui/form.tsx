@@ -44,31 +44,38 @@ const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext)
   const itemContext = React.useContext(FormItemContext)
   
-  // Add a check to ensure fieldContext exists before accessing properties
+  // Check if we're inside a FormField context
   if (!fieldContext) {
     throw new Error("useFormField should be used within <FormField>")
   }
 
+  // Check if we have item context
+  if (!itemContext) {
+    throw new Error("useFormField should be used within <FormItem>")
+  }
+
   // Check if we're inside a form context
   let formContext = null
+  let fieldState = { invalid: false, isDirty: false, isTouched: false, error: undefined }
+  
   try {
     formContext = useFormContext()
   } catch (e) {
-    // Not within a form context, return a minimal object
+    // Not within a FormProvider
     return {
-      id: itemContext?.id || "",
+      id: itemContext.id,
       name: fieldContext.name,
-      formItemId: `${itemContext?.id || "field"}-form-item`,
-      formDescriptionId: `${itemContext?.id || "field"}-form-item-description`,
-      formMessageId: `${itemContext?.id || "field"}-form-item-message`,
+      formItemId: `${itemContext.id}-form-item`,
+      formDescriptionId: `${itemContext.id}-form-item-description`,
+      formMessageId: `${itemContext.id}-form-item-message`,
+      ...fieldState,
     }
   }
-  
-  const { getFieldState, formState } = formContext
-  const fieldState = getFieldState(fieldContext.name, formState)
 
-  if (!itemContext) {
-    throw new Error("useFormField should be used within <FormItem>")
+  // If we have a form context, get the field state
+  if (formContext) {
+    const { getFieldState, formState } = formContext
+    fieldState = getFieldState(fieldContext.name, formState)
   }
 
   const { id } = itemContext
