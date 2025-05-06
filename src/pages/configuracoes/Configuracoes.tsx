@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
+import { FormItem, FormLabel, FormDescription } from '@/components/ui/form';
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from '@/components/ui/menubar';
 
 const ConfiguracoesPage: React.FC = () => {
@@ -61,23 +61,23 @@ const ConfiguracoesPage: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <div className="space-y-2">
+                <FormItem>
                   <FormLabel>Nome da Empresa</FormLabel>
                   <Input defaultValue="CONSERVIAS TRANSPORTES E PAVIMENTAÇÃO LTDA" />
                   <FormDescription>
                     Nome que será exibido nos relatórios e documentos.
                   </FormDescription>
-                </div>
+                </FormItem>
 
-                <div className="space-y-2">
+                <FormItem>
                   <FormLabel>Email para Notificações</FormLabel>
                   <Input type="email" defaultValue="admin@conservias.com" />
                   <FormDescription>
                     Email principal para receber notificações do sistema.
                   </FormDescription>
-                </div>
+                </FormItem>
 
-                <div className="space-y-2">
+                <FormItem>
                   <FormLabel>Tema</FormLabel>
                   <Menubar>
                     <MenubarMenu>
@@ -92,7 +92,7 @@ const ConfiguracoesPage: React.FC = () => {
                   <FormDescription>
                     Escolha o tema visual do sistema.
                   </FormDescription>
-                </div>
+                </FormItem>
               </div>
               
               <Button onClick={() => saveSettings('Geral')}>Salvar Configurações</Button>
@@ -110,29 +110,29 @@ const ConfiguracoesPage: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <div className="space-y-2">
+                <FormItem>
                   <FormLabel>Valor do Vale Refeição</FormLabel>
                   <Input type="number" defaultValue="450" />
                   <FormDescription>
                     Valor mensal do vale refeição em reais.
                   </FormDescription>
-                </div>
+                </FormItem>
 
-                <div className="space-y-2">
+                <FormItem>
                   <FormLabel>Valor do Lanche</FormLabel>
                   <Input type="number" defaultValue="5" />
                   <FormDescription>
                     Valor do lanche diário em reais.
                   </FormDescription>
-                </div>
+                </FormItem>
 
-                <div className="space-y-2">
+                <FormItem>
                   <FormLabel>Dias de Antecedência para Alerta de ASO</FormLabel>
                   <Input type="number" defaultValue="30" />
                   <FormDescription>
                     Quantos dias antes do vencimento o sistema deve alertar sobre ASOs.
                   </FormDescription>
-                </div>
+                </FormItem>
               </div>
               
               <Button onClick={() => saveSettings('RH')}>Salvar Configurações</Button>
@@ -150,21 +150,21 @@ const ConfiguracoesPage: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <div className="space-y-2">
+                <FormItem>
                   <FormLabel>Dias de Antecedência para Alerta de Término de Obra</FormLabel>
                   <Input type="number" defaultValue="15" />
                   <FormDescription>
                     Quantos dias antes do prazo final o sistema deve alertar sobre obras a vencer.
                   </FormDescription>
-                </div>
+                </FormItem>
                 
-                <div className="space-y-2">
+                <FormItem>
                   <FormLabel>Percentual Mínimo de Progresso Esperado</FormLabel>
                   <Input type="number" defaultValue="90" />
                   <FormDescription>
                     Percentual mínimo esperado ao se aproximar da data de conclusão.
                   </FormDescription>
-                </div>
+                </FormItem>
               </div>
               
               <Button onClick={() => saveSettings('Obras')}>Salvar Configurações</Button>
@@ -182,29 +182,29 @@ const ConfiguracoesPage: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <div className="space-y-2">
+                <FormItem>
                   <FormLabel>Quilometragem para Revisão de Veículos Leves</FormLabel>
                   <Input type="number" defaultValue="10000" />
                   <FormDescription>
                     Quilometragem padrão para agendar revisões de veículos leves.
                   </FormDescription>
-                </div>
+                </FormItem>
 
-                <div className="space-y-2">
+                <FormItem>
                   <FormLabel>Quilometragem para Revisão de Veículos Pesados</FormLabel>
                   <Input type="number" defaultValue="15000" />
                   <FormDescription>
                     Quilometragem padrão para agendar revisões de veículos pesados.
                   </FormDescription>
-                </div>
+                </FormItem>
 
-                <div className="space-y-2">
+                <FormItem>
                   <FormLabel>Dias de Antecedência para Alerta de Documentos</FormLabel>
                   <Input type="number" defaultValue="30" />
                   <FormDescription>
                     Quantos dias antes do vencimento o sistema deve alertar sobre documentos de veículos.
                   </FormDescription>
-                </div>
+                </FormItem>
               </div>
               
               <Button onClick={() => saveSettings('Frota')}>Salvar Configurações</Button>
@@ -222,21 +222,21 @@ const ConfiguracoesPage: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <div className="space-y-2">
+                <FormItem>
                   <FormLabel>Prefixo para Número de Plaqueta</FormLabel>
                   <Input defaultValue="CONSERV-" />
                   <FormDescription>
                     Prefixo usado para identificação de bens patrimoniais.
                   </FormDescription>
-                </div>
+                </FormItem>
 
-                <div className="space-y-2">
+                <FormItem>
                   <FormLabel>Responsável pela Gestão Patrimonial</FormLabel>
                   <Input defaultValue="Administrador" />
                   <FormDescription>
                     Responsável principal pela gestão de patrimônio.
                   </FormDescription>
-                </div>
+                </FormItem>
               </div>
               
               <Button onClick={() => saveSettings('Patrimônio')}>Salvar Configurações</Button>
@@ -254,29 +254,29 @@ const ConfiguracoesPage: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <div className="space-y-2">
+                <FormItem>
                   <FormLabel>Dias de Antecedência para Alerta de Contas a Pagar</FormLabel>
                   <Input type="number" defaultValue="5" />
                   <FormDescription>
                     Quantos dias antes do vencimento o sistema deve alertar sobre contas a pagar.
                   </FormDescription>
-                </div>
+                </FormItem>
 
-                <div className="space-y-2">
+                <FormItem>
                   <FormLabel>Dias para Considerar Pagamento em Atraso</FormLabel>
                   <Input type="number" defaultValue="1" />
                   <FormDescription>
                     Após quantos dias do vencimento um pagamento é considerado em atraso.
                   </FormDescription>
-                </div>
+                </FormItem>
 
-                <div className="space-y-2">
+                <FormItem>
                   <FormLabel>Email para Relatórios Financeiros</FormLabel>
                   <Input type="email" defaultValue="financeiro@conservias.com" />
                   <FormDescription>
                     Email para envio de relatórios financeiros periódicos.
                   </FormDescription>
-                </div>
+                </FormItem>
               </div>
               
               <Button onClick={() => saveSettings('Financeiro')}>Salvar Configurações</Button>
