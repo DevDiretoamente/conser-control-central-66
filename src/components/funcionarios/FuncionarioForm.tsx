@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -24,11 +23,18 @@ import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { validateCPF, formatCPF } from '@/utils/validators';
+import DocumentUploader from './DocumentUploader';
+
+// Custom validator for CPF
+const cpfValidator = z.string().refine(validateCPF, {
+  message: 'CPF inválido'
+});
 
 // Schemas for the form
 const dadosPessoaisSchema = z.object({
   nome: z.string().min(3, { message: 'Nome deve ter pelo menos 3 caracteres' }),
-  cpf: z.string().min(11, { message: 'CPF inválido' }),
+  cpf: cpfValidator,
   rg: z.string().min(1, { message: 'RG é obrigatório' }),
   dataNascimento: z.date({ required_error: 'Data de nascimento é obrigatória' }),
   escolaridade: z.string().min(1, { message: 'Escolaridade é obrigatória' }),
@@ -78,6 +84,14 @@ const dadosBancariosSchema = z.object({
   tipoConta: z.enum(['corrente', 'poupanca']),
 });
 
+const documentosSchema = z.object({
+  rgFile: z.any().optional(),
+  cpfFile: z.any().optional(),
+  comprovanteResidencia: z.any().optional(),
+  fotoFile: z.any().optional(),
+  outrosDocumentos: z.any().optional(),
+});
+
 const funcionarioSchema = z.object({
   dadosPessoais: dadosPessoaisSchema,
   endereco: enderecoSchema,
@@ -85,6 +99,7 @@ const funcionarioSchema = z.object({
   dadosProfissionais: dadosProfissionaisSchema,
   cnh: cnhSchema,
   dadosBancarios: dadosBancariosSchema,
+  documentos: documentosSchema,
 });
 
 type FuncionarioFormValues = z.infer<typeof funcionarioSchema>;
@@ -102,6 +117,13 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const isEditMode = !!funcionarioId;
+  const [documentFiles, setDocumentFiles] = useState({
+    rgFile: null as File | null,
+    cpfFile: null as File | null,
+    comprovanteResidencia: null as File | null,
+    fotoFile: null as File | null,
+    outrosDocumentos: null as File | null,
+  });
 
   const form = useForm<FuncionarioFormValues>({
     resolver: zodResolver(funcionarioSchema),
@@ -152,8 +174,30 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
         conta: '',
         tipoConta: 'corrente',
       },
+      documentos: {
+        rgFile: null,
+        cpfFile: null,
+        comprovanteResidencia: null,
+        fotoFile: null,
+        outrosDocumentos: null,
+      },
     },
   });
+
+  const handleDocumentChange = (documentKey: keyof typeof documentFiles, file: File | null) => {
+    setDocumentFiles(prev => ({
+      ...prev,
+      [documentKey]: file
+    }));
+    
+    form.setValue(`documentos.${documentKey}` as any, file);
+  };
+
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '');
+    const formattedCpf = formatCPF(value);
+    form.setValue('dadosPessoais.cpf', formattedCpf, { shouldValidate: true });
+  };
 
   const buscarCep = async (cep: string) => {
     if (cep.length !== 8) return;
@@ -180,6 +224,9 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
     try {
       setIsLoading(true);
       
+      // Add document files to data
+      data.documentos = documentFiles;
+      
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -204,13 +251,14 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Tabs defaultValue="dados-pessoais" className="w-full">
-          <TabsList className="mb-4 grid grid-cols-3 md:grid-cols-6">
+          <TabsList className="mb-4 grid grid-cols-2 md:grid-cols-7">
             <TabsTrigger value="dados-pessoais">Dados Pessoais</TabsTrigger>
             <TabsTrigger value="endereco">Endereço</TabsTrigger>
             <TabsTrigger value="contato">Contato</TabsTrigger>
             <TabsTrigger value="dados-profissionais">Dados Profissionais</TabsTrigger>
             <TabsTrigger value="cnh">CNH</TabsTrigger>
             <TabsTrigger value="dados-bancarios">Dados Bancários</TabsTrigger>
+            <TabsTrigger value="documentos">Documentos</TabsTrigger>
           </TabsList>
           
           {/* Dados Pessoais */}
@@ -239,7 +287,12 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
                       <FormItem>
                         <FormLabel>CPF*</FormLabel>
                         <FormControl>
-                          <Input placeholder="000.000.000-00" {...field} />
+                          <Input 
+                            placeholder="000.000.000-00" 
+                            value={field.value}
+                            onChange={(e) => handleCpfChange(e)}
+                            onBlur={field.onBlur}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -958,6 +1011,59 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
                         <FormMessage />
                       </FormItem>
                     )}
+                  />
+                </div>
+                
+                <div className="flex justify-end mt-6">
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? (
+                      <span className="flex items-center gap-2">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        Salvando...
+                      </span>
+                    ) : isEditMode ? 'Atualizar Funcionário' : 'Cadastrar Funcionário'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Documentos */}
+          <TabsContent value="documentos">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <DocumentUploader 
+                    label="Foto do Funcionário"
+                    description="JPG ou PNG até 10MB"
+                    allowedTypes=".jpg,.jpeg,.png"
+                    onFileChange={(file) => handleDocumentChange('fotoFile', file)}
+                  />
+                  
+                  <DocumentUploader 
+                    label="RG (Frente e Verso)"
+                    allowedTypes=".pdf,.jpg,.jpeg,.png"
+                    onFileChange={(file) => handleDocumentChange('rgFile', file)}
+                  />
+                  
+                  <DocumentUploader 
+                    label="CPF"
+                    allowedTypes=".pdf,.jpg,.jpeg,.png"
+                    onFileChange={(file) => handleDocumentChange('cpfFile', file)}
+                  />
+                  
+                  <DocumentUploader 
+                    label="Comprovante de Residência"
+                    description="PDF, JPG ou PNG até 10MB, últimos 3 meses"
+                    allowedTypes=".pdf,.jpg,.jpeg,.png"
+                    onFileChange={(file) => handleDocumentChange('comprovanteResidencia', file)}
+                  />
+                  
+                  <DocumentUploader 
+                    label="Outros Documentos"
+                    description="PDF, JPG ou PNG até 10MB"
+                    allowedTypes=".pdf,.jpg,.jpeg,.png"
+                    onFileChange={(file) => handleDocumentChange('outrosDocumentos', file)}
                   />
                 </div>
                 
