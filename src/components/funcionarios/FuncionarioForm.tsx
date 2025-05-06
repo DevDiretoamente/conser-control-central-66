@@ -977,3 +977,186 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
                               disabled={(date) => date < new Date()}
                               initialFocus
                               className="pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Dados Bancários */}
+          <TabsContent value="dados-bancarios">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="dadosBancarios.banco"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Banco*</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Banco" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="dadosBancarios.agencia"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Agência*</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Agência" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="dadosBancarios.conta"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Conta*</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Conta" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="dadosBancarios.tipoConta"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tipo de Conta*</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="corrente">Corrente</SelectItem>
+                            <SelectItem value="poupanca">Poupança</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Uniformes */}
+          <TabsContent value="uniformes">
+            <UniformeTab form={form} />
+          </TabsContent>
+          
+          {/* Documentos */}
+          <TabsContent value="documentos">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Documentos Pessoais</h3>
+                    
+                    <div className="space-y-4">
+                      <DocumentUploader
+                        label="RG*"
+                        onChange={(file) => handleDocumentChange('rgFile', file)}
+                        value={documentFiles.rgFile}
+                      />
+                      
+                      <DocumentUploader
+                        label="CPF*"
+                        onChange={(file) => handleDocumentChange('cpfFile', file)}
+                        value={documentFiles.cpfFile}
+                      />
+                      
+                      <DocumentUploader
+                        label="Comprovante de Residência*"
+                        onChange={(file) => handleDocumentChange('comprovanteResidencia', file)}
+                        value={documentFiles.comprovanteResidencia}
+                      />
+                      
+                      <DocumentUploader
+                        label="Foto*"
+                        onChange={(file) => handleDocumentChange('fotoFile', file)}
+                        value={documentFiles.fotoFile}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Documentos Profissionais</h3>
+                    
+                    <div className="space-y-4">
+                      <DocumentUploader
+                        label="CNH"
+                        onChange={(file) => handleDocumentChange('cnhFile', file)}
+                        value={documentFiles.cnhFile}
+                      />
+                      
+                      <DocumentUploader
+                        label="CTPS"
+                        onChange={(file) => handleDocumentChange('ctpsFile', file)}
+                        value={documentFiles.ctpsFile}
+                      />
+                      
+                      <DocumentUploader
+                        label="Exame Médico"
+                        onChange={(file) => handleDocumentChange('exameMedicoFile', file)}
+                        value={documentFiles.exameMedicoFile}
+                      />
+                      
+                      <h3 className="text-lg font-medium my-4">Outros Documentos</h3>
+                      
+                      <MultiDocumentUploader
+                        onChange={handleMultiDocumentChange}
+                        value={documentFiles.outrosDocumentos}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Dependentes */}
+          <TabsContent value="dependentes">
+            <DependentesTab form={form} />
+          </TabsContent>
+        </Tabs>
+        
+        <div className="flex justify-end space-x-2">
+          <Button variant="outline" type="button" disabled={isLoading}>
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? 'Salvando...' : isEditMode ? 'Atualizar' : 'Cadastrar'}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+};
+
+export default FuncionarioForm;
