@@ -40,8 +40,8 @@ const FuncionarioFilter: React.FC<FuncionarioFilterProps> = ({
   const resetFilters = () => {
     const resetValues: FuncionarioFilterValues = {
       search: '',
-      cargo: '',
-      departamento: '',
+      cargo: 'todos',
+      departamento: 'todos',
       statusAso: 'todos' as const,
     };
     setLocalValues(resetValues);
@@ -66,14 +66,14 @@ const FuncionarioFilter: React.FC<FuncionarioFilterProps> = ({
         </div>
 
         <Select
-          value={localValues.cargo}
+          value={localValues.cargo || 'todos'}
           onValueChange={(value) => handleChange('cargo', value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Cargo" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos os cargos</SelectItem>
+            <SelectItem value="todos">Todos os cargos</SelectItem>
             {availableCargos.map((cargo) => (
               <SelectItem key={cargo.id} value={cargo.id}>{cargo.nome}</SelectItem>
             ))}
@@ -81,14 +81,14 @@ const FuncionarioFilter: React.FC<FuncionarioFilterProps> = ({
         </Select>
 
         <Select
-          value={localValues.departamento}
+          value={localValues.departamento || 'todos'}
           onValueChange={(value) => handleChange('departamento', value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Departamento" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos os departamentos</SelectItem>
+            <SelectItem value="todos">Todos os departamentos</SelectItem>
             {availableDepartamentos.map((dep) => (
               <SelectItem key={dep.id} value={dep.id}>{dep.nome}</SelectItem>
             ))}

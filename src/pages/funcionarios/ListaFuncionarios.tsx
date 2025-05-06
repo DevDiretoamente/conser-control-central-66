@@ -95,8 +95,8 @@ const ListaFuncionarios: React.FC = () => {
   
   const [filterValues, setFilterValues] = useState<FuncionarioFilterValues>({
     search: '',
-    cargo: '',
-    departamento: '',
+    cargo: 'todos',
+    departamento: 'todos',
     statusAso: 'todos'
   });
   
@@ -114,12 +114,12 @@ const ListaFuncionarios: React.FC = () => {
       }
       
       // Filter by cargo
-      if (values.cargo && availableCargos.find(c => c.id === values.cargo)?.nome !== funcionario.cargo) {
+      if (values.cargo && values.cargo !== 'todos' && availableCargos.find(c => c.id === values.cargo)?.nome !== funcionario.cargo) {
         return false;
       }
       
       // Filter by departamento
-      if (values.departamento && availableDepartamentos.find(d => d.id === values.departamento)?.nome !== funcionario.departamento) {
+      if (values.departamento && values.departamento !== 'todos' && availableDepartamentos.find(d => d.id === values.departamento)?.nome !== funcionario.departamento) {
         return false;
       }
       
