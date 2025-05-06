@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -1118,48 +1117,48 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
                     <DocumentUploader 
                       label="RG" 
                       onFileChange={(file) => handleDocumentChange('rgFile', file)}
-                      currentFile={documentFiles.rgFile}
+                      value={documentFiles.rgFile}
                     />
                     
                     <DocumentUploader 
                       label="CPF" 
                       onFileChange={(file) => handleDocumentChange('cpfFile', file)}
-                      currentFile={documentFiles.cpfFile}
+                      value={documentFiles.cpfFile}
                     />
                     
                     <DocumentUploader 
                       label="Comprovante de Residência" 
                       onFileChange={(file) => handleDocumentChange('comprovanteResidencia', file)}
-                      currentFile={documentFiles.comprovanteResidencia}
+                      value={documentFiles.comprovanteResidencia}
                     />
                     
                     <DocumentUploader 
                       label="Foto" 
                       onFileChange={(file) => handleDocumentChange('fotoFile', file)}
-                      currentFile={documentFiles.fotoFile}
+                      value={documentFiles.fotoFile}
                     />
                     
                     <DocumentUploader 
                       label="CTPS" 
                       onFileChange={(file) => handleDocumentChange('ctpsFile', file)}
-                      currentFile={documentFiles.ctpsFile}
+                      value={documentFiles.ctpsFile}
                     />
                     
                     <DocumentUploader 
                       label="CNH" 
                       onFileChange={(file) => handleDocumentChange('cnhFile', file)}
-                      currentFile={documentFiles.cnhFile}
+                      value={documentFiles.cnhFile}
                     />
                     
                     <DocumentUploader 
                       label="Exame Médico" 
                       onFileChange={(file) => handleDocumentChange('exameMedicoFile', file)}
-                      currentFile={documentFiles.exameMedicoFile}
+                      value={documentFiles.exameMedicoFile}
                     />
                     
                     <MultiDocumentUploader 
                       onFilesChange={handleMultiDocumentChange}
-                      currentFiles={documentFiles.outrosDocumentos}
+                      value={documentFiles.outrosDocumentos}
                     />
                   </div>
                 </CardContent>

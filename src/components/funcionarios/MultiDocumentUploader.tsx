@@ -13,6 +13,7 @@ interface MultiDocumentUploaderProps {
   onFilesChange: (files: File[]) => void;
   onChange?: (files: File[]) => void; // Added for backward compatibility
   value?: File[];
+  currentFiles?: File[]; // Add this line to support the currentFiles prop
 }
 
 const MultiDocumentUploader: React.FC<MultiDocumentUploaderProps> = ({
@@ -23,12 +24,14 @@ const MultiDocumentUploader: React.FC<MultiDocumentUploaderProps> = ({
   onFilesChange,
   onChange,
   value: externalFiles,
+  currentFiles, // Add this line
 }) => {
   const [internalFiles, setInternalFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   
-  // Use either the external files (if provided) or the internal state
-  const files = externalFiles || internalFiles;
+  // Use either the external files, currentFiles or the internal state
+  const files = externalFiles ? externalFiles : 
+                (currentFiles ? currentFiles : internalFiles);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();

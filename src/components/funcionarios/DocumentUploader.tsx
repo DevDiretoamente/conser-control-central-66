@@ -13,6 +13,7 @@ interface DocumentUploaderProps {
   onFileChange?: (file: File | null) => void;
   onChange?: (file: File | null) => void; // Added for backward compatibility
   value?: File | null; // Added to support the value prop
+  currentFile?: File | null; // Add this line to support the currentFile prop
 }
 
 const DocumentUploader: React.FC<DocumentUploaderProps> = ({
@@ -23,12 +24,14 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({
   onFileChange,
   onChange, // Add the new prop
   value: externalValue, // Rename to avoid conflicts
+  currentFile, // Add this line
 }) => {
   const [internalFile, setInternalFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   
-  // Use either the external value (if provided) or the internal state
-  const file = externalValue !== undefined ? externalValue : internalFile;
+  // Use either the external value (if provided) or the internal state or currentFile
+  const file = externalValue !== undefined ? externalValue : 
+               (currentFile !== undefined ? currentFile : internalFile);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
