@@ -129,7 +129,7 @@ export interface Funcionario {
     comprovanteResidencia: File | null;
     fotoFile: File | null;
     cnhFile?: File | null;
-    ctsFile?: File | null;
+    ctpsFile?: File | null; // Changed from 'ctsFile' to 'ctpsFile' to match usage in the form
     exameMedicoFile?: File | null;
     outrosDocumentos: File[] | null;
   };
