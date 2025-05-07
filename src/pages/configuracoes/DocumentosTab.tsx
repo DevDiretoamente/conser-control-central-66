@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
@@ -25,6 +24,7 @@ import { DocumentTemplate, DOCUMENT_CATEGORIES, DOCUMENT_VARIABLES } from '@/typ
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import CompanyInfo from '@/components/CompanyInfo';
 
 // Mock data for demonstration
 const mockTemplates: DocumentTemplate[] = [
@@ -300,7 +300,8 @@ const DocumentosTab: React.FC = () => {
                       <DialogHeader>
                         <DialogTitle>{viewTemplate?.title}</DialogTitle>
                       </DialogHeader>
-                      <div className="space-y-4 py-4">
+                      <div className="space-y-6 py-4">
+                        <CompanyInfo className="mb-4" />
                         <div className="space-y-2">
                           <Label>Categoria</Label>
                           <div className="px-3 py-2 bg-muted rounded-md">{viewTemplate?.category}</div>

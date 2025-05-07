@@ -1,13 +1,24 @@
 
 import React from 'react';
 
-const Logo: React.FC = () => {
+interface LogoProps {
+  size?: 'sm' | 'md' | 'lg';
+}
+
+const Logo: React.FC<LogoProps> = ({ size = 'md' }) => {
+  const sizeClasses = {
+    sm: 'h-6',
+    md: 'h-8',
+    lg: 'h-12',
+  };
+
   return (
-    <div className="flex items-center gap-2">
-      <div className="bg-conserv-primary text-white font-bold p-1 rounded">
-        CON
-      </div>
-      <span className="font-semibold text-lg text-conserv-primary">SERVIAS</span>
+    <div className="flex flex-col items-center">
+      <img 
+        src="/lovable-uploads/141d5ab2-f175-4b0d-8b75-05c5affa10bd.png" 
+        alt="CONSERVIAS" 
+        className={`${sizeClasses[size]}`}
+      />
     </div>
   );
 };

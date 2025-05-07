@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText, Printer, Download, Eye } from 'lucide-react';
@@ -23,6 +22,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import CompanyInfo from '@/components/CompanyInfo';
 
 interface DocumentGeneratorProps {
   funcionario: Funcionario;
@@ -219,8 +219,13 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({ funcionario }) =>
               {selectedTemplate?.title}
             </DialogTitle>
           </DialogHeader>
-          <div className="bg-muted p-6 rounded-md whitespace-pre-wrap">
-            {generatedDocument}
+          <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+            <CompanyInfo className="mb-6" />
+            <div className="border-t pt-6">
+              <div className="whitespace-pre-wrap">
+                {generatedDocument}
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <div className="flex gap-2">
