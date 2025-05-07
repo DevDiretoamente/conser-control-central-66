@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Settings, Building, Users, Truck, Briefcase, FileText } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,6 +8,7 @@ import { toast } from 'sonner';
 import { Form, FormField, FormItem, FormLabel, FormDescription, FormControl } from '@/components/ui/form';
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from '@/components/ui/menubar';
 import { useForm } from 'react-hook-form';
+import DocumentosTab from './DocumentosTab';
 
 const ConfiguracoesPage: React.FC = () => {
   const generalForm = useForm();
@@ -32,7 +32,7 @@ const ConfiguracoesPage: React.FC = () => {
       </div>
 
       <Tabs defaultValue="geral" className="space-y-4">
-        <TabsList className="grid grid-cols-2 md:grid-cols-6 gap-2">
+        <TabsList className="grid grid-cols-2 md:grid-cols-7 gap-2">
           <TabsTrigger value="geral" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             <span className="hidden md:inline">Geral</span>
@@ -56,6 +56,10 @@ const ConfiguracoesPage: React.FC = () => {
           <TabsTrigger value="financeiro" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             <span className="hidden md:inline">Financeiro</span>
+          </TabsTrigger>
+          <TabsTrigger value="documentos" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            <span className="hidden md:inline">Documentos</span>
           </TabsTrigger>
         </TabsList>
 
@@ -300,6 +304,20 @@ const ConfiguracoesPage: React.FC = () => {
                 
                 <Button onClick={() => saveSettings('Financeiro')} className="mt-4">Salvar Configurações</Button>
               </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="documentos">
+          <Card>
+            <CardHeader>
+              <CardTitle>Modelos de Documentos</CardTitle>
+              <CardDescription>
+                Gerencie os modelos de documentos para impressão como declarações, termos e outros documentos para funcionários.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DocumentosTab />
             </CardContent>
           </Card>
         </TabsContent>

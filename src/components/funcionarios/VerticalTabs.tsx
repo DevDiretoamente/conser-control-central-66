@@ -13,7 +13,8 @@ import {
   FileText,
   Users,
   ShieldCheck,
-  Stethoscope
+  Stethoscope,
+  Printer
 } from 'lucide-react';
 
 interface VerticalTabsProps {
@@ -143,6 +144,15 @@ const VerticalTabs: React.FC<VerticalTabsProps> = ({
         currentValue={defaultValue}
         onClick={() => onChange("exames-medicos")}
         completed={completedSections.includes("exames-medicos")}
+      />
+      
+      <TabItem
+        value="documentos-impressao"
+        icon={<Printer className="h-4 w-4" />}
+        label="Documentos para Impressão"
+        currentValue={defaultValue}
+        onClick={() => onChange("documentos-impressao")}
+        completed={completedSections.includes("documentos-impressao")}
       />
     </div>
   );
