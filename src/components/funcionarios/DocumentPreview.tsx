@@ -2,10 +2,20 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, Eye, X } from 'lucide-react';
+import { FileText, Download, Eye, X, AlertTriangle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+
+export interface DocumentInfo {
+  file: File;
+  name: string;
+  uploadDate?: Date;
+  expirationDate?: Date;
+  id?: string;
+}
 
 interface DocumentPreviewProps {
   file: File | null;
@@ -52,12 +62,33 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
   const fileSize = file.size / (1024 * 1024) < 1 
     ? `${(file.size / 1024).toFixed(2)} KB` 
     : `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+
+  const handleDownload = () => {
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.download = file.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Download iniciado');
+  };
     
   return (
-    <div className="border rounded-lg p-4">
+    <div className={cn(
+      "border rounded-lg p-4",
+      isExpired ? "border-red-200 bg-red-50" : 
+      willExpireSoon ? "border-amber-200 bg-amber-50" : 
+      "border-gray-200"
+    )}>
       <div className="flex items-start justify-between">
         <div className="flex items-center">
-          {icon}
+          {isExpired ? 
+            <div className="relative">
+              {icon}
+              <AlertTriangle className="h-4 w-4 text-red-500 absolute -right-1 -top-1" />
+            </div> : 
+            icon
+          }
           <div className="ml-3">
             <h4 className="text-sm font-medium">{name}</h4>
             <p className="text-xs text-muted-foreground">{file.name}</p>
@@ -119,7 +150,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
                     <p className="mt-4">Pré-visualização não disponível</p>
                     <Button 
                       className="mt-4"
-                      onClick={() => window.open(fileUrl, '_blank')}
+                      onClick={handleDownload}
                     >
                       <Download className="mr-2 h-4 w-4" />
                       Download
@@ -134,7 +165,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
             variant="outline" 
             size="icon"
             className="h-8 w-8"
-            onClick={() => window.open(fileUrl, '_blank')}
+            onClick={handleDownload}
           >
             <Download className="h-4 w-4" />
           </Button>

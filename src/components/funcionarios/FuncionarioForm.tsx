@@ -20,7 +20,7 @@ import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, ChevronLeft, ChevronRight, CircleCheck } from 'lucide-react';
+import { CalendarIcon, ChevronLeft, ChevronRight, CircleCheck, ShieldCheck } from 'lucide-react';
 import { validateCPF, formatCPF } from '@/utils/validators';
 import DocumentUploader from './DocumentUploader';
 import MultiDocumentUploader from './MultiDocumentUploader';
@@ -31,6 +31,8 @@ import DadosProfissionaisTab from './DadosProfissionaisTab';
 import CNHTab from './CNHTab';
 import { Funcionario } from '@/types/funcionario';
 import VerticalTabs from './VerticalTabs';
+import DocumentsTab from './DocumentsTab';
+import ExamesMedicosTab from './ExamesMedicosTab';
 
 // Custom validator for CPF
 const cpfValidator = z.string().refine(validateCPF, {
@@ -845,58 +847,16 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
               </Card>
             )}
             
-            {/* Documentos */}
+            {/* Documentos - Replace old implementation with new DocumentsTab */}
             {activeTab === "documentos" && (
               <Card>
                 <CardContent className="pt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <DocumentUploader 
-                      label="RG" 
-                      onFileChange={(file) => handleDocumentChange('rgFile', file)}
-                      value={documentFiles.rgFile}
-                    />
-                    
-                    <DocumentUploader 
-                      label="CPF" 
-                      onFileChange={(file) => handleDocumentChange('cpfFile', file)}
-                      value={documentFiles.cpfFile}
-                    />
-                    
-                    <DocumentUploader 
-                      label="Comprovante de Residência" 
-                      onFileChange={(file) => handleDocumentChange('comprovanteResidencia', file)}
-                      value={documentFiles.comprovanteResidencia}
-                    />
-                    
-                    <DocumentUploader 
-                      label="Foto" 
-                      onFileChange={(file) => handleDocumentChange('fotoFile', file)}
-                      value={documentFiles.fotoFile}
-                    />
-                    
-                    <DocumentUploader 
-                      label="CTPS" 
-                      onFileChange={(file) => handleDocumentChange('ctpsFile', file)}
-                      value={documentFiles.ctpsFile}
-                    />
-                    
-                    <DocumentUploader 
-                      label="CNH" 
-                      onFileChange={(file) => handleDocumentChange('cnhFile', file)}
-                      value={documentFiles.cnhFile}
-                    />
-                    
-                    <DocumentUploader 
-                      label="Exame Médico" 
-                      onFileChange={(file) => handleDocumentChange('exameMedicoFile', file)}
-                      value={documentFiles.exameMedicoFile}
-                    />
-                    
-                    <MultiDocumentUploader 
-                      onFilesChange={handleMultiDocumentChange}
-                      value={documentFiles.outrosDocumentos}
-                    />
-                  </div>
+                  <DocumentsTab
+                    form={form}
+                    documentFiles={documentFiles}
+                    onDocumentChange={handleDocumentChange}
+                    onMultiDocumentChange={handleMultiDocumentChange}
+                  />
                 </CardContent>
               </Card>
             )}
@@ -906,6 +866,30 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
               <Card>
                 <CardContent className="pt-6">
                   <DependentesTab form={form} />
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* New tab for EPIs */}
+            {activeTab === "epis" && (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center p-8">
+                    <ShieldCheck className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <h3 className="mt-2 font-medium">Equipamentos de Proteção Individual</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Controle de entrega e devolução de EPIs estará disponível em breve.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* New tab for Exames Médicos */}
+            {activeTab === "exames-medicos" && (
+              <Card>
+                <CardContent className="pt-6">
+                  <ExamesMedicosTab form={form} />
                 </CardContent>
               </Card>
             )}
