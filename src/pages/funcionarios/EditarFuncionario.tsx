@@ -99,7 +99,8 @@ const getMockFuncionarioById = (id: string): Funcionario | undefined => {
     },
     episEntregues: [],
     uniformesEntregues: [],
-    examesRealizados: []
+    examesRealizados: [],
+    documentosGerados: [] // Added this line to include the required property
   };
 };
 

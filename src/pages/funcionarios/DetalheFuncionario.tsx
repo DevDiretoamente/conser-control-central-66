@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -125,7 +126,8 @@ const getMockFuncionarioById = (id: string): Funcionario | undefined => {
     },
     episEntregues: [],
     uniformesEntregues: [],
-    examesRealizados: []
+    examesRealizados: [],
+    documentosGerados: [] // Added this line to include the required property
   };
 };
 

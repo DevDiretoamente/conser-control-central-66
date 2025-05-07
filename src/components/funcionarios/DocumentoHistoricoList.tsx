@@ -78,7 +78,7 @@ const DocumentoHistoricoList: React.FC<DocumentoHistoricoListProps> = ({
       case 'gerado':
         return <Badge variant="outline">Gerado</Badge>;
       case 'assinado':
-        return <Badge variant="success" className="bg-green-500">Assinado</Badge>;
+        return <Badge className="bg-green-500 text-white">Assinado</Badge>;
       case 'pendente':
         return <Badge variant="secondary" className="bg-yellow-500">Pendente</Badge>;
       case 'arquivado':
