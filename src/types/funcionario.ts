@@ -74,6 +74,20 @@ export interface ExameRealizado {
   documento?: File | null;
 }
 
+// New interface for generated documents
+export interface DocumentoGerado {
+  id: string;
+  titulo: string;
+  categoria: string;
+  dataGeracao: Date;
+  dataAssinatura?: Date;
+  status: 'gerado' | 'assinado' | 'pendente' | 'arquivado';
+  arquivoPdf?: string; // URL or path to the stored PDF
+  assinaturaFuncionario?: string; // URL or path to signature image
+  assinaturaEmpresa?: string; // URL or path to signature image
+  observacoes?: string;
+}
+
 export interface Funcionario {
   id?: string;
   dadosPessoais: {
@@ -138,4 +152,6 @@ export interface Funcionario {
   episEntregues: EntregaEPI[];
   uniformesEntregues: EntregaUniforme[];
   examesRealizados: ExameRealizado[];
+  // New property to store generated documents
+  documentosGerados: DocumentoGerado[];
 }

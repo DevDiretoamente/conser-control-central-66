@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText, Printer, Download, Eye } from 'lucide-react';
@@ -28,6 +27,7 @@ import jsPDF from 'jspdf';
 
 interface DocumentGeneratorProps {
   funcionario: Funcionario;
+  onDocumentGenerated?: (titulo: string, categoria: string) => void;
 }
 
 // Mock document templates data
@@ -70,7 +70,10 @@ const mockTemplates: DocumentTemplate[] = [
   }
 ];
 
-const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({ funcionario }) => {
+const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({ 
+  funcionario,
+  onDocumentGenerated
+}) => {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
   const [generatedDocument, setGeneratedDocument] = useState<string | null>(null);
@@ -199,6 +202,11 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({ funcionario }) =>
     
     printWindow.document.close();
     toast.success(`Documento "${selectedTemplate.title}" enviado para impressão`);
+    
+    // Notify that document was generated
+    if (onDocumentGenerated) {
+      onDocumentGenerated(selectedTemplate.title, selectedTemplate.category);
+    }
   };
 
   const handlePreviewDocument = () => {
@@ -254,6 +262,11 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({ funcionario }) =>
       doc.save(fileName);
       
       toast.success(`Documento "${selectedTemplate.title}" baixado com sucesso`);
+      
+      // Notify that document was generated
+      if (onDocumentGenerated) {
+        onDocumentGenerated(selectedTemplate.title, selectedTemplate.category);
+      }
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
       toast.error('Erro ao gerar o PDF. Tente novamente.');
