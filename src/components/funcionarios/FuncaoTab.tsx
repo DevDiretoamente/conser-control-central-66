@@ -232,7 +232,8 @@ const FuncaoTab: React.FC<FuncaoTabProps> = ({ form }) => {
                           <div>
                             <p className="font-medium">{exame.nome}</p>
                             <p className="text-xs text-muted-foreground">
-                              Tipo: {exame.tipo.charAt(0).toUpperCase() + exame.tipo.slice(1)}
+                              {/* Changed 'tipo' to 'tipos' here */}
+                              Tipo: {exame.tipos.length > 0 && (exame.tipos[0].charAt(0).toUpperCase() + exame.tipos[0].slice(1))}
                               {exame.periodicidade && ` | Periodicidade: ${exame.periodicidade} meses`}
                             </p>
                             {exame.descricao && (

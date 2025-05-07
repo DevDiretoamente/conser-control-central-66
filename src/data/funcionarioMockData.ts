@@ -1,4 +1,5 @@
 
+
 import { Funcao, EPI, ExameMedico, Uniforme, Setor } from "@/types/funcionario";
 
 // New mock data for Sectors
@@ -116,87 +117,111 @@ export const mockExamesMedicos: ExameMedico[] = [
   { 
     id: "exam-1", 
     nome: "Exame Clínico Ocupacional", 
-    tipo: "admissional", 
+    tipos: ["admissional"], 
     descricao: "Avaliação clínica geral",
-    valor: 120,
+    precosPorClinica: [
+      { clinicaId: "1", clinicaNome: "RP Medicina e Segurança do Trabalho", valor: 120 },
+      { clinicaId: "2", clinicaNome: "Sindiconvenios", valor: 110 }
+    ],
     orientacoes: "Não é necessário jejum. Levar documentos pessoais e carteira de vacinação.",
-    clinicasRecomendadas: ["Clínica Saúde", "MedOcupacional"], 
+    clinicasDisponiveis: ["Clínica Saúde", "MedOcupacional"], 
     ativo: true
   },
   { 
     id: "exam-2", 
     nome: "Audiometria", 
-    tipo: "admissional", 
+    tipos: ["admissional"], 
     periodicidade: 12, 
     descricao: "Avaliação da capacidade auditiva",
-    valor: 80,
+    precosPorClinica: [
+      { clinicaId: "1", clinicaNome: "RP Medicina e Segurança do Trabalho", valor: 80 },
+      { clinicaId: "2", clinicaNome: "Sindiconvenios", valor: 75 }
+    ],
     orientacoes: "Evitar exposição a ruídos intensos nas 14h que antecedem o exame.",
-    clinicasRecomendadas: ["AudioClin", "Clínica Saúde"],
+    clinicasDisponiveis: ["AudioClin", "Clínica Saúde"],
     ativo: true
   },
   { 
     id: "exam-3", 
     nome: "Espirometria", 
-    tipo: "admissional", 
+    tipos: ["periodico"], 
     periodicidade: 12, 
     descricao: "Avaliação da função pulmonar",
-    valor: 90,
+    precosPorClinica: [
+      { clinicaId: "1", clinicaNome: "RP Medicina e Segurança do Trabalho", valor: 90 },
+      { clinicaId: "2", clinicaNome: "Sindiconvenios", valor: 85 }
+    ],
     orientacoes: "Evitar fumar nas 2h anteriores ao exame. Não realizar atividade física intensa no dia.",
-    clinicasRecomendadas: ["PulmoClinic", "Clínica Saúde"],
+    clinicasDisponiveis: ["PulmoClinic", "Clínica Saúde"],
     ativo: true
   },
   { 
     id: "exam-4", 
     nome: "Acuidade Visual", 
-    tipo: "admissional", 
+    tipos: ["admissional"], 
     periodicidade: 12, 
     descricao: "Avaliação da visão",
-    valor: 70,
+    precosPorClinica: [
+      { clinicaId: "1", clinicaNome: "RP Medicina e Segurança do Trabalho", valor: 70 },
+      { clinicaId: "2", clinicaNome: "Sindiconvenios", valor: 65 }
+    ],
     orientacoes: "Levar óculos ou lentes se fizer uso.",
-    clinicasRecomendadas: ["VisãoPlena", "OftalmoClin"],
+    clinicasDisponiveis: ["VisãoPlena", "OftalmoClin"],
     ativo: true
   },
   { 
     id: "exam-5", 
     nome: "Eletrocardiograma", 
-    tipo: "admissional", 
+    tipos: ["admissional"], 
     periodicidade: 12, 
     descricao: "Avaliação cardíaca",
-    valor: 130,
+    precosPorClinica: [
+      { clinicaId: "1", clinicaNome: "RP Medicina e Segurança do Trabalho", valor: 130 },
+      { clinicaId: "2", clinicaNome: "Sindiconvenios", valor: 120 }
+    ],
     orientacoes: "Não é necessário jejum. Evitar cafeína nas 3h anteriores.",
-    clinicasRecomendadas: ["CardioCenter", "Clínica Saúde"],
+    clinicasDisponiveis: ["CardioCenter", "Clínica Saúde"],
     ativo: true
   },
   { 
     id: "exam-6", 
     nome: "Glicemia", 
-    tipo: "periodico", 
+    tipos: ["periodico"], 
     periodicidade: 12, 
     descricao: "Avaliação dos níveis de açúcar no sangue",
-    valor: 40,
+    precosPorClinica: [
+      { clinicaId: "1", clinicaNome: "RP Medicina e Segurança do Trabalho", valor: 40 },
+      { clinicaId: "2", clinicaNome: "Sindiconvenios", valor: 35 }
+    ],
     orientacoes: "Jejum de 8-12 horas. Pode tomar água.",
-    clinicasRecomendadas: ["LabCheck", "MedOcupacional"],
+    clinicasDisponiveis: ["LabCheck", "MedOcupacional"],
     ativo: true
   },
   { 
     id: "exam-7", 
     nome: "Raio-X Coluna Lombar", 
-    tipo: "mudancaFuncao", 
+    tipos: ["mudancaFuncao"], 
     descricao: "Avaliação da coluna lombar",
-    valor: 150,
+    precosPorClinica: [
+      { clinicaId: "1", clinicaNome: "RP Medicina e Segurança do Trabalho", valor: 150 },
+      { clinicaId: "2", clinicaNome: "Sindiconvenios", valor: 145 }
+    ],
     orientacoes: "Retirar objetos metálicos antes do exame. Não é necessário jejum.",
-    clinicasRecomendadas: ["ImagemDiag", "RaioXExpress"],
+    clinicasDisponiveis: ["ImagemDiag", "RaioXExpress"],
     ativo: true
   },
   { 
     id: "exam-8", 
     nome: "Exame Toxicológico", 
-    tipo: "admissional", 
+    tipos: ["admissional"], 
     periodicidade: 24, 
     descricao: "Detecção de substâncias",
-    valor: 280,
+    precosPorClinica: [
+      { clinicaId: "1", clinicaNome: "RP Medicina e Segurança do Trabalho", valor: 280 },
+      { clinicaId: "2", clinicaNome: "Sindiconvenios", valor: 260 }
+    ],
     orientacoes: "Coleta de cabelo ou pelo. Não requer preparação especial.",
-    clinicasRecomendadas: ["LabCheck", "ToxicoLab"],
+    clinicasDisponiveis: ["LabCheck", "ToxicoLab"],
     ativo: true
   },
 ];
