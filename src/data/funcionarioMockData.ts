@@ -1,6 +1,4 @@
-
-
-import { Funcao, EPI, ExameMedico, Uniforme, Setor } from "@/types/funcionario";
+import { Funcao, EPI, ExameMedico, Uniforme, Setor, ExamesPorTipo } from "@/types/funcionario";
 
 // New mock data for Sectors
 export const mockSetores: Setor[] = [
@@ -117,7 +115,7 @@ export const mockExamesMedicos: ExameMedico[] = [
   { 
     id: "exam-1", 
     nome: "Exame Clínico Ocupacional", 
-    tipos: ["admissional"], 
+    tipos: ["admissional", "periodico", "mudancaFuncao", "retornoTrabalho", "demissional"], 
     descricao: "Avaliação clínica geral",
     precosPorClinica: [
       { clinicaId: "1", clinicaNome: "RP Medicina e Segurança do Trabalho", valor: 120 },
@@ -130,7 +128,7 @@ export const mockExamesMedicos: ExameMedico[] = [
   { 
     id: "exam-2", 
     nome: "Audiometria", 
-    tipos: ["admissional"], 
+    tipos: ["admissional", "periodico", "demissional"], 
     periodicidade: 12, 
     descricao: "Avaliação da capacidade auditiva",
     precosPorClinica: [
@@ -144,7 +142,7 @@ export const mockExamesMedicos: ExameMedico[] = [
   { 
     id: "exam-3", 
     nome: "Espirometria", 
-    tipos: ["periodico"], 
+    tipos: ["periodico", "mudancaFuncao"], 
     periodicidade: 12, 
     descricao: "Avaliação da função pulmonar",
     precosPorClinica: [
@@ -158,7 +156,7 @@ export const mockExamesMedicos: ExameMedico[] = [
   { 
     id: "exam-4", 
     nome: "Acuidade Visual", 
-    tipos: ["admissional"], 
+    tipos: ["admissional", "periodico"], 
     periodicidade: 12, 
     descricao: "Avaliação da visão",
     precosPorClinica: [
@@ -172,7 +170,7 @@ export const mockExamesMedicos: ExameMedico[] = [
   { 
     id: "exam-5", 
     nome: "Eletrocardiograma", 
-    tipos: ["admissional"], 
+    tipos: ["admissional", "periodico"], 
     periodicidade: 12, 
     descricao: "Avaliação cardíaca",
     precosPorClinica: [
@@ -213,7 +211,7 @@ export const mockExamesMedicos: ExameMedico[] = [
   { 
     id: "exam-8", 
     nome: "Exame Toxicológico", 
-    tipos: ["admissional"], 
+    tipos: ["admissional", "demissional"], 
     periodicidade: 24, 
     descricao: "Detecção de substâncias",
     precosPorClinica: [
@@ -235,6 +233,44 @@ export const mockUniformes: Uniforme[] = [
   { id: "unif-6", tipo: "Calça", descricao: "Calça impermeável" },
 ];
 
+// Helper function to create empty exam type structure
+const createEmptyExamesPorTipo = (): ExamesPorTipo => ({
+  admissional: [],
+  periodico: [],
+  mudancaFuncao: [],
+  retornoTrabalho: [],
+  demissional: []
+});
+
+// Helper function to distribute exams by type
+const distributeExamsByType = (exams: ExameMedico[]): ExamesPorTipo => {
+  const result = createEmptyExamesPorTipo();
+  
+  exams.forEach(exam => {
+    exam.tipos.forEach(tipo => {
+      switch (tipo) {
+        case 'admissional':
+          result.admissional.push(exam);
+          break;
+        case 'periodico':
+          result.periodico.push(exam);
+          break;
+        case 'mudancaFuncao':
+          result.mudancaFuncao.push(exam);
+          break;
+        case 'retornoTrabalho':
+          result.retornoTrabalho.push(exam);
+          break;
+        case 'demissional':
+          result.demissional.push(exam);
+          break;
+      }
+    });
+  });
+  
+  return result;
+};
+
 export const mockFuncoes: Funcao[] = [
   {
     id: "funcao-1",
@@ -249,10 +285,14 @@ export const mockFuncoes: Funcao[] = [
       "Manter a cabine limpa e organizada"
     ],
     epis: [mockEPIs[0], mockEPIs[1], mockEPIs[2], mockEPIs[3], mockEPIs[5], mockEPIs[7]],
-    examesNecessarios: [
-      mockExamesMedicos[0], mockExamesMedicos[1], mockExamesMedicos[3], 
-      mockExamesMedicos[4], mockExamesMedicos[7]
-    ],
+    examesNecessarios: distributeExamsByType([
+      mockExamesMedicos[0], // Exame Clínico (todos os tipos)
+      mockExamesMedicos[1], // Audiometria (admissional, periodico, demissional)
+      mockExamesMedicos[2], // Espirometria (periodico, mudancaFuncao)
+      mockExamesMedicos[3], // Acuidade Visual (admissional, periodico)
+      mockExamesMedicos[4], // Eletrocardiograma (admissional, periodico)
+      mockExamesMedicos[7]  // Exame Toxicológico (admissional, demissional)
+    ]),
     uniformes: [mockUniformes[0], mockUniformes[2], mockUniformes[3]],
     ativo: true
   },
@@ -269,10 +309,13 @@ export const mockFuncoes: Funcao[] = [
       "Seguir normas de trânsito e segurança"
     ],
     epis: [mockEPIs[5], mockEPIs[7]],
-    examesNecessarios: [
-      mockExamesMedicos[0], mockExamesMedicos[3], mockExamesMedicos[4], 
-      mockExamesMedicos[7], mockExamesMedicos[5]
-    ],
+    examesNecessarios: distributeExamsByType([
+      mockExamesMedicos[0], // Exame Clínico (todos os tipos)
+      mockExamesMedicos[3], // Acuidade Visual (admissional, periodico)
+      mockExamesMedicos[4], // Eletrocardiograma (admissional, periodico)
+      mockExamesMedicos[5], // Glicemia (periodico)
+      mockExamesMedicos[7]  // Exame Toxicológico (admissional, demissional)
+    ]),
     uniformes: [mockUniformes[1], mockUniformes[2], mockUniformes[3]],
     ativo: true
   },
@@ -289,10 +332,12 @@ export const mockFuncoes: Funcao[] = [
       "Utilizar corretamente ferramentas e equipamentos"
     ],
     epis: [mockEPIs[0], mockEPIs[1], mockEPIs[3], mockEPIs[4], mockEPIs[5], mockEPIs[7]],
-    examesNecessarios: [
-      mockExamesMedicos[0], mockExamesMedicos[2], mockExamesMedicos[3], 
-      mockExamesMedicos[6]
-    ],
+    examesNecessarios: distributeExamsByType([
+      mockExamesMedicos[0], // Exame Clínico (todos os tipos)
+      mockExamesMedicos[1], // Audiometria (admissional, periodico, demissional)
+      mockExamesMedicos[2], // Espirometria (periodico, mudancaFuncao)
+      mockExamesMedicos[6]  // Raio-X (mudancaFuncao)
+    ]),
     uniformes: [mockUniformes[0], mockUniformes[2], mockUniformes[3]],
     ativo: true
   },
@@ -309,9 +354,11 @@ export const mockFuncoes: Funcao[] = [
       "Garantir o cumprimento das normas técnicas"
     ],
     epis: [mockEPIs[0], mockEPIs[3], mockEPIs[5], mockEPIs[7]],
-    examesNecessarios: [
-      mockExamesMedicos[0], mockExamesMedicos[3], mockExamesMedicos[5]
-    ],
+    examesNecessarios: distributeExamsByType([
+      mockExamesMedicos[0], // Exame Clínico (todos os tipos)
+      mockExamesMedicos[3], // Acuidade Visual (admissional, periodico)
+      mockExamesMedicos[5]  // Glicemia (periodico)
+    ]),
     uniformes: [mockUniformes[1], mockUniformes[2], mockUniformes[3]],
     ativo: true
   },
@@ -328,9 +375,11 @@ export const mockFuncoes: Funcao[] = [
       "Apoiar demais áreas administrativas"
     ],
     epis: [],
-    examesNecessarios: [
-      mockExamesMedicos[0], mockExamesMedicos[3], mockExamesMedicos[5]
-    ],
+    examesNecessarios: distributeExamsByType([
+      mockExamesMedicos[0], // Exame Clínico (todos os tipos)
+      mockExamesMedicos[3], // Acuidade Visual (admissional, periodico)
+      mockExamesMedicos[5]  // Glicemia (periodico)
+    ]),
     uniformes: [mockUniformes[1], mockUniformes[2]],
     ativo: true
   }

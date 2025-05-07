@@ -16,6 +16,7 @@ import { mockFuncoes, mockSetores } from '@/data/funcionarioMockData';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, HardHat, Shirt } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface FuncaoTabProps {
   form: UseFormReturn<Funcionario>;
@@ -24,6 +25,7 @@ interface FuncaoTabProps {
 const FuncaoTab: React.FC<FuncaoTabProps> = ({ form }) => {
   const [selectedSetor, setSelectedSetor] = useState<string | null>(null);
   const [selectedFuncao, setSelectedFuncao] = useState<Funcao | null>(null);
+  const [selectedExamTab, setSelectedExamTab] = useState<string>('admissional');
 
   // Filter functions based on selected sector
   const filteredFuncoes = selectedSetor 
@@ -52,6 +54,31 @@ const FuncaoTab: React.FC<FuncaoTabProps> = ({ form }) => {
       funcoes: mockFuncoes.filter(f => f.setorId === setor.id && f.ativo)
     }))
     .filter(setor => setor.funcoes.length > 0);
+
+  // Helper function to get badge for exam type
+  const getExamTypeBadge = (tipo: string) => {
+    const badgeVariants: Record<string, string> = {
+      'admissional': 'bg-green-500',
+      'periodico': 'bg-blue-500',
+      'mudancaFuncao': 'bg-yellow-500',
+      'retornoTrabalho': 'bg-purple-500',
+      'demissional': 'bg-red-500'
+    };
+    
+    const badgeLabels: Record<string, string> = {
+      'admissional': 'Admissional',
+      'periodico': 'Periódico',
+      'mudancaFuncao': 'Mudança de Função',
+      'retornoTrabalho': 'Retorno ao Trabalho',
+      'demissional': 'Demissional'
+    };
+
+    return (
+      <Badge className={badgeVariants[tipo] || 'bg-gray-500'}>
+        {badgeLabels[tipo] || tipo}
+      </Badge>
+    );
+  };
 
   return (
     <Card>
@@ -223,27 +250,135 @@ const FuncaoTab: React.FC<FuncaoTabProps> = ({ form }) => {
                   </span>
                 </AccordionTrigger>
                 <AccordionContent>
-                  {selectedFuncao.examesNecessarios.length === 0 ? (
-                    <p className="text-muted-foreground">Não há exames específicos para esta função</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {selectedFuncao.examesNecessarios.map((exame) => (
-                        <div key={exame.id} className="flex items-center justify-between rounded-lg border p-3">
-                          <div>
-                            <p className="font-medium">{exame.nome}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {/* Changed 'tipo' to 'tipos' here */}
-                              Tipo: {exame.tipos.length > 0 && (exame.tipos[0].charAt(0).toUpperCase() + exame.tipos[0].slice(1))}
-                              {exame.periodicidade && ` | Periodicidade: ${exame.periodicidade} meses`}
-                            </p>
-                            {exame.descricao && (
-                              <p className="text-sm mt-1">{exame.descricao}</p>
-                            )}
-                          </div>
+                  <Tabs 
+                    defaultValue="admissional" 
+                    value={selectedExamTab}
+                    onValueChange={setSelectedExamTab}
+                    className="w-full"
+                  >
+                    <TabsList className="grid grid-cols-5 mb-4">
+                      <TabsTrigger value="admissional" className="text-xs">Admissional</TabsTrigger>
+                      <TabsTrigger value="periodico" className="text-xs">Periódico</TabsTrigger>
+                      <TabsTrigger value="mudancaFuncao" className="text-xs">Mudança</TabsTrigger>
+                      <TabsTrigger value="retornoTrabalho" className="text-xs">Retorno</TabsTrigger>
+                      <TabsTrigger value="demissional" className="text-xs">Demissional</TabsTrigger>
+                    </TabsList>
+
+                    {/* Admissional Tab */}
+                    <TabsContent value="admissional">
+                      {selectedFuncao.examesNecessarios.admissional.length === 0 ? (
+                        <p className="text-muted-foreground">Não há exames admissionais específicos para esta função</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {selectedFuncao.examesNecessarios.admissional.map((exame) => (
+                            <div key={exame.id} className="flex items-center justify-between rounded-lg border p-3">
+                              <div>
+                                <p className="font-medium">{exame.nome}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {exame.periodicidade && `Periodicidade: ${exame.periodicidade} meses`}
+                                </p>
+                                {exame.descricao && (
+                                  <p className="text-sm mt-1">{exame.descricao}</p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      )}
+                    </TabsContent>
+
+                    {/* Periodico Tab */}
+                    <TabsContent value="periodico">
+                      {selectedFuncao.examesNecessarios.periodico.length === 0 ? (
+                        <p className="text-muted-foreground">Não há exames periódicos específicos para esta função</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {selectedFuncao.examesNecessarios.periodico.map((exame) => (
+                            <div key={exame.id} className="flex items-center justify-between rounded-lg border p-3">
+                              <div>
+                                <p className="font-medium">{exame.nome}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {exame.periodicidade && `Periodicidade: ${exame.periodicidade} meses`}
+                                </p>
+                                {exame.descricao && (
+                                  <p className="text-sm mt-1">{exame.descricao}</p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    {/* Mudança de Função Tab */}
+                    <TabsContent value="mudancaFuncao">
+                      {selectedFuncao.examesNecessarios.mudancaFuncao.length === 0 ? (
+                        <p className="text-muted-foreground">Não há exames de mudança de função específicos para esta função</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {selectedFuncao.examesNecessarios.mudancaFuncao.map((exame) => (
+                            <div key={exame.id} className="flex items-center justify-between rounded-lg border p-3">
+                              <div>
+                                <p className="font-medium">{exame.nome}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {exame.periodicidade && `Periodicidade: ${exame.periodicidade} meses`}
+                                </p>
+                                {exame.descricao && (
+                                  <p className="text-sm mt-1">{exame.descricao}</p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    {/* Retorno ao Trabalho Tab */}
+                    <TabsContent value="retornoTrabalho">
+                      {selectedFuncao.examesNecessarios.retornoTrabalho.length === 0 ? (
+                        <p className="text-muted-foreground">Não há exames de retorno ao trabalho específicos para esta função</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {selectedFuncao.examesNecessarios.retornoTrabalho.map((exame) => (
+                            <div key={exame.id} className="flex items-center justify-between rounded-lg border p-3">
+                              <div>
+                                <p className="font-medium">{exame.nome}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {exame.periodicidade && `Periodicidade: ${exame.periodicidade} meses`}
+                                </p>
+                                {exame.descricao && (
+                                  <p className="text-sm mt-1">{exame.descricao}</p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    {/* Demissional Tab */}
+                    <TabsContent value="demissional">
+                      {selectedFuncao.examesNecessarios.demissional.length === 0 ? (
+                        <p className="text-muted-foreground">Não há exames demissionais específicos para esta função</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {selectedFuncao.examesNecessarios.demissional.map((exame) => (
+                            <div key={exame.id} className="flex items-center justify-between rounded-lg border p-3">
+                              <div>
+                                <p className="font-medium">{exame.nome}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {exame.periodicidade && `Periodicidade: ${exame.periodicidade} meses`}
+                                </p>
+                                {exame.descricao && (
+                                  <p className="text-sm mt-1">{exame.descricao}</p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </TabsContent>
+                  </Tabs>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

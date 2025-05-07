@@ -55,6 +55,15 @@ export interface ExameMedico {
   ativo: boolean;
 }
 
+// New interface to map exam types to required exams
+export interface ExamesPorTipo {
+  admissional: ExameMedico[];
+  periodico: ExameMedico[];
+  mudancaFuncao: ExameMedico[];
+  retornoTrabalho: ExameMedico[];
+  demissional: ExameMedico[];
+}
+
 export interface Funcao {
   id: string;
   nome: string;
@@ -62,7 +71,7 @@ export interface Funcao {
   setorId: string; // Referência ao setor ao qual a função pertence
   atribuicoes: string[]; // Atribuições conforme PGR
   epis: EPI[];
-  examesNecessarios: ExameMedico[];
+  examesNecessarios: ExamesPorTipo; // Changed from ExameMedico[] to ExamesPorTipo
   uniformes: Uniforme[];
   ativo: boolean;
 }
@@ -91,7 +100,7 @@ export interface TamanhoUniforme {
 
 export interface ExameRealizado {
   exameId: string;
-  tipoSelecionado?: string; // Tipo específico do exame realizado
+  tipoSelecionado: string; // Changed from optional to required - the exam type must be specified
   clinicaId?: string; // Id da clínica onde foi realizado
   dataRealizado: Date;
   dataValidade: Date;

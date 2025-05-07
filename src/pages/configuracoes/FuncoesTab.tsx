@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,12 +23,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from 'sonner';
-import { Funcao, EPI, ExameMedico, Uniforme, Setor } from '@/types/funcionario';
+import { Funcao, EPI, ExameMedico, Uniforme, Setor, ExamesPorTipo } from '@/types/funcionario';
 import { mockFuncoes, mockSetores, mockEPIs, mockExamesMedicos, mockUniformes } from '@/data/funcionarioMockData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { HardHat, FileText, Shirt } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const funcaoSchema = z.object({
   id: z.string().optional(),
@@ -38,7 +40,7 @@ const funcaoSchema = z.object({
   ativo: z.boolean().default(true),
   // These will be handled separately
   // epis: z.array(z.any()),
-  // examesNecessarios: z.array(z.any()),
+  // examesNecessarios: z.any(),
   // uniformes: z.array(z.any()),
 });
 
@@ -51,9 +53,16 @@ const FuncoesTab: React.FC = () => {
   
   // State for multi-select items
   const [selectedEPIs, setSelectedEPIs] = useState<string[]>([]);
-  const [selectedExames, setSelectedExames] = useState<string[]>([]);
+  const [selectedExamesByType, setSelectedExamesByType] = useState<Record<string, string[]>>({
+    admissional: [],
+    periodico: [],
+    mudancaFuncao: [],
+    retornoTrabalho: [],
+    demissional: []
+  });
   const [selectedUniformes, setSelectedUniformes] = useState<string[]>([]);
   const [atribuicoesText, setAtribuicoesText] = useState<string>('');
+  const [activeExamTypeTab, setActiveExamTypeTab] = useState<string>('admissional');
 
   const form = useForm<FuncaoFormValues>({
     resolver: zodResolver(funcaoSchema),
@@ -66,13 +75,56 @@ const FuncoesTab: React.FC = () => {
     },
   });
 
+  // Helper function to initialize selected exams from existing function
+  const initializeSelectedExamsFromFuncao = (funcao: Funcao) => {
+    const examesByType: Record<string, string[]> = {
+      admissional: [],
+      periodico: [],
+      mudancaFuncao: [],
+      retornoTrabalho: [],
+      demissional: []
+    };
+    
+    if (funcao.examesNecessarios) {
+      // Get exam IDs for each type
+      examesByType.admissional = funcao.examesNecessarios.admissional.map(exame => exame.id);
+      examesByType.periodico = funcao.examesNecessarios.periodico.map(exame => exame.id);
+      examesByType.mudancaFuncao = funcao.examesNecessarios.mudancaFuncao.map(exame => exame.id);
+      examesByType.retornoTrabalho = funcao.examesNecessarios.retornoTrabalho.map(exame => exame.id);
+      examesByType.demissional = funcao.examesNecessarios.demissional.map(exame => exame.id);
+    }
+    
+    return examesByType;
+  };
+
+  // Helper function to create an ExamesPorTipo object from selected exam IDs
+  const createExamesPorTipoFromSelected = (selectedByType: Record<string, string[]>): ExamesPorTipo => {
+    const result: ExamesPorTipo = {
+      admissional: [],
+      periodico: [],
+      mudancaFuncao: [],
+      retornoTrabalho: [],
+      demissional: []
+    };
+    
+    // For each type, get the full exam objects
+    Object.keys(selectedByType).forEach(type => {
+      const tipoKey = type as keyof ExamesPorTipo;
+      result[tipoKey] = mockExamesMedicos.filter(exame => 
+        selectedByType[type].includes(exame.id) && exame.ativo
+      );
+    });
+    
+    return result;
+  };
+
   const onOpenDialog = (funcao?: Funcao) => {
     if (funcao) {
       setEditingFuncao(funcao);
       
       // Set selected items
       setSelectedEPIs(funcao.epis.map(epi => epi.id));
-      setSelectedExames(funcao.examesNecessarios.map(exame => exame.id));
+      setSelectedExamesByType(initializeSelectedExamsFromFuncao(funcao));
       setSelectedUniformes(funcao.uniformes.map(uniforme => uniforme.id));
       setAtribuicoesText(funcao.atribuicoes.join('\n'));
       
@@ -87,7 +139,13 @@ const FuncoesTab: React.FC = () => {
     } else {
       setEditingFuncao(null);
       setSelectedEPIs([]);
-      setSelectedExames([]);
+      setSelectedExamesByType({
+        admissional: [],
+        periodico: [],
+        mudancaFuncao: [],
+        retornoTrabalho: [],
+        demissional: []
+      });
       setSelectedUniformes([]);
       setAtribuicoesText('');
       
@@ -109,11 +167,13 @@ const FuncoesTab: React.FC = () => {
       .filter(line => line.trim() !== '')
       .map(line => line.trim());
     
-    // Get full objects for EPIs, exames and uniformes
+    // Get full objects for EPIs and uniformes
     const selectedEPIObjects = mockEPIs.filter(epi => selectedEPIs.includes(epi.id));
-    const selectedExameObjects = mockExamesMedicos.filter(exame => selectedExames.includes(exame.id));
     const selectedUniformeObjects = mockUniformes.filter(uniforme => selectedUniformes.includes(uniforme.id));
     
+    // Create the examesNecessarios object from selected exam IDs
+    const examesNecessarios = createExamesPorTipoFromSelected(selectedExamesByType);
+
     if (editingFuncao) {
       // Update existing funcao
       const updatedFuncoes = funcoes.map(f => 
@@ -122,22 +182,22 @@ const FuncoesTab: React.FC = () => {
           id: editingFuncao.id,
           atribuicoes: atribuicoesList,
           epis: selectedEPIObjects,
-          examesNecessarios: selectedExameObjects,
+          examesNecessarios: examesNecessarios,
           uniformes: selectedUniformeObjects
         } as Funcao : f
       );
       setFuncoes(updatedFuncoes);
       toast.success(`Função "${values.nome}" atualizada com sucesso!`);
     } else {
-      // Create new funcao - Fix: Ensure all required properties are set
+      // Create new funcao
       const newFuncao: Funcao = {
         id: `funcao-${Date.now()}`,
-        nome: values.nome, // required
-        descricao: values.descricao, // required
-        setorId: values.setorId, // required
+        nome: values.nome,
+        descricao: values.descricao,
+        setorId: values.setorId,
         atribuicoes: atribuicoesList,
         epis: selectedEPIObjects,
-        examesNecessarios: selectedExameObjects,
+        examesNecessarios: examesNecessarios,
         uniformes: selectedUniformeObjects,
         ativo: values.ativo
       };
@@ -174,7 +234,7 @@ const FuncoesTab: React.FC = () => {
     return setor ? setor.nome : 'Setor não encontrado';
   };
 
-  // Handle checkbox change
+  // Handle checkbox change for EPIs and uniformes
   const handleCheckboxChange = (
     id: string, 
     currentSelected: string[], 
@@ -186,6 +246,51 @@ const FuncoesTab: React.FC = () => {
       setSelected([...currentSelected, id]);
     }
   };
+
+  // Handle checkbox change for exams (by type)
+  const handleExamCheckboxChange = (examId: string, type: string) => {
+    setSelectedExamesByType(prev => {
+      const currentTypeSelected = prev[type] || [];
+      let updatedTypeSelected;
+      
+      if (currentTypeSelected.includes(examId)) {
+        updatedTypeSelected = currentTypeSelected.filter(id => id !== examId);
+      } else {
+        updatedTypeSelected = [...currentTypeSelected, examId];
+      }
+      
+      return {
+        ...prev,
+        [type]: updatedTypeSelected
+      };
+    });
+  };
+
+  // Helper to get total exam count across all types
+  const getTotalExamCount = (examesNecessarios: ExamesPorTipo): number => {
+    const uniqueExamIds = new Set<string>();
+    
+    Object.values(examesNecessarios).forEach(exams => {
+      exams.forEach(exam => uniqueExamIds.add(exam.id));
+    });
+    
+    return uniqueExamIds.size;
+  };
+
+  // Helper to filter exams for display based on which types they support
+  const getExamsForType = (tipo: string) => {
+    return mockExamesMedicos
+      .filter(exame => exame.ativo && exame.tipos.includes(tipo as any))
+      .sort((a, b) => a.nome.localeCompare(b.nome));
+  };
+
+  const examTypeTabs = [
+    { value: 'admissional', label: 'Admissional' },
+    { value: 'periodico', label: 'Periódico' },
+    { value: 'mudancaFuncao', label: 'Mudança de Função' },
+    { value: 'retornoTrabalho', label: 'Retorno ao Trabalho' },
+    { value: 'demissional', label: 'Demissional' }
+  ];
 
   return (
     <div className="space-y-4">
@@ -288,7 +393,7 @@ const FuncoesTab: React.FC = () => {
                   </FormDescription>
                 </FormItem>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* EPIs Selection */}
                   <FormItem>
                     <div className="flex items-center gap-2 mb-2">
@@ -318,37 +423,6 @@ const FuncoesTab: React.FC = () => {
                     </Card>
                     <FormDescription>
                       Selecione os EPIs necessários para esta função
-                    </FormDescription>
-                  </FormItem>
-
-                  {/* Exames Selection */}
-                  <FormItem>
-                    <div className="flex items-center gap-2 mb-2">
-                      <FileText className="h-4 w-4" />
-                      <FormLabel>Exames Necessários</FormLabel>
-                    </div>
-                    <Card>
-                      <ScrollArea className="h-[200px]">
-                        <CardContent className="pt-2">
-                          {mockExamesMedicos.filter(exame => exame.ativo).map((exame) => (
-                            <div key={exame.id} className="flex items-center space-x-2 py-2 border-b">
-                              <Checkbox 
-                                id={`exame-${exame.id}`}
-                                checked={selectedExames.includes(exame.id)}
-                                onCheckedChange={() => 
-                                  handleCheckboxChange(exame.id, selectedExames, setSelectedExames)
-                                }
-                              />
-                              <Label htmlFor={`exame-${exame.id}`}>
-                                {exame.nome}
-                              </Label>
-                            </div>
-                          ))}
-                        </CardContent>
-                      </ScrollArea>
-                    </Card>
-                    <FormDescription>
-                      Selecione os exames médicos necessários para esta função
                     </FormDescription>
                   </FormItem>
 
@@ -383,6 +457,71 @@ const FuncoesTab: React.FC = () => {
                     </FormDescription>
                   </FormItem>
                 </div>
+
+                {/* Exames Selection with Tabs */}
+                <FormItem className="col-span-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileText className="h-4 w-4" />
+                    <FormLabel>Exames Médicos por Tipo</FormLabel>
+                  </div>
+                  <Card>
+                    <CardContent className="pt-2">
+                      <Tabs value={activeExamTypeTab} onValueChange={setActiveExamTypeTab}>
+                        <TabsList className="mb-4 grid grid-cols-5">
+                          {examTypeTabs.map((tab) => (
+                            <TabsTrigger key={tab.value} value={tab.value} className="text-xs">
+                              {tab.label}
+                            </TabsTrigger>
+                          ))}
+                        </TabsList>
+
+                        {examTypeTabs.map((tab) => (
+                          <TabsContent key={tab.value} value={tab.value}>
+                            <div className="mb-2 flex justify-between items-center">
+                              <span className="text-sm font-medium">Exames para {tab.label}</span>
+                              <Badge variant="outline">
+                                {selectedExamesByType[tab.value]?.length || 0} selecionados
+                              </Badge>
+                            </div>
+                            <ScrollArea className="h-[200px] border rounded-md p-2">
+                              {getExamsForType(tab.value).length === 0 ? (
+                                <div className="text-center text-muted-foreground p-4">
+                                  Não há exames disponíveis para este tipo
+                                </div>
+                              ) : (
+                                getExamsForType(tab.value).map((exame) => (
+                                  <div key={exame.id} className="flex items-center space-x-2 py-2 border-b">
+                                    <Checkbox 
+                                      id={`exame-${tab.value}-${exame.id}`}
+                                      checked={selectedExamesByType[tab.value]?.includes(exame.id) || false}
+                                      onCheckedChange={() => handleExamCheckboxChange(exame.id, tab.value)}
+                                    />
+                                    <div className="flex-1">
+                                      <Label htmlFor={`exame-${tab.value}-${exame.id}`} className="font-medium">
+                                        {exame.nome}
+                                      </Label>
+                                      {exame.descricao && (
+                                        <p className="text-xs text-muted-foreground">{exame.descricao}</p>
+                                      )}
+                                    </div>
+                                    {exame.periodicidade && (
+                                      <Badge variant="outline" className="ml-auto">
+                                        {exame.periodicidade} meses
+                                      </Badge>
+                                    )}
+                                  </div>
+                                ))
+                              )}
+                            </ScrollArea>
+                            <FormDescription className="mt-2">
+                              Selecione os exames necessários para {tab.label.toLowerCase()}
+                            </FormDescription>
+                          </TabsContent>
+                        ))}
+                      </Tabs>
+                    </CardContent>
+                  </Card>
+                </FormItem>
                 
                 <FormField
                   control={form.control}
@@ -449,7 +588,7 @@ const FuncoesTab: React.FC = () => {
                         </Badge>
                         <Badge variant="outline" className="flex items-center gap-1">
                           <FileText className="h-3 w-3" />
-                          {funcao.examesNecessarios.length}
+                          {getTotalExamCount(funcao.examesNecessarios)}
                         </Badge>
                         <Badge variant="outline" className="flex items-center gap-1">
                           <Shirt className="h-3 w-3" />
