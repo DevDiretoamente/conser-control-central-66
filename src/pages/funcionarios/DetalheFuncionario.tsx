@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -33,6 +32,7 @@ import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Funcionario } from '@/types/funcionario';
+import DocumentosTab from '@/components/funcionarios/DocumentosTab';
 
 // Mock data for funcionario details based on ID
 const getMockFuncionarioById = (id: string): Funcionario | undefined => {
@@ -214,6 +214,7 @@ const DetalheFuncionario: React.FC = () => {
         </div>
       </div>
 
+      {/* Profile card */}
       <div className="bg-white rounded-lg border p-6 mb-6">
         <div className="flex flex-col md:flex-row gap-6 items-start">
           <div className="relative">
@@ -258,7 +259,7 @@ const DetalheFuncionario: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-6">
+        <TabsList className="mb-6 flex flex-wrap">
           <TabsTrigger value="info" className="flex gap-2">
             <User size={16} />
             <span>Informações Pessoais</span>
@@ -568,87 +569,26 @@ const DetalheFuncionario: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="documentos">
-          <div className="bg-white rounded-lg border p-6">
-            <h3 className="text-lg font-medium mb-6 flex items-center gap-2">
-              <FileText size={18} />
-              Documentos
-            </h3>
-            
-            <div className="space-y-8">
-              <div className="border-b pb-4">
-                <h4 className="text-base font-medium mb-4">Documentos Pessoais</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  <Card className="bg-slate-50 flex flex-col items-center justify-center p-6 border-dashed">
-                    <FileText className="h-10 w-10 text-muted-foreground mb-2" />
-                    <p className="font-medium">RG</p>
-                    <p className="text-xs text-muted-foreground">Nenhum arquivo enviado</p>
-                  </Card>
-                  
-                  <Card className="bg-slate-50 flex flex-col items-center justify-center p-6 border-dashed">
-                    <FileText className="h-10 w-10 text-muted-foreground mb-2" />
-                    <p className="font-medium">CPF</p>
-                    <p className="text-xs text-muted-foreground">Nenhum arquivo enviado</p>
-                  </Card>
-                  
-                  <Card className="bg-slate-50 flex flex-col items-center justify-center p-6 border-dashed">
-                    <FileText className="h-10 w-10 text-muted-foreground mb-2" />
-                    <p className="font-medium">Comprovante de Residência</p>
-                    <p className="text-xs text-muted-foreground">Nenhum arquivo enviado</p>
-                  </Card>
-
-                  <Card className="bg-slate-50 flex flex-col items-center justify-center p-6 border-dashed">
-                    <FileText className="h-10 w-10 text-muted-foreground mb-2" />
-                    <p className="font-medium">Foto</p>
-                    <p className="text-xs text-muted-foreground">Nenhum arquivo enviado</p>
-                  </Card>
-                </div>
-              </div>
-
-              <div className="border-b pb-4">
-                <h4 className="text-base font-medium mb-4">Documentos Profissionais</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {funcionario.cnh.numero && (
-                    <Card className="bg-slate-50 flex flex-col items-center justify-center p-6 border-dashed">
-                      <FileText className="h-10 w-10 text-muted-foreground mb-2" />
-                      <p className="font-medium">CNH</p>
-                      <p className="text-xs text-muted-foreground">Nenhum arquivo enviado</p>
-                    </Card>
-                  )}
-                  
-                  <Card className="bg-slate-50 flex flex-col items-center justify-center p-6 border-dashed">
-                    <FileText className="h-10 w-10 text-muted-foreground mb-2" />
-                    <p className="font-medium">CTPS</p>
-                    <p className="text-xs text-muted-foreground">Nenhum arquivo enviado</p>
-                  </Card>
-                  
-                  <Card className="bg-slate-50 flex flex-col items-center justify-center p-6 border-dashed">
-                    <FileText className="h-10 w-10 text-muted-foreground mb-2" />
-                    <p className="font-medium">Exame Médico</p>
-                    <p className="text-xs text-muted-foreground">Nenhum arquivo enviado</p>
-                  </Card>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-base font-medium mb-4">Outros Documentos</h4>
-                <p className="text-muted-foreground">Nenhum documento adicional enviado.</p>
-              </div>
-            </div>
-          </div>
+          <Card>
+            <CardContent className="p-6">
+              <DocumentosTab funcionario={funcionario} />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
+      {/* Delete confirmation dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir Funcionário</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. Isso excluirá permanentemente o funcionário e todos os dados relacionados.
+              Tem certeza que deseja excluir o funcionário {funcionario.dadosPessoais.nome}? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
