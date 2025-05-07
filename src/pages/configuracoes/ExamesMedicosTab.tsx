@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -111,8 +112,15 @@ const ExamesMedicosTab: React.FC = () => {
     
     if (editingExame) {
       // Update existing exame
+      // Here is the fix: Create the new exame object with all required properties
+      const updatedExame = {
+        ...values,
+        id: editingExame.id,
+        clinicasRecomendadas: clinicasList
+      };
+      
       const updatedExames = exames.map(e => 
-        e.id === editingExame.id ? { ...formattedValues, id: editingExame.id } as ExameMedico : e
+        e.id === editingExame.id ? updatedExame as ExameMedico : e
       );
       setExames(updatedExames);
       toast.success(`Exame "${values.nome}" atualizado com sucesso!`);
