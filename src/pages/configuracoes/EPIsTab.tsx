@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -96,10 +95,17 @@ const EPIsTab: React.FC = () => {
       setEpis(updatedEpis);
       toast.success(`EPI "${values.nome}" atualizado com sucesso!`);
     } else {
-      // Create new EPI
+      // Create new EPI - Fix: Ensure all required properties are set
       const newEPI: EPI = {
-        ...values,
         id: `epi-${Date.now()}`,
+        nome: values.nome,         // required
+        ca: values.ca,             // required
+        validade: values.validade, // required
+        descricao: values.descricao,
+        obrigatorio: values.obrigatorio,
+        instrucoes: values.instrucoes,
+        imagem: values.imagem,
+        ativo: values.ativo
       };
       setEpis(prev => [...prev, newEPI]);
       toast.success(`EPI "${values.nome}" criado com sucesso!`);

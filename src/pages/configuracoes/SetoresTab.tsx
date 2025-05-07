@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,10 +76,12 @@ const SetoresTab: React.FC = () => {
       setSetores(updatedSetores);
       toast.success(`Setor "${values.nome}" atualizado com sucesso!`);
     } else {
-      // Create new setor
+      // Create new setor - Fix: Ensure all required properties are set
       const newSetor: Setor = {
-        ...values,
         id: `setor-${Date.now()}`,
+        nome: values.nome, // required
+        descricao: values.descricao, // required
+        ativo: values.ativo // required
       };
       setSetores(prev => [...prev, newSetor]);
       toast.success(`Setor "${values.nome}" criado com sucesso!`);

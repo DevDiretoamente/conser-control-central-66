@@ -33,33 +33,37 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import DocumentUploader from './DocumentUploader';
 
-// Mock exames available
+// Mock exames available - fixed to include the 'ativo' property
 const mockExamesMedicos: ExameMedico[] = [
   { 
     id: '1', 
     nome: 'Exame Admissional', 
     tipo: 'admissional',
-    descricao: 'Exame para admissão do funcionário'
+    descricao: 'Exame para admissão do funcionário',
+    ativo: true
   },
   { 
     id: '2', 
     nome: 'Exame Periódico', 
     tipo: 'periodico',
     periodicidade: 12, // 12 months
-    descricao: 'Exame periódico anual'
+    descricao: 'Exame periódico anual',
+    ativo: true
   },
   { 
     id: '3', 
     nome: 'Audiometria', 
     tipo: 'periodico',
     periodicidade: 6, // 6 months
-    descricao: 'Exame de audiometria semestral'
+    descricao: 'Exame de audiometria semestral',
+    ativo: true
   },
   { 
     id: '4', 
     nome: 'Exame Demissional', 
     tipo: 'demissional',
-    descricao: 'Exame para desligamento do funcionário'
+    descricao: 'Exame para desligamento do funcionário',
+    ativo: true
   },
 ];
 

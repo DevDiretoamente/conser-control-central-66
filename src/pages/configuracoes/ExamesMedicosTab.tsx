@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -110,11 +109,6 @@ const ExamesMedicosTab: React.FC = () => {
       .filter(line => line.trim() !== '')
       .map(line => line.trim());
     
-    const formattedValues = {
-      ...values,
-      clinicasRecomendadas: clinicasList,
-    };
-
     if (editingExame) {
       // Update existing exame
       const updatedExames = exames.map(e => 
@@ -123,10 +117,17 @@ const ExamesMedicosTab: React.FC = () => {
       setExames(updatedExames);
       toast.success(`Exame "${values.nome}" atualizado com sucesso!`);
     } else {
-      // Create new exame
+      // Create new exame - Fix: Ensure all required properties are set
       const newExame: ExameMedico = {
-        ...formattedValues,
         id: `exam-${Date.now()}`,
+        nome: values.nome, // required
+        tipo: values.tipo, // required
+        periodicidade: values.periodicidade,
+        descricao: values.descricao,
+        valor: values.valor,
+        orientacoes: values.orientacoes,
+        clinicasRecomendadas: clinicasList,
+        ativo: values.ativo // required
       };
       setExames(prev => [...prev, newExame]);
       toast.success(`Exame "${values.nome}" criado com sucesso!`);
@@ -299,7 +300,7 @@ const ExamesMedicosTab: React.FC = () => {
                   name="descricao"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Descrição</FormLabel>
+                      <FormLabel>Descri��ão</FormLabel>
                       <FormControl>
                         <Textarea 
                           {...field} 

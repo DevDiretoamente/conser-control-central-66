@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -115,26 +114,32 @@ const FuncoesTab: React.FC = () => {
     const selectedExameObjects = mockExamesMedicos.filter(exame => selectedExames.includes(exame.id));
     const selectedUniformeObjects = mockUniformes.filter(uniforme => selectedUniformes.includes(uniforme.id));
     
-    const funcaoData = {
-      ...values,
-      atribuicoes: atribuicoesList,
-      epis: selectedEPIObjects,
-      examesNecessarios: selectedExameObjects,
-      uniformes: selectedUniformeObjects,
-    };
-
     if (editingFuncao) {
       // Update existing funcao
       const updatedFuncoes = funcoes.map(f => 
-        f.id === editingFuncao.id ? { ...funcaoData, id: editingFuncao.id } as Funcao : f
+        f.id === editingFuncao.id ? { 
+          ...values, 
+          id: editingFuncao.id,
+          atribuicoes: atribuicoesList,
+          epis: selectedEPIObjects,
+          examesNecessarios: selectedExameObjects,
+          uniformes: selectedUniformeObjects
+        } as Funcao : f
       );
       setFuncoes(updatedFuncoes);
       toast.success(`Função "${values.nome}" atualizada com sucesso!`);
     } else {
-      // Create new funcao
+      // Create new funcao - Fix: Ensure all required properties are set
       const newFuncao: Funcao = {
-        ...funcaoData,
         id: `funcao-${Date.now()}`,
+        nome: values.nome, // required
+        descricao: values.descricao, // required
+        setorId: values.setorId, // required
+        atribuicoes: atribuicoesList,
+        epis: selectedEPIObjects,
+        examesNecessarios: selectedExameObjects,
+        uniformes: selectedUniformeObjects,
+        ativo: values.ativo
       };
       setFuncoes(prev => [...prev, newFuncao]);
       toast.success(`Função "${values.nome}" criada com sucesso!`);
