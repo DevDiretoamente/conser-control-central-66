@@ -36,7 +36,7 @@ const CNHTab: React.FC<CNHTabProps> = ({ form, onCNHFileChange, cnhFile }) => {
             <FormItem>
               <FormLabel>Número da CNH</FormLabel>
               <FormControl>
-                <Input placeholder="Número da CNH" {...field} />
+                <Input placeholder="Número da CNH" {...field} value={field.value || ""} />
               </FormControl>
               <FormMessage />
             </FormItem>

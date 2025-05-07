@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { CalendarIcon } from 'lucide-react';
+import { mockFuncoes } from '@/data/funcionarioMockData';
 
 interface DadosProfissionaisTabProps {
   form: UseFormReturn<Funcionario>;
@@ -42,11 +43,11 @@ const DadosProfissionaisTab: React.FC<DadosProfissionaisTabProps> = ({ form }) =
               </FormControl>
               <SelectContent>
                 <SelectItem value="">Selecione uma função</SelectItem>
-                <SelectItem value="1">Operador</SelectItem>
-                <SelectItem value="2">Motorista</SelectItem>
-                <SelectItem value="3">Auxiliar Administrativo</SelectItem>
-                <SelectItem value="4">Engenheiro</SelectItem>
-                <SelectItem value="5">Gerente</SelectItem>
+                {mockFuncoes.filter(f => f.ativo).map((funcao) => (
+                  <SelectItem key={funcao.id} value={funcao.id}>
+                    {funcao.nome}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <FormMessage />
