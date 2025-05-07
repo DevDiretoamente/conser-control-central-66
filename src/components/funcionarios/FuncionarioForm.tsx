@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -33,6 +34,7 @@ import { Funcionario } from '@/types/funcionario';
 import VerticalTabs from './VerticalTabs';
 import DocumentsTab from './DocumentsTab';
 import ExamesMedicosTab from './ExamesMedicosTab';
+import DocumentosImpressaoTab from './DocumentosImpressaoTab';
 
 // Custom validator for CPF
 const cpfValidator = z.string().refine(validateCPF, {
@@ -293,7 +295,7 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
 
   const navigateToNextTab = () => {
     const tabs = ["dados-pessoais", "endereco", "contato", "funcao", "dados-profissionais", "cnh", 
-                 "dados-bancarios", "uniformes", "documentos", "dependentes"];
+                 "dados-bancarios", "uniformes", "documentos", "dependentes", "documentos-impressao", "exames-medicos"];
     const currentIndex = tabs.indexOf(activeTab);
     
     if (currentIndex < tabs.length - 1) {
@@ -304,7 +306,7 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
 
   const navigateToPreviousTab = () => {
     const tabs = ["dados-pessoais", "endereco", "contato", "funcao", "dados-profissionais", "cnh", 
-                 "dados-bancarios", "uniformes", "documentos", "dependentes"];
+                 "dados-bancarios", "uniformes", "documentos", "dependentes", "documentos-impressao", "exames-medicos"];
     const currentIndex = tabs.indexOf(activeTab);
     
     if (currentIndex > 0) {
@@ -847,7 +849,7 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
               </Card>
             )}
             
-            {/* Documentos - Replace old implementation with new DocumentsTab */}
+            {/* Documentos */}
             {activeTab === "documentos" && (
               <Card>
                 <CardContent className="pt-6">
@@ -869,8 +871,22 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
                 </CardContent>
               </Card>
             )}
+
+            {/* Documentos para Impressão */}
+            {activeTab === "documentos-impressao" && (
+              <Card>
+                <CardContent className="pt-6">
+                  <DocumentosImpressaoTab 
+                    funcionario={form.getValues() as Funcionario} 
+                    onUpdate={(updatedFuncionario) => {
+                      // Handle updates if needed
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            )}
             
-            {/* New tab for EPIs */}
+            {/* EPIs */}
             {activeTab === "epis" && (
               <Card>
                 <CardContent className="pt-6">
@@ -885,7 +901,7 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
               </Card>
             )}
             
-            {/* New tab for Exames Médicos */}
+            {/* Exames Médicos */}
             {activeTab === "exames-medicos" && (
               <Card>
                 <CardContent className="pt-6">
