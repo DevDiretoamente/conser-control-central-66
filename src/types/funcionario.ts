@@ -1,4 +1,3 @@
-
 export interface Dependente {
   id?: string;
   nome: string;
@@ -37,15 +36,22 @@ export interface Uniforme {
   descricao: string;
 }
 
+// Novo tipo para representar os preços por clínica
+export interface PrecoClinica {
+  clinicaId: string;
+  clinicaNome: string;
+  valor: number;
+}
+
 export interface ExameMedico {
   id: string;
   nome: string;
-  tipo: 'admissional' | 'periodico' | 'mudancaFuncao' | 'retornoTrabalho' | 'demissional';
+  tipos: Array<'admissional' | 'periodico' | 'mudancaFuncao' | 'retornoTrabalho' | 'demissional'>;
   periodicidade?: number; // em meses (para exames periódicos)
   descricao?: string;
-  valor?: number; // Custo estimado do exame
+  precosPorClinica: PrecoClinica[]; // Preços diferentes por clínica
   orientacoes?: string; // Orientações de preparação (jejum, etc.)
-  clinicasRecomendadas?: string[]; // Lista de clínicas recomendadas
+  clinicasDisponiveis?: string[]; // Lista de clínicas que realizam este exame
   ativo: boolean;
 }
 
@@ -85,10 +91,13 @@ export interface TamanhoUniforme {
 
 export interface ExameRealizado {
   exameId: string;
+  tipoSelecionado?: string; // Tipo específico do exame realizado
+  clinicaId?: string; // Id da clínica onde foi realizado
   dataRealizado: Date;
   dataValidade: Date;
   resultado: string;
   documento?: File | null;
+  observacoes?: string; // Campo adicional para observações
 }
 
 // New interface for generated documents

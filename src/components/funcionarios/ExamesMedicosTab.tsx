@@ -32,47 +32,86 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import DocumentUploader from './DocumentUploader';
+import { Checkbox } from '@/components/ui/checkbox';
 
-// Mock exames available - fixed to include the 'ativo' property
+// Mock clínicas disponíveis
+const mockClinicas = [
+  { id: '1', nome: 'RP Medicina e Segurança do Trabalho' },
+  { id: '2', nome: 'Sindiconvenios' },
+];
+
+// Mock exames available - atualizado para suportar múltiplos tipos e preços por clínica
 const mockExamesMedicos: ExameMedico[] = [
   { 
     id: '1', 
     nome: 'Exame Admissional', 
-    tipo: 'admissional',
+    tipos: ['admissional'],
     descricao: 'Exame para admissão do funcionário',
+    precosPorClinica: [
+      { clinicaId: '1', clinicaNome: 'RP Medicina e Segurança do Trabalho', valor: 80.00 },
+      { clinicaId: '2', clinicaNome: 'Sindiconvenios', valor: 75.00 }
+    ],
+    clinicasDisponiveis: ['RP Medicina e Segurança do Trabalho', 'Sindiconvenios'],
     ativo: true
   },
   { 
     id: '2', 
-    nome: 'Exame Periódico', 
-    tipo: 'periodico',
+    nome: 'Exame Completo', 
+    tipos: ['admissional', 'periodico', 'demissional'],
     periodicidade: 12, // 12 months
-    descricao: 'Exame periódico anual',
+    descricao: 'Exame completo que serve para múltiplas finalidades',
+    precosPorClinica: [
+      { clinicaId: '1', clinicaNome: 'RP Medicina e Segurança do Trabalho', valor: 120.00 },
+      { clinicaId: '2', clinicaNome: 'Sindiconvenios', valor: 110.00 }
+    ],
+    clinicasDisponiveis: ['RP Medicina e Segurança do Trabalho', 'Sindiconvenios'],
     ativo: true
   },
   { 
     id: '3', 
     nome: 'Audiometria', 
-    tipo: 'periodico',
+    tipos: ['periodico'],
     periodicidade: 6, // 6 months
     descricao: 'Exame de audiometria semestral',
+    precosPorClinica: [
+      { clinicaId: '1', clinicaNome: 'RP Medicina e Segurança do Trabalho', valor: 60.00 },
+      { clinicaId: '2', clinicaNome: 'Sindiconvenios', valor: 55.00 }
+    ],
+    clinicasDisponiveis: ['RP Medicina e Segurança do Trabalho', 'Sindiconvenios'],
     ativo: true
   },
   { 
     id: '4', 
     nome: 'Exame Demissional', 
-    tipo: 'demissional',
+    tipos: ['demissional'],
     descricao: 'Exame para desligamento do funcionário',
+    precosPorClinica: [
+      { clinicaId: '1', clinicaNome: 'RP Medicina e Segurança do Trabalho', valor: 70.00 },
+      { clinicaId: '2', clinicaNome: 'Sindiconvenios', valor: 65.00 }
+    ],
+    clinicasDisponiveis: ['RP Medicina e Segurança do Trabalho', 'Sindiconvenios'],
     ativo: true
   },
 ];
 
+// Tipos de exame para seleção
+const tiposExame = [
+  { value: 'admissional', label: 'Admissional' },
+  { value: 'periodico', label: 'Periódico' },
+  { value: 'mudancaFuncao', label: 'Mudança de Função' },
+  { value: 'retornoTrabalho', label: 'Retorno ao Trabalho' },
+  { value: 'demissional', label: 'Demissional' },
+];
+
 interface ExameFormData {
   exameId: string;
+  tipoSelecionado: string; // Armazena o tipo específico do exame realizado
+  clinicaId: string; // Id da clínica onde foi realizado
   dataRealizado: Date;
   dataValidade: Date;
   resultado: string;
   documento: File | null;
+  observacoes?: string; // Campo adicional para observações
 }
 
 interface ExamesMedicosTabProps {
@@ -83,10 +122,13 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentExame, setCurrentExame] = useState<ExameFormData>({
     exameId: '',
+    tipoSelecionado: '',
+    clinicaId: '',
     dataRealizado: new Date(),
     dataValidade: new Date(),
     resultado: 'Apto',
-    documento: null
+    documento: null,
+    observacoes: ''
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -99,20 +141,26 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
       const exame = examesRealizados[index];
       setCurrentExame({
         exameId: exame.exameId,
+        tipoSelecionado: exame.tipoSelecionado || '',
+        clinicaId: exame.clinicaId || '',
         dataRealizado: exame.dataRealizado,
         dataValidade: exame.dataValidade,
         resultado: exame.resultado,
-        documento: exame.documento || null
+        documento: exame.documento || null,
+        observacoes: exame.observacoes || ''
       });
       setIsEditing(true);
       setEditingIndex(index);
     } else {
       setCurrentExame({
         exameId: '',
+        tipoSelecionado: '',
+        clinicaId: '',
         dataRealizado: new Date(),
         dataValidade: new Date(),
         resultado: 'Apto',
-        documento: null
+        documento: null,
+        observacoes: ''
       });
       setIsEditing(false);
       setEditingIndex(null);
@@ -121,14 +169,17 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
   };
   
   const handleSaveExame = () => {
-    if (!currentExame.exameId) return;
+    if (!currentExame.exameId || !currentExame.tipoSelecionado || !currentExame.clinicaId) return;
     
     const newExame: ExameRealizado = {
       exameId: currentExame.exameId,
+      tipoSelecionado: currentExame.tipoSelecionado,
+      clinicaId: currentExame.clinicaId,
       dataRealizado: currentExame.dataRealizado,
       dataValidade: currentExame.dataValidade,
       resultado: currentExame.resultado,
-      documento: currentExame.documento
+      documento: currentExame.documento,
+      observacoes: currentExame.observacoes
     };
     
     if (isEditing && editingIndex !== null) {
@@ -155,6 +206,18 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
   
   const getExameById = (id: string): ExameMedico | undefined => {
     return mockExamesMedicos.find(exame => exame.id === id);
+  };
+  
+  const getClinicaById = (id: string): {id: string, nome: string} | undefined => {
+    return mockClinicas.find(clinica => clinica.id === id);
+  };
+  
+  const getExamePreco = (exameId: string, clinicaId: string): number => {
+    const exame = getExameById(exameId);
+    if (!exame) return 0;
+    
+    const preco = exame.precosPorClinica.find(p => p.clinicaId === clinicaId);
+    return preco ? preco.valor : 0;
   };
   
   const isExameValido = (dataValidade: Date): boolean => {
@@ -193,8 +256,12 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {examesRealizados.map((exame, index) => {
             const exameInfo = getExameById(exame.exameId);
+            const clinicaInfo = getClinicaById(exame.clinicaId);
             const isValido = isExameValido(exame.dataValidade);
             const isExpiringSoon = isExameExpiringSoon(exame.dataValidade);
+            
+            // Get tipo label
+            const tipoLabel = tiposExame.find(t => t.value === exame.tipoSelecionado)?.label || exame.tipoSelecionado;
             
             return (
               <Card key={index} className={cn(
@@ -203,7 +270,10 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
               )}>
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
-                    <CardTitle className="text-base">{exameInfo?.nome || "Exame Médico"}</CardTitle>
+                    <div>
+                      <CardTitle className="text-base">{exameInfo?.nome || "Exame Médico"}</CardTitle>
+                      <p className="text-xs text-muted-foreground">{tipoLabel}</p>
+                    </div>
                     <div className="flex space-x-1">
                       <Button 
                         variant="outline" 
@@ -254,7 +324,26 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
                         )}
                       </div>
                     </div>
+                    <div>
+                      <p className="text-muted-foreground">Clínica:</p>
+                      <p>{clinicaInfo?.nome || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Valor:</p>
+                      <p>
+                        {exame.clinicaId && exame.exameId 
+                          ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(getExamePreco(exame.exameId, exame.clinicaId))
+                          : "N/A"}
+                      </p>
+                    </div>
                   </div>
+                  
+                  {exame.observacoes && (
+                    <div className="mt-2">
+                      <p className="text-xs text-muted-foreground">Observações:</p>
+                      <p className="text-xs">{exame.observacoes}</p>
+                    </div>
+                  )}
                   
                   {exame.documento && (
                     <div className="mt-2 flex items-center gap-2">
@@ -292,12 +381,13 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="exame-tipo">Tipo de Exame</Label>
+              <Label htmlFor="exame-tipo">Exame</Label>
               <Select
                 value={currentExame.exameId}
                 onValueChange={(value) => {
                   setCurrentExame(prev => ({ ...prev, exameId: value }));
-                  setExameValidade(value, currentExame.dataRealizado);
+                  // Limpar o tipo selecionado quando mudar o exame
+                  setCurrentExame(prev => ({ ...prev, tipoSelecionado: '' }));
                 }}
               >
                 <SelectTrigger>
@@ -312,6 +402,63 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
                 </SelectContent>
               </Select>
             </div>
+            
+            {currentExame.exameId && (
+              <div className="space-y-2">
+                <Label>Tipo de Exame</Label>
+                <Select
+                  value={currentExame.tipoSelecionado}
+                  onValueChange={(value) => {
+                    setCurrentExame(prev => ({ ...prev, tipoSelecionado: value }));
+                    if (currentExame.dataRealizado) {
+                      setExameValidade(currentExame.exameId, currentExame.dataRealizado);
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getExameById(currentExame.exameId)?.tipos.map(tipo => {
+                      const tipoInfo = tiposExame.find(t => t.value === tipo);
+                      return (
+                        <SelectItem key={tipo} value={tipo}>
+                          {tipoInfo?.label || tipo}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
+            {currentExame.exameId && (
+              <div className="space-y-2">
+                <Label>Clínica</Label>
+                <Select
+                  value={currentExame.clinicaId}
+                  onValueChange={(value) => {
+                    setCurrentExame(prev => ({ ...prev, clinicaId: value }));
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a clínica" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mockClinicas.map(clinica => (
+                      <SelectItem key={clinica.id} value={clinica.id}>
+                        {clinica.nome} 
+                        {currentExame.exameId && (
+                          <span className="ml-2 text-muted-foreground">
+                            ({new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(getExamePreco(currentExame.exameId, clinica.id))})
+                          </span>
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -340,7 +487,7 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
                       onSelect={(date) => {
                         if (date) {
                           setCurrentExame(prev => ({ ...prev, dataRealizado: date }));
-                          if (currentExame.exameId) {
+                          if (currentExame.exameId && currentExame.tipoSelecionado) {
                             setExameValidade(currentExame.exameId, date);
                           }
                         }
@@ -408,6 +555,16 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
                   <SelectItem value="Inapto temporário">Inapto temporário</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="observacoes">Observações</Label>
+              <Input
+                id="observacoes"
+                placeholder="Observações adicionais sobre o exame"
+                value={currentExame.observacoes || ''}
+                onChange={(e) => setCurrentExame(prev => ({ ...prev, observacoes: e.target.value }))}
+              />
             </div>
             
             <DocumentUploader
