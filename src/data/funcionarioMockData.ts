@@ -1,5 +1,33 @@
 
-import { Funcao, EPI, ExameMedico, Uniforme } from "@/types/funcionario";
+import { Funcao, EPI, ExameMedico, Uniforme, Setor } from "@/types/funcionario";
+
+// New mock data for Sectors
+export const mockSetores: Setor[] = [
+  {
+    id: "setor-1",
+    nome: "Operacional",
+    descricao: "Setor responsável pela execução das obras",
+    ativo: true
+  },
+  {
+    id: "setor-2",
+    nome: "Administrativo",
+    descricao: "Setor responsável pelas atividades administrativas",
+    ativo: true
+  },
+  {
+    id: "setor-3",
+    nome: "Transporte",
+    descricao: "Setor responsável pelo transporte de materiais e pessoal",
+    ativo: true
+  },
+  {
+    id: "setor-4",
+    nome: "Engenharia",
+    descricao: "Setor responsável pelos projetos e supervisão técnica",
+    ativo: true
+  }
+];
 
 export const mockEPIs: EPI[] = [
   { 
@@ -8,7 +36,9 @@ export const mockEPIs: EPI[] = [
     ca: "31.469", 
     validade: 12, 
     descricao: "Proteção da cabeça contra impactos",
-    obrigatorio: true 
+    obrigatorio: true,
+    instrucoes: "Ajustar corretamente à cabeça. Inspecionar regularmente quanto a rachaduras.",
+    ativo: true
   },
   { 
     id: "epi-2", 
@@ -16,7 +46,9 @@ export const mockEPIs: EPI[] = [
     ca: "32.034", 
     validade: 3, 
     descricao: "Proteção das mãos contra agentes cortantes",
-    obrigatorio: true 
+    obrigatorio: true,
+    instrucoes: "Verificar integridade antes do uso. Não utilizar com óleos ou produtos químicos.",
+    ativo: true 
   },
   { 
     id: "epi-3", 
@@ -24,7 +56,9 @@ export const mockEPIs: EPI[] = [
     ca: "29.710", 
     validade: 6, 
     descricao: "Proteção auditiva",
-    obrigatorio: true 
+    obrigatorio: true,
+    instrucoes: "Inserir corretamente no canal auditivo. Manter limpo e seco após uso.",
+    ativo: true
   },
   { 
     id: "epi-4", 
@@ -32,7 +66,9 @@ export const mockEPIs: EPI[] = [
     ca: "36.719", 
     validade: 12, 
     descricao: "Proteção dos olhos contra partículas",
-    obrigatorio: true 
+    obrigatorio: true,
+    instrucoes: "Limpar regularmente com pano macio. Guardar em local protegido.",
+    ativo: true 
   },
   { 
     id: "epi-5", 
@@ -40,7 +76,9 @@ export const mockEPIs: EPI[] = [
     ca: "38.811", 
     validade: 3, 
     descricao: "Proteção respiratória",
-    obrigatorio: true 
+    obrigatorio: true,
+    instrucoes: "Verificar vedação antes do uso. Trocar filtros conforme saturação.",
+    ativo: true
   },
   { 
     id: "epi-6", 
@@ -48,7 +86,9 @@ export const mockEPIs: EPI[] = [
     ca: "42.554", 
     validade: 12, 
     descricao: "Proteção dos pés",
-    obrigatorio: true 
+    obrigatorio: true,
+    instrucoes: "Manter limpa e seca. Verificar solado regularmente.",
+    ativo: true 
   },
   { 
     id: "epi-7", 
@@ -56,7 +96,9 @@ export const mockEPIs: EPI[] = [
     ca: "27.397", 
     validade: 12, 
     descricao: "Proteção contra quedas",
-    obrigatorio: false 
+    obrigatorio: false,
+    instrucoes: "Verificar costuras e fivelas antes do uso. Nunca utilizar após uma queda.",
+    ativo: true
   },
   { 
     id: "epi-8", 
@@ -64,7 +106,9 @@ export const mockEPIs: EPI[] = [
     ca: "38.044", 
     validade: 3, 
     descricao: "Proteção contra raios UV",
-    obrigatorio: true 
+    obrigatorio: true,
+    instrucoes: "Aplicar 30 minutos antes da exposição ao sol. Reaplicar a cada 2 horas.",
+    ativo: true 
   },
 ];
 
@@ -73,55 +117,87 @@ export const mockExamesMedicos: ExameMedico[] = [
     id: "exam-1", 
     nome: "Exame Clínico Ocupacional", 
     tipo: "admissional", 
-    descricao: "Avaliação clínica geral" 
+    descricao: "Avaliação clínica geral",
+    valor: 120,
+    orientacoes: "Não é necessário jejum. Levar documentos pessoais e carteira de vacinação.",
+    clinicasRecomendadas: ["Clínica Saúde", "MedOcupacional"], 
+    ativo: true
   },
   { 
     id: "exam-2", 
     nome: "Audiometria", 
     tipo: "admissional", 
     periodicidade: 12, 
-    descricao: "Avaliação da capacidade auditiva" 
+    descricao: "Avaliação da capacidade auditiva",
+    valor: 80,
+    orientacoes: "Evitar exposição a ruídos intensos nas 14h que antecedem o exame.",
+    clinicasRecomendadas: ["AudioClin", "Clínica Saúde"],
+    ativo: true
   },
   { 
     id: "exam-3", 
     nome: "Espirometria", 
     tipo: "admissional", 
     periodicidade: 12, 
-    descricao: "Avaliação da função pulmonar" 
+    descricao: "Avaliação da função pulmonar",
+    valor: 90,
+    orientacoes: "Evitar fumar nas 2h anteriores ao exame. Não realizar atividade física intensa no dia.",
+    clinicasRecomendadas: ["PulmoClinic", "Clínica Saúde"],
+    ativo: true
   },
   { 
     id: "exam-4", 
     nome: "Acuidade Visual", 
     tipo: "admissional", 
     periodicidade: 12, 
-    descricao: "Avaliação da visão" 
+    descricao: "Avaliação da visão",
+    valor: 70,
+    orientacoes: "Levar óculos ou lentes se fizer uso.",
+    clinicasRecomendadas: ["VisãoPlena", "OftalmoClin"],
+    ativo: true
   },
   { 
     id: "exam-5", 
     nome: "Eletrocardiograma", 
     tipo: "admissional", 
     periodicidade: 12, 
-    descricao: "Avaliação cardíaca" 
+    descricao: "Avaliação cardíaca",
+    valor: 130,
+    orientacoes: "Não é necessário jejum. Evitar cafeína nas 3h anteriores.",
+    clinicasRecomendadas: ["CardioCenter", "Clínica Saúde"],
+    ativo: true
   },
   { 
     id: "exam-6", 
     nome: "Glicemia", 
     tipo: "periodico", 
     periodicidade: 12, 
-    descricao: "Avaliação dos níveis de açúcar no sangue" 
+    descricao: "Avaliação dos níveis de açúcar no sangue",
+    valor: 40,
+    orientacoes: "Jejum de 8-12 horas. Pode tomar água.",
+    clinicasRecomendadas: ["LabCheck", "MedOcupacional"],
+    ativo: true
   },
   { 
     id: "exam-7", 
     nome: "Raio-X Coluna Lombar", 
     tipo: "mudancaFuncao", 
-    descricao: "Avaliação da coluna lombar"
+    descricao: "Avaliação da coluna lombar",
+    valor: 150,
+    orientacoes: "Retirar objetos metálicos antes do exame. Não é necessário jejum.",
+    clinicasRecomendadas: ["ImagemDiag", "RaioXExpress"],
+    ativo: true
   },
   { 
     id: "exam-8", 
     nome: "Exame Toxicológico", 
     tipo: "admissional", 
     periodicidade: 24, 
-    descricao: "Detecção de substâncias" 
+    descricao: "Detecção de substâncias",
+    valor: 280,
+    orientacoes: "Coleta de cabelo ou pelo. Não requer preparação especial.",
+    clinicasRecomendadas: ["LabCheck", "ToxicoLab"],
+    ativo: true
   },
 ];
 
@@ -139,6 +215,7 @@ export const mockFuncoes: Funcao[] = [
     id: "funcao-1",
     nome: "Operador de Máquinas",
     descricao: "Responsável pela operação de máquinas pesadas",
+    setorId: "setor-1", // Operacional
     atribuicoes: [
       "Operar máquinas pesadas seguindo normas de segurança",
       "Realizar verificações diárias de equipamentos",
@@ -151,12 +228,14 @@ export const mockFuncoes: Funcao[] = [
       mockExamesMedicos[0], mockExamesMedicos[1], mockExamesMedicos[3], 
       mockExamesMedicos[4], mockExamesMedicos[7]
     ],
-    uniformes: [mockUniformes[0], mockUniformes[2], mockUniformes[3]]
+    uniformes: [mockUniformes[0], mockUniformes[2], mockUniformes[3]],
+    ativo: true
   },
   {
     id: "funcao-2",
     nome: "Motorista",
     descricao: "Condução de veículos para transporte de materiais e pessoas",
+    setorId: "setor-3", // Transporte
     atribuicoes: [
       "Dirigir veículos leves e pesados",
       "Realizar o transporte de materiais e equipamentos",
@@ -169,12 +248,14 @@ export const mockFuncoes: Funcao[] = [
       mockExamesMedicos[0], mockExamesMedicos[3], mockExamesMedicos[4], 
       mockExamesMedicos[7], mockExamesMedicos[5]
     ],
-    uniformes: [mockUniformes[1], mockUniformes[2], mockUniformes[3]]
+    uniformes: [mockUniformes[1], mockUniformes[2], mockUniformes[3]],
+    ativo: true
   },
   {
     id: "funcao-3",
     nome: "Auxiliar de Obras",
     descricao: "Suporte às atividades de construção e manutenção",
+    setorId: "setor-1", // Operacional
     atribuicoes: [
       "Auxiliar na execução de serviços de construção e manutenção",
       "Carregar e descarregar materiais",
@@ -187,12 +268,14 @@ export const mockFuncoes: Funcao[] = [
       mockExamesMedicos[0], mockExamesMedicos[2], mockExamesMedicos[3], 
       mockExamesMedicos[6]
     ],
-    uniformes: [mockUniformes[0], mockUniformes[2], mockUniformes[3]]
+    uniformes: [mockUniformes[0], mockUniformes[2], mockUniformes[3]],
+    ativo: true
   },
   {
     id: "funcao-4",
     nome: "Engenheiro Civil",
     descricao: "Responsável pelo planejamento e supervisão de obras",
+    setorId: "setor-4", // Engenharia
     atribuicoes: [
       "Elaborar projetos de engenharia civil",
       "Supervisionar e fiscalizar obras",
@@ -204,12 +287,14 @@ export const mockFuncoes: Funcao[] = [
     examesNecessarios: [
       mockExamesMedicos[0], mockExamesMedicos[3], mockExamesMedicos[5]
     ],
-    uniformes: [mockUniformes[1], mockUniformes[2], mockUniformes[3]]
+    uniformes: [mockUniformes[1], mockUniformes[2], mockUniformes[3]],
+    ativo: true
   },
   {
     id: "funcao-5",
     nome: "Auxiliar Administrativo",
     descricao: "Suporte administrativo às operações da empresa",
+    setorId: "setor-2", // Administrativo
     atribuicoes: [
       "Organizar e arquivar documentos",
       "Atender chamadas telefônicas",
@@ -221,6 +306,7 @@ export const mockFuncoes: Funcao[] = [
     examesNecessarios: [
       mockExamesMedicos[0], mockExamesMedicos[3], mockExamesMedicos[5]
     ],
-    uniformes: [mockUniformes[1], mockUniformes[2]]
+    uniformes: [mockUniformes[1], mockUniformes[2]],
+    ativo: true
   }
 ];

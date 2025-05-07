@@ -11,6 +11,14 @@ export interface Dependente {
   };
 }
 
+// New Setor interface
+export interface Setor {
+  id: string;
+  nome: string;
+  descricao: string;
+  ativo: boolean;
+}
+
 export interface EPI {
   id: string;
   nome: string;
@@ -18,6 +26,9 @@ export interface EPI {
   validade: number; // em meses
   descricao?: string;
   obrigatorio: boolean;
+  instrucoes?: string; // Orientações de uso
+  imagem?: string; // URL da imagem do EPI
+  ativo: boolean;
 }
 
 export interface Uniforme {
@@ -32,16 +43,22 @@ export interface ExameMedico {
   tipo: 'admissional' | 'periodico' | 'mudancaFuncao' | 'retornoTrabalho' | 'demissional';
   periodicidade?: number; // em meses (para exames periódicos)
   descricao?: string;
+  valor?: number; // Custo estimado do exame
+  orientacoes?: string; // Orientações de preparação (jejum, etc.)
+  clinicasRecomendadas?: string[]; // Lista de clínicas recomendadas
+  ativo: boolean;
 }
 
 export interface Funcao {
   id: string;
   nome: string;
   descricao: string;
+  setorId: string; // Referência ao setor ao qual a função pertence
   atribuicoes: string[]; // Atribuições conforme PGR
   epis: EPI[];
   examesNecessarios: ExameMedico[];
   uniformes: Uniforme[];
+  ativo: boolean;
 }
 
 export interface EntregaEPI {

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { Funcionario, Funcao, EPI, Uniforme, ExameMedico } from '@/types/funcionario';
+import { Funcionario, Funcao, EPI, Uniforme, ExameMedico, Setor } from '@/types/funcionario';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   FormField,
@@ -12,7 +12,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { mockFuncoes } from '@/data/funcionarioMockData';
+import { mockFuncoes, mockSetores } from '@/data/funcionarioMockData';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, HardHat, Shirt } from 'lucide-react';
@@ -22,7 +22,19 @@ interface FuncaoTabProps {
 }
 
 const FuncaoTab: React.FC<FuncaoTabProps> = ({ form }) => {
+  const [selectedSetor, setSelectedSetor] = useState<string | null>(null);
   const [selectedFuncao, setSelectedFuncao] = useState<Funcao | null>(null);
+
+  // Filter functions based on selected sector
+  const filteredFuncoes = selectedSetor 
+    ? mockFuncoes.filter(f => f.setorId === selectedSetor && f.ativo) 
+    : mockFuncoes.filter(f => f.ativo);
+
+  const handleSetorChange = (setorId: string) => {
+    setSelectedSetor(setorId);
+    setSelectedFuncao(null);
+    form.setValue('dadosProfissionais.funcaoId', undefined);
+  };
 
   const handleFuncaoChange = (funcaoId: string) => {
     const funcao = mockFuncoes.find(f => f.id === funcaoId);
@@ -32,9 +44,46 @@ const FuncaoTab: React.FC<FuncaoTabProps> = ({ form }) => {
     form.setValue('dadosProfissionais.funcaoId', funcaoId);
   };
 
+  // Organize functions by sector for rendering
+  const setoresWithFuncoes = mockSetores
+    .filter(setor => setor.ativo)
+    .map(setor => ({
+      ...setor,
+      funcoes: mockFuncoes.filter(f => f.setorId === setor.id && f.ativo)
+    }))
+    .filter(setor => setor.funcoes.length > 0);
+
   return (
     <Card>
       <CardContent className="pt-6">
+        {/* Sector Selector */}
+        <FormItem className="mb-6">
+          <FormLabel>Setor</FormLabel>
+          <Select
+            onValueChange={handleSetorChange}
+            value={selectedSetor || ''}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione um setor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Todos os setores</SelectItem>
+              {mockSetores
+                .filter(setor => setor.ativo)
+                .map((setor) => (
+                  <SelectItem key={setor.id} value={setor.id}>
+                    {setor.nome}
+                  </SelectItem>
+                ))
+              }
+            </SelectContent>
+          </Select>
+          <FormDescription>
+            Selecione um setor para filtrar as funções disponíveis
+          </FormDescription>
+        </FormItem>
+
+        {/* Function Selector */}
         <FormField
           control={form.control}
           name="dadosProfissionais.funcaoId"
@@ -46,7 +95,7 @@ const FuncaoTab: React.FC<FuncaoTabProps> = ({ form }) => {
                   field.onChange(value);
                   handleFuncaoChange(value);
                 }}
-                defaultValue={field.value}
+                value={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -54,11 +103,28 @@ const FuncaoTab: React.FC<FuncaoTabProps> = ({ form }) => {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {mockFuncoes.map((funcao) => (
-                    <SelectItem key={funcao.id} value={funcao.id}>
-                      {funcao.nome}
-                    </SelectItem>
-                  ))}
+                  {selectedSetor ? (
+                    // Show functions filtered by selected sector
+                    filteredFuncoes.map((funcao) => (
+                      <SelectItem key={funcao.id} value={funcao.id}>
+                        {funcao.nome}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    // Show functions grouped by sector
+                    setoresWithFuncoes.map((setor) => (
+                      <React.Fragment key={setor.id}>
+                        <SelectItem disabled value={`setor-header-${setor.id}`} className="font-bold pl-2">
+                          {setor.nome}
+                        </SelectItem>
+                        {setor.funcoes.map((funcao) => (
+                          <SelectItem key={funcao.id} value={funcao.id} className="pl-4">
+                            {funcao.nome}
+                          </SelectItem>
+                        ))}
+                      </React.Fragment>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               <FormDescription>
@@ -72,7 +138,12 @@ const FuncaoTab: React.FC<FuncaoTabProps> = ({ form }) => {
         {selectedFuncao && (
           <div className="mt-6">
             <div className="mb-4">
-              <h3 className="text-lg font-medium mb-2">{selectedFuncao.nome}</h3>
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <h3 className="text-lg font-medium">{selectedFuncao.nome}</h3>
+                <Badge variant="outline">
+                  {mockSetores.find(s => s.id === selectedFuncao.setorId)?.nome || 'Setor não encontrado'}
+                </Badge>
+              </div>
               <p className="text-muted-foreground">{selectedFuncao.descricao}</p>
             </div>
             

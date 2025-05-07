@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Settings, Building, Users, Truck, Briefcase, FileText } from 'lucide-react';
+import { Settings, Building, Users, Truck, Briefcase, FileText, HardHat, Stethoscope, Boxes } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,10 @@ import { Form, FormField, FormItem, FormLabel, FormDescription, FormControl } fr
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from '@/components/ui/menubar';
 import { useForm } from 'react-hook-form';
 import DocumentosTab from './DocumentosTab';
+import SetoresTab from './SetoresTab';
+import EPIsTab from './EPIsTab';
+import ExamesMedicosTab from './ExamesMedicosTab';
+import FuncoesTab from './FuncoesTab';
 
 const ConfiguracoesPage: React.FC = () => {
   const generalForm = useForm();
@@ -32,7 +37,7 @@ const ConfiguracoesPage: React.FC = () => {
       </div>
 
       <Tabs defaultValue="geral" className="space-y-4">
-        <TabsList className="grid grid-cols-2 md:grid-cols-7 gap-2">
+        <TabsList className="grid grid-cols-2 md:grid-cols-12 gap-2">
           <TabsTrigger value="geral" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             <span className="hidden md:inline">Geral</span>
@@ -56,6 +61,22 @@ const ConfiguracoesPage: React.FC = () => {
           <TabsTrigger value="financeiro" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             <span className="hidden md:inline">Financeiro</span>
+          </TabsTrigger>
+          <TabsTrigger value="setores" className="flex items-center gap-2">
+            <Boxes className="h-4 w-4" />
+            <span className="hidden md:inline">Setores</span>
+          </TabsTrigger>
+          <TabsTrigger value="funcoes" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden md:inline">Funções</span>
+          </TabsTrigger>
+          <TabsTrigger value="epis" className="flex items-center gap-2">
+            <HardHat className="h-4 w-4" />
+            <span className="hidden md:inline">EPIs</span>
+          </TabsTrigger>
+          <TabsTrigger value="exames" className="flex items-center gap-2">
+            <Stethoscope className="h-4 w-4" />
+            <span className="hidden md:inline">Exames</span>
           </TabsTrigger>
           <TabsTrigger value="documentos" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -304,6 +325,62 @@ const ConfiguracoesPage: React.FC = () => {
                 
                 <Button onClick={() => saveSettings('Financeiro')} className="mt-4">Salvar Configurações</Button>
               </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="setores">
+          <Card>
+            <CardHeader>
+              <CardTitle>Gerenciamento de Setores</CardTitle>
+              <CardDescription>
+                Cadastre e gerencie os setores da empresa para organização das funções.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SetoresTab />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="funcoes">
+          <Card>
+            <CardHeader>
+              <CardTitle>Gerenciamento de Funções</CardTitle>
+              <CardDescription>
+                Cadastre e gerencie as funções da empresa, atribuindo EPIs e exames necessários conforme PGR/PCMSO.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FuncoesTab />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="epis">
+          <Card>
+            <CardHeader>
+              <CardTitle>Gerenciamento de EPIs</CardTitle>
+              <CardDescription>
+                Cadastre e gerencie os Equipamentos de Proteção Individual, com seus respectivos CAs e instruções.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EPIsTab />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="exames">
+          <Card>
+            <CardHeader>
+              <CardTitle>Gerenciamento de Exames Médicos</CardTitle>
+              <CardDescription>
+                Cadastre e gerencie os exames médicos conforme PCMSO, com suas instruções e periodicidade.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ExamesMedicosTab />
             </CardContent>
           </Card>
         </TabsContent>
