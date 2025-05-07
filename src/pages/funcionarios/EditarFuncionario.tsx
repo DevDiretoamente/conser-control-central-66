@@ -188,7 +188,11 @@ const EditarFuncionario: React.FC = () => {
         </p>
       </div>
 
-      <FuncionarioForm initialData={funcionario} onSuccess={handleSuccess} isEditing={true} />
+      <FuncionarioForm 
+        defaultValues={funcionario} 
+        onSuccess={handleSuccess} 
+        funcionarioId={id}
+      />
     </div>
   );
 };
