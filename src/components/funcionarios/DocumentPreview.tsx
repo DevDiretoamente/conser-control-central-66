@@ -76,7 +76,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
                     Expirado em {expirationDate.toLocaleDateString()}
                   </Badge>
                 ) : willExpireSoon ? (
-                  <Badge variant="warning" className="text-xs">
+                  <Badge variant="secondary" className="text-xs bg-amber-500 hover:bg-amber-600">
                     Expira em {formatDistanceToNow(expirationDate, { locale: ptBR })}
                   </Badge>
                 ) : (
