@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText, Printer, Download, Eye } from 'lucide-react';
@@ -25,6 +24,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import CompanyInfo from '@/components/CompanyInfo';
 import jsPDF from 'jspdf';
+import { generatePDF, openPrintWindow, replaceTemplateVariables } from '@/utils/documentUtils';
 
 interface DocumentGeneratorProps {
   funcionario: Funcionario;
@@ -110,130 +110,28 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
     ? templates.filter(t => t.category === selectedCategory)
     : templates;
 
-  const generateDocument = (template: DocumentTemplate) => {
-    if (!funcionario) return '';
-    
-    let content = template.content;
-    
-    // Replace variables with actual data
-    content = content.replace(/\{NOME\}/g, funcionario.dadosPessoais.nome || '');
-    content = content.replace(/\{CPF\}/g, funcionario.dadosPessoais.cpf || '');
-    content = content.replace(/\{RG\}/g, funcionario.dadosPessoais.rg || '');
-    content = content.replace(/\{DATA_ADMISSAO\}/g, 
-      funcionario.dadosProfissionais.dataAdmissao 
-        ? format(funcionario.dadosProfissionais.dataAdmissao, 'dd/MM/yyyy', { locale: ptBR })
-        : ''
-    );
-    content = content.replace(/\{CARGO\}/g, funcionario.dadosProfissionais.cargo || '');
-    content = content.replace(/\{SALARIO\}/g, 
-      funcionario.dadosProfissionais.salario 
-        ? funcionario.dadosProfissionais.salario.toLocaleString('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-          })
-        : ''
-    );
-    
-    // Formato completo de endereço
-    const endereco = funcionario.endereco 
-      ? `${funcionario.endereco.rua}, ${funcionario.endereco.numero}${
-          funcionario.endereco.complemento ? ', ' + funcionario.endereco.complemento : ''
-        } - ${funcionario.endereco.bairro}, ${funcionario.endereco.cidade}/${funcionario.endereco.uf}, CEP: ${funcionario.endereco.cep}`
-      : '';
-    content = content.replace(/\{ENDERECO\}/g, endereco);
-    
-    // Data atual
-    content = content.replace(/\{DATA_ATUAL\}/g, format(new Date(), 'dd/MM/yyyy', { locale: ptBR }));
-    
-    // Nome da empresa
-    content = content.replace(/\{EMPRESA\}/g, 'CONSERVIAS TRANSPORTES E PAVIMENTAÇÃO LTDA');
-    
-    return content;
-  };
-
   const handlePreviewDocument = () => {
     if (!selectedTemplate) return;
     
-    const content = generateDocument(selectedTemplate);
+    const content = replaceTemplateVariables(selectedTemplate.content, funcionario);
     setGeneratedDocument(content);
     setIsDialogOpen(true);
   };
 
   const handlePrintDocument = () => {
-    if (!selectedTemplate) return;
+    if (!selectedTemplate || !documentContentRef.current) return;
     
-    // Open a print-specific layout in a new window
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
+    // Get the HTML content
+    const content = documentContentRef.current.innerHTML || '';
+    
+    // Open print window
+    const success = openPrintWindow(content, `${selectedTemplate.title} - ${funcionario.dadosPessoais.nome}`);
+    
+    if (!success) {
       toast.error('Não foi possível abrir a janela de impressão. Verifique se o bloqueador de pop-ups está desativado.');
       return;
     }
     
-    // Generate content
-    const content = documentContentRef.current?.innerHTML || '';
-    
-    // Create the print window content
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${selectedTemplate.title} - ${funcionario.dadosPessoais.nome}</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              padding: 20px;
-              line-height: 1.6;
-            }
-            .document-content {
-              max-width: 800px;
-              margin: 0 auto;
-            }
-            .signature-line {
-              margin-top: 50px;
-              border-top: 1px solid #000;
-              width: 250px;
-              text-align: center;
-              padding-top: 5px;
-            }
-            @media print {
-              body {
-                padding: 0;
-                margin: 0;
-              }
-              .no-print {
-                display: none;
-              }
-              button {
-                display: none;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="document-content">
-            ${content}
-            <div style="margin-top: 60px;">
-              <div class="signature-line">Assinatura do Funcionário</div>
-              <div style="margin-top: 40px;">
-                <p>${format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}</p>
-              </div>
-            </div>
-          </div>
-          <div class="no-print" style="text-align: center; margin-top: 20px;">
-            <button onclick="window.print()">Imprimir</button>
-            <button onclick="window.close()">Fechar</button>
-          </div>
-          <script>
-            // Auto print
-            window.onload = function() {
-              setTimeout(() => window.print(), 500);
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    
-    printWindow.document.close();
     toast.success(`Documento "${selectedTemplate.title}" enviado para impressão`);
     
     // Notify that document was generated
@@ -243,44 +141,11 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
   };
 
   const handleDownloadDocument = () => {
-    if (!selectedTemplate || !documentContentRef.current) return;
+    if (!selectedTemplate) return;
     
     try {
-      const doc = new jsPDF();
-      
-      // Set font and size
-      doc.setFont('helvetica');
-      doc.setFontSize(12);
-      
-      // Add the document title
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text(selectedTemplate.title, 20, 20);
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'normal');
-      
-      // Add the company information
-      doc.text('CONSERVIAS – TRANSPORTES E PAVIMENTAÇÃO LTDA.', 20, 30);
-      doc.text('Avenida General Aldo Bonde, nº 551 - Contorno', 20, 35);
-      doc.text('(42) 3239 4358 / (42) 9 99161 9031 (ambos com whats)', 20, 40);
-      doc.text('CEP 84 060- 170 Ponta Grossa - Paraná', 20, 45);
-      doc.text('CNPJ: 02.205.149/0001-32 I.E. 90150007-05', 20, 50);
-      
-      // Add a separator line
-      doc.line(20, 55, 190, 55);
-      
-      // Add the document content
-      const content = generatedDocument || '';
-      const splitText = doc.splitTextToSize(content, 170);
-      doc.text(splitText, 20, 65);
-      
-      // Add signature line
-      doc.text('Assinatura do Funcionário', 20, 160);
-      doc.line(20, 155, 100, 155);
-      
-      // Add date
-      const currentDate = format(new Date(), 'dd/MM/yyyy', { locale: ptBR });
-      doc.text(currentDate, 20, 170);
+      const content = replaceTemplateVariables(selectedTemplate.content, funcionario);
+      const doc = generatePDF(selectedTemplate.title, content, funcionario);
       
       // Save the PDF
       const fileName = `${selectedTemplate.title.toLowerCase().replace(/\s+/g, '_')}_${funcionario.dadosPessoais.nome.toLowerCase().replace(/\s+/g, '_')}.pdf`;
@@ -381,8 +246,8 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
             </DialogTitle>
           </DialogHeader>
           <div ref={documentContentRef} className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
-            <CompanyInfo className="mb-6" />
-            <div className="border-t pt-6">
+            <CompanyInfo variant="letterhead" showFooter={true} className="mb-6" />
+            <div className="pt-6">
               <div className="whitespace-pre-wrap">
                 {generatedDocument}
               </div>

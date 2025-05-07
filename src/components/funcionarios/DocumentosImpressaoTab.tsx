@@ -89,7 +89,7 @@ const DocumentosImpressaoTab: React.FC<DocumentosImpressaoTabProps> = ({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-center mb-4">
-        <CompanyInfo />
+        <CompanyInfo variant="compact" />
       </div>
       
       <Alert>
