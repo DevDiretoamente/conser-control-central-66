@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import FuncionarioListItem, { Funcionario } from '@/components/funcionarios/FuncionarioListItem';
 import FuncionarioFilter, { FuncionarioFilterValues } from '@/components/funcionarios/FuncionarioFilter';
@@ -92,6 +92,7 @@ const availableDepartamentos = [
 const ListaFuncionarios: React.FC = () => {
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>(mockFuncionarios);
   const [filteredFuncionarios, setFilteredFuncionarios] = useState<Funcionario[]>(mockFuncionarios);
+  const navigate = useNavigate();
   
   const [filterValues, setFilterValues] = useState<FuncionarioFilterValues>({
     search: '',
@@ -150,19 +151,19 @@ const ListaFuncionarios: React.FC = () => {
   };
   
   const handleEdit = (id: string) => {
-    // Navigate to edit page in a real app
-    console.log('Editar funcionário', id);
-    toast.info('Função de edição será implementada em breve');
+    navigate(`/funcionarios/${id}/editar`);
+  };
+  
+  const handleViewDetails = (id: string) => {
+    navigate(`/funcionarios/${id}`);
   };
   
   const handleViewDocuments = (id: string) => {
-    console.log('Ver documentos do funcionário', id);
-    toast.info('Visualização de documentos será implementada em breve');
+    navigate(`/funcionarios/${id}?tab=documentos`);
   };
   
   const handleViewDependentes = (id: string) => {
-    console.log('Ver dependentes do funcionário', id);
-    toast.info('Visualização de dependentes será implementada em breve');
+    navigate(`/funcionarios/${id}?tab=dependentes`);
   };
 
   return (
@@ -205,6 +206,7 @@ const ListaFuncionarios: React.FC = () => {
               funcionario={funcionario}
               onDelete={handleDeleteFuncionario}
               onEdit={handleEdit}
+              onView={handleViewDetails}
               onViewDocuments={handleViewDocuments}
               onViewDependentes={handleViewDependentes}
             />

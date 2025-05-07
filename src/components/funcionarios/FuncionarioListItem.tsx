@@ -40,6 +40,7 @@ interface FuncionarioListItemProps {
   funcionario: Funcionario;
   onDelete?: (id: string) => void;
   onEdit?: (id: string) => void;
+  onView?: (id: string) => void;
   onViewDocuments?: (id: string) => void;
   onViewDependentes?: (id: string) => void;
 }
@@ -48,6 +49,7 @@ const FuncionarioListItem: React.FC<FuncionarioListItemProps> = ({
   funcionario,
   onDelete,
   onEdit,
+  onView,
   onViewDocuments,
   onViewDependentes
 }) => {
@@ -74,7 +76,7 @@ const FuncionarioListItem: React.FC<FuncionarioListItemProps> = ({
   };
 
   return (
-    <Card className="mb-4 hover:shadow-md transition-shadow">
+    <Card className="mb-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => onView && onView(funcionario.id)}>
       <CardContent className="p-4 md:p-6">
         <div className="flex flex-col md:flex-row md:items-center gap-4">
           <div className="relative">
@@ -117,7 +119,7 @@ const FuncionarioListItem: React.FC<FuncionarioListItemProps> = ({
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
                       <MoreHorizontal className="h-4 w-4" />
                       <span className="sr-only">Ações</span>
                     </Button>
@@ -125,21 +127,40 @@ const FuncionarioListItem: React.FC<FuncionarioListItemProps> = ({
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Ações</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => onEdit && onEdit(funcionario.id)}>
+                    <DropdownMenuItem onClick={(e) => { 
+                      e.stopPropagation(); 
+                      onView && onView(funcionario.id); 
+                    }}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      <span>Visualizar</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => { 
+                      e.stopPropagation(); 
+                      onEdit && onEdit(funcionario.id); 
+                    }}>
                       <Pencil className="mr-2 h-4 w-4" />
                       <span>Editar</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onViewDocuments && onViewDocuments(funcionario.id)}>
+                    <DropdownMenuItem onClick={(e) => { 
+                      e.stopPropagation(); 
+                      onViewDocuments && onViewDocuments(funcionario.id); 
+                    }}>
                       <File className="mr-2 h-4 w-4" />
                       <span>Documentos</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onViewDependentes && onViewDependentes(funcionario.id)}>
+                    <DropdownMenuItem onClick={(e) => { 
+                      e.stopPropagation(); 
+                      onViewDependentes && onViewDependentes(funcionario.id); 
+                    }}>
                       <Users className="mr-2 h-4 w-4" />
                       <span>Dependentes</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
-                      onClick={() => onDelete && onDelete(funcionario.id)}
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        onDelete && onDelete(funcionario.id); 
+                      }}
                       className="text-red-600 focus:text-red-600"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />

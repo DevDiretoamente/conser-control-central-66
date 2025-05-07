@@ -9,6 +9,8 @@ import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import ListaFuncionarios from "./pages/funcionarios/ListaFuncionarios";
 import NovoFuncionario from "./pages/funcionarios/NovoFuncionario";
+import DetalheFuncionario from "./pages/funcionarios/DetalheFuncionario";
+import EditarFuncionario from "./pages/funcionarios/EditarFuncionario";
 import ObrasPage from "./pages/obras/Obras";
 import FrotaPage from "./pages/frota/Frota";
 import PatrimonioPage from "./pages/patrimonio/Patrimonio";
@@ -28,6 +30,8 @@ const App = () => (
             <Route index element={<Dashboard />} />
             <Route path="funcionarios" element={<ListaFuncionarios />} />
             <Route path="funcionarios/novo" element={<NovoFuncionario />} />
+            <Route path="funcionarios/:id" element={<DetalheFuncionario />} />
+            <Route path="funcionarios/:id/editar" element={<EditarFuncionario />} />
             <Route path="obras" element={<ObrasPage />} />
             <Route path="frota" element={<FrotaPage />} />
             <Route path="patrimonio" element={<PatrimonioPage />} />
