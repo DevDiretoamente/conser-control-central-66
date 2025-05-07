@@ -7,6 +7,8 @@ import { toast } from 'sonner';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import FuncionarioForm from '@/components/funcionarios/FuncionarioForm';
 import { Funcionario } from '@/types/funcionario';
+import DocumentosImpressaoTab from '@/components/funcionarios/DocumentosImpressaoTab';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // This would be replaced with an API call in a real application
 const getMockFuncionarioById = (id: string): Funcionario | undefined => {
@@ -109,6 +111,7 @@ const EditarFuncionario: React.FC = () => {
   const navigate = useNavigate();
   const [funcionario, setFuncionario] = useState<Funcionario | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('formulario');
 
   useEffect(() => {
     if (id) {
@@ -189,11 +192,30 @@ const EditarFuncionario: React.FC = () => {
         </p>
       </div>
 
-      <FuncionarioForm 
-        defaultValues={funcionario} 
-        onSuccess={handleSuccess} 
-        funcionarioId={id}
-      />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-2 mb-4">
+          <TabsTrigger value="formulario">Dados do Funcionário</TabsTrigger>
+          <TabsTrigger value="documentos">Documentos e Impressões</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="formulario">
+          <FuncionarioForm 
+            defaultValues={funcionario} 
+            onSuccess={handleSuccess} 
+            funcionarioId={id}
+          />
+        </TabsContent>
+        
+        <TabsContent value="documentos">
+          <DocumentosImpressaoTab 
+            funcionario={funcionario}
+            onUpdate={(updatedFuncionario) => {
+              setFuncionario(updatedFuncionario);
+              toast.success("Documentos atualizados com sucesso!");
+            }}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

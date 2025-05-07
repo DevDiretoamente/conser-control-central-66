@@ -29,9 +29,23 @@ import {
   Share,
   Pen,
   Files,
-  Signature
+  Signature,
+  MoreHorizontal
 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 
 interface DocumentoHistoricoListProps {
@@ -39,13 +53,15 @@ interface DocumentoHistoricoListProps {
   onView: (documento: DocumentoGerado) => void;
   onPrint: (documento: DocumentoGerado) => void;
   onDownload: (documento: DocumentoGerado) => void;
+  onStatusChange?: (documento: DocumentoGerado, newStatus: 'gerado' | 'assinado' | 'pendente' | 'arquivado') => void;
 }
 
 const DocumentoHistoricoList: React.FC<DocumentoHistoricoListProps> = ({
   documentos,
   onView,
   onPrint,
-  onDownload
+  onDownload,
+  onStatusChange
 }) => {
   const [search, setSearch] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<string>('');
@@ -94,13 +110,21 @@ const DocumentoHistoricoList: React.FC<DocumentoHistoricoListProps> = ({
   };
 
   const handleRequestSignature = (doc: DocumentoGerado) => {
-    // In a real implementation, this would send a signature request
-    toast.success(`Solicitação de assinatura para "${doc.titulo}" enviada`);
+    if (onStatusChange) {
+      onStatusChange(doc, 'pendente');
+      toast.success(`Solicitação de assinatura para "${doc.titulo}" enviada`);
+    }
   };
 
   const handleDuplicate = (doc: DocumentoGerado) => {
     // In a real implementation, this would duplicate the document
     toast.success(`Documento "${doc.titulo}" duplicado`);
+  };
+
+  const handleSetStatus = (doc: DocumentoGerado, status: 'gerado' | 'assinado' | 'pendente' | 'arquivado') => {
+    if (onStatusChange) {
+      onStatusChange(doc, status);
+    }
   };
 
   return (
@@ -189,14 +213,45 @@ const DocumentoHistoricoList: React.FC<DocumentoHistoricoListProps> = ({
                       >
                         <Download className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleViewDetail(doc)}
-                      >
-                        <span className="sr-only">Ver detalhes</span>
-                        <span className="text-xs">Detalhes</span>
-                      </Button>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Opções</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => handleViewDetail(doc)}>
+                            Detalhes
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {onStatusChange && (
+                            <>
+                              <DropdownMenuLabel>Alterar Status</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => handleSetStatus(doc, 'gerado')}>
+                                Marcar como Gerado
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleSetStatus(doc, 'assinado')}>
+                                Marcar como Assinado
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleSetStatus(doc, 'pendente')}>
+                                Marcar como Pendente
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleSetStatus(doc, 'arquivado')}>
+                                Arquivar
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                            </>
+                          )}
+                          <DropdownMenuItem onClick={() => handleShare(doc)}>
+                            Compartilhar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDuplicate(doc)}>
+                            Duplicar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -258,10 +313,17 @@ const DocumentoHistoricoList: React.FC<DocumentoHistoricoListProps> = ({
                   </Button>
                 </div>
                 <div className="space-x-2">
-                  {selectedDocument.status !== 'assinado' && (
-                    <Button size="sm" variant="outline" onClick={() => handleRequestSignature(selectedDocument)}>
+                  {onStatusChange && selectedDocument.status !== 'assinado' && (
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => {
+                        handleSetStatus(selectedDocument, 'assinado');
+                        setShowDetailDialog(false);
+                      }}
+                    >
                       <Signature className="h-4 w-4 mr-2" />
-                      Assinar
+                      Marcar como Assinado
                     </Button>
                   )}
                   <Button size="sm" variant="outline" onClick={() => handleDuplicate(selectedDocument)}>

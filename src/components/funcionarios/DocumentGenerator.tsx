@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText, Printer, Download, Eye } from 'lucide-react';
 import {
@@ -30,46 +31,6 @@ interface DocumentGeneratorProps {
   onDocumentGenerated?: (titulo: string, categoria: string) => void;
 }
 
-// Mock document templates data
-const mockTemplates: DocumentTemplate[] = [
-  {
-    id: "1",
-    title: "Declaração de Obra",
-    description: "Informa o funcionário sobre os locais diversos de trabalho",
-    content: "Eu, {NOME}, portador do CPF {CPF}, declaro estar ciente que os locais de trabalho serão em obras diversas e não na sede da empresa.",
-    createdAt: new Date(2023, 5, 15),
-    updatedAt: new Date(2023, 5, 15),
-    category: "Declarações"
-  },
-  {
-    id: "2",
-    title: "Declaração de Opção - Vale Alimentação",
-    description: "Opção de recebimento de créditos em cartão alimentação",
-    content: "Eu, {NOME}, CPF {CPF}, opto por receber os créditos referentes à cesta básica através de cartão alimentação, conforme convenção coletiva.",
-    createdAt: new Date(2023, 6, 20),
-    updatedAt: new Date(2023, 7, 5),
-    category: "Benefícios"
-  },
-  {
-    id: "3",
-    title: "Normas de Alojamento",
-    description: "Orientações de comportamento no alojamento",
-    content: "Eu, {NOME}, CPF {CPF}, declaro estar ciente e de acordo com as normas de convivência do alojamento da empresa, comprometendo-me a respeitá-las integralmente.",
-    createdAt: new Date(2023, 8, 10),
-    updatedAt: new Date(2023, 8, 10),
-    category: "Alojamento"
-  },
-  {
-    id: "4",
-    title: "Designação de Beneficiário - Seguro de Vida",
-    description: "Indicação de beneficiários para seguro de vida",
-    content: "Eu, {NOME}, CPF {CPF}, funcionário da empresa CONSERVIAS TRANSPORTES E PAVIMENTAÇÃO LTDA, indico como beneficiário(s) do meu seguro de vida: __________________.",
-    createdAt: new Date(2023, 9, 5),
-    updatedAt: new Date(2023, 9, 5),
-    category: "Seguro de Vida"
-  }
-];
-
 const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({ 
   funcionario,
   onDocumentGenerated
@@ -78,12 +39,76 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
   const [generatedDocument, setGeneratedDocument] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [templates, setTemplates] = useState<DocumentTemplate[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const documentContentRef = useRef<HTMLDivElement>(null);
   
+  // Fetch document templates (simulated with mock data)
+  useEffect(() => {
+    // This would be an API call in a real application
+    const fetchTemplates = async () => {
+      setIsLoading(true);
+      try {
+        // Simulating API fetch with mock data
+        const response = await new Promise<DocumentTemplate[]>((resolve) => {
+          setTimeout(() => {
+            resolve([
+              {
+                id: "1",
+                title: "Declaração de Obra",
+                description: "Informa o funcionário sobre os locais diversos de trabalho",
+                content: "Eu, {NOME}, portador do CPF {CPF}, declaro estar ciente que os locais de trabalho serão em obras diversas e não na sede da empresa.",
+                createdAt: new Date(2023, 5, 15),
+                updatedAt: new Date(2023, 5, 15),
+                category: "Declarações"
+              },
+              {
+                id: "2",
+                title: "Declaração de Opção - Vale Alimentação",
+                description: "Opção de recebimento de créditos em cartão alimentação",
+                content: "Eu, {NOME}, CPF {CPF}, opto por receber os créditos referentes à cesta básica através de cartão alimentação, conforme convenção coletiva.",
+                createdAt: new Date(2023, 6, 20),
+                updatedAt: new Date(2023, 7, 5),
+                category: "Benefícios"
+              },
+              {
+                id: "3",
+                title: "Normas de Alojamento",
+                description: "Orientações de comportamento no alojamento",
+                content: "Eu, {NOME}, CPF {CPF}, declaro estar ciente e de acordo com as normas de convivência do alojamento da empresa, comprometendo-me a respeitá-las integralmente.",
+                createdAt: new Date(2023, 8, 10),
+                updatedAt: new Date(2023, 8, 10),
+                category: "Alojamento"
+              },
+              {
+                id: "4",
+                title: "Designação de Beneficiário - Seguro de Vida",
+                description: "Indicação de beneficiários para seguro de vida",
+                content: "Eu, {NOME}, CPF {CPF}, funcionário da empresa {EMPRESA}, indico como beneficiário(s) do meu seguro de vida: __________________.",
+                createdAt: new Date(2023, 9, 5),
+                updatedAt: new Date(2023, 9, 5),
+                category: "Seguro de Vida"
+              }
+            ]);
+          }, 500);
+        });
+        
+        setTemplates(response);
+      } catch (error) {
+        console.error('Error fetching templates:', error);
+        toast.error('Erro ao carregar os modelos de documento');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchTemplates();
+  }, []);
+
   // Filter templates by selected category
   const filteredTemplates = selectedCategory 
-    ? mockTemplates.filter(t => t.category === selectedCategory)
-    : mockTemplates;
+    ? templates.filter(t => t.category === selectedCategory)
+    : templates;
 
   const generateDocument = (template: DocumentTemplate) => {
     if (!funcionario) return '';
@@ -124,6 +149,14 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
     content = content.replace(/\{EMPRESA\}/g, 'CONSERVIAS TRANSPORTES E PAVIMENTAÇÃO LTDA');
     
     return content;
+  };
+
+  const handlePreviewDocument = () => {
+    if (!selectedTemplate) return;
+    
+    const content = generateDocument(selectedTemplate);
+    setGeneratedDocument(content);
+    setIsDialogOpen(true);
   };
 
   const handlePrintDocument = () => {
@@ -209,14 +242,6 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
     }
   };
 
-  const handlePreviewDocument = () => {
-    if (!selectedTemplate) return;
-    
-    const content = generateDocument(selectedTemplate);
-    setGeneratedDocument(content);
-    setIsDialogOpen(true);
-  };
-
   const handleDownloadDocument = () => {
     if (!selectedTemplate || !documentContentRef.current) return;
     
@@ -283,9 +308,10 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
               setSelectedCategory(value);
               setSelectedTemplate(null);
             }}
+            disabled={isLoading}
           >
             <SelectTrigger id="category-select">
-              <SelectValue placeholder="Selecione uma categoria" />
+              <SelectValue placeholder={isLoading ? "Carregando..." : "Selecione uma categoria"} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todos os documentos</SelectItem>
@@ -300,13 +326,13 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
           <Label htmlFor="template-select">Documento</Label>
           <Select
             onValueChange={(value) => {
-              const template = mockTemplates.find(t => t.id === value);
+              const template = templates.find(t => t.id === value);
               setSelectedTemplate(template || null);
             }}
-            disabled={!selectedCategory && selectedCategory !== 'todos'}
+            disabled={isLoading}
           >
             <SelectTrigger id="template-select">
-              <SelectValue placeholder="Selecione um documento" />
+              <SelectValue placeholder={isLoading ? "Carregando..." : "Selecione um documento"} />
             </SelectTrigger>
             <SelectContent>
               {filteredTemplates.map((template) => (
@@ -319,7 +345,13 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         </div>
       </div>
 
-      {selectedTemplate && (
+      {isLoading && (
+        <div className="flex justify-center p-4">
+          <div className="animate-pulse">Carregando modelos de documentos...</div>
+        </div>
+      )}
+
+      {selectedTemplate && !isLoading && (
         <div className="p-4 bg-muted rounded-md">
           <h4 className="font-medium">{selectedTemplate.title}</h4>
           <p className="text-sm text-muted-foreground">{selectedTemplate.description}</p>

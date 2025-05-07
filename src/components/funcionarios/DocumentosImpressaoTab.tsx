@@ -18,51 +18,15 @@ interface DocumentosImpressaoTabProps {
   readOnly?: boolean;
 }
 
-// Mock data for document history
-const mockDocumentos: DocumentoGerado[] = [
-  {
-    id: "1",
-    titulo: "Declaração de Obra",
-    categoria: "Declarações",
-    dataGeracao: new Date(2023, 6, 15),
-    status: 'assinado',
-    dataAssinatura: new Date(2023, 6, 16)
-  },
-  {
-    id: "2",
-    titulo: "Opção de Vale Alimentação",
-    categoria: "Benefícios",
-    dataGeracao: new Date(2023, 7, 20),
-    status: 'pendente',
-    observacoes: "Aguardando assinatura do funcionário"
-  },
-  {
-    id: "3",
-    titulo: "Normas de Alojamento",
-    categoria: "Alojamento",
-    dataGeracao: new Date(2023, 8, 5),
-    status: 'gerado'
-  },
-  {
-    id: "4",
-    titulo: "Designação de Beneficiário",
-    categoria: "Seguro de Vida",
-    dataGeracao: new Date(2023, 9, 10),
-    status: 'arquivado',
-    dataAssinatura: new Date(2023, 9, 12)
-  }
-];
-
 const DocumentosImpressaoTab: React.FC<DocumentosImpressaoTabProps> = ({
   funcionario,
   onUpdate,
   readOnly = false
 }) => {
   const [activeTab, setActiveTab] = useState("gerar");
-  
-  // In a real implementation, we would use funcionario.documentosGerados
-  // For now, we'll use mock data
-  const [documentos, setDocumentos] = useState<DocumentoGerado[]>(mockDocumentos);
+  const [documentos, setDocumentos] = useState<DocumentoGerado[]>(
+    funcionario.documentosGerados || []
+  );
 
   const handleDocumentGenerated = (titulo: string, categoria: string) => {
     if (!onUpdate) return;
@@ -78,11 +42,11 @@ const DocumentosImpressaoTab: React.FC<DocumentosImpressaoTabProps> = ({
     const documentosAtualizados = [...documentos, novoDocumento];
     setDocumentos(documentosAtualizados);
     
-    // In a real implementation, we would update the funcionario object
-    // onUpdate({
-    //   ...funcionario,
-    //   documentosGerados: documentosAtualizados
-    // });
+    // Update the funcionario object with the new document
+    onUpdate({
+      ...funcionario,
+      documentosGerados: documentosAtualizados
+    });
     
     toast.success(`Documento "${titulo}" gerado com sucesso!`);
     setActiveTab("historico"); // Switch to history tab
@@ -101,6 +65,25 @@ const DocumentosImpressaoTab: React.FC<DocumentosImpressaoTabProps> = ({
   const handleDownloadDocument = (documento: DocumentoGerado) => {
     toast.success(`Download do documento "${documento.titulo}" iniciado`);
     // In a real implementation, this would download the document
+  };
+
+  const handleStatusChange = (documento: DocumentoGerado, newStatus: 'gerado' | 'assinado' | 'pendente' | 'arquivado') => {
+    if (!onUpdate) return;
+    
+    const updatedDocumentos = documentos.map(doc => 
+      doc.id === documento.id 
+        ? { ...doc, status: newStatus } 
+        : doc
+    );
+    
+    setDocumentos(updatedDocumentos);
+    
+    onUpdate({
+      ...funcionario,
+      documentosGerados: updatedDocumentos
+    });
+    
+    toast.success(`Status do documento "${documento.titulo}" alterado para ${newStatus}`);
   };
   
   return (
@@ -145,6 +128,7 @@ const DocumentosImpressaoTab: React.FC<DocumentosImpressaoTabProps> = ({
                   onView={handleViewDocument}
                   onPrint={handlePrintDocument}
                   onDownload={handleDownloadDocument}
+                  onStatusChange={handleStatusChange}
                 />
               ) : (
                 <div className="p-6 text-center text-muted-foreground">
