@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { Funcionario } from '@/types/funcionario';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 const NovoFuncionario: React.FC = () => {
   const navigate = useNavigate();
@@ -33,6 +34,18 @@ const NovoFuncionario: React.FC = () => {
 
   return (
     <div className="w-full">
+      <Breadcrumb className="mb-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/funcionarios">Funcionários</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink>Novo Funcionário</BreadcrumbLink>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       <div className="mb-6">
         <Button variant="outline" onClick={() => navigate('/funcionarios')} className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" />

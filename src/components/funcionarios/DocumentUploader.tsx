@@ -11,9 +11,9 @@ interface DocumentUploaderProps {
   allowedTypes?: string;
   maxSize?: number; // in MB
   onFileChange?: (file: File | null) => void;
-  onChange?: (file: File | null) => void; // Added for backward compatibility
-  value?: File | null; // Added to support the value prop
-  currentFile?: File | null; // Add this line to support the currentFile prop
+  onChange?: (file: File | null) => void; // For backward compatibility
+  value?: File | null;
+  currentFile?: File | null;
 }
 
 const DocumentUploader: React.FC<DocumentUploaderProps> = ({
@@ -22,14 +22,14 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({
   allowedTypes = ".pdf",
   maxSize = 10,
   onFileChange,
-  onChange, // Add the new prop
-  value: externalValue, // Rename to avoid conflicts
-  currentFile, // Add this line
+  onChange,
+  value: externalValue,
+  currentFile,
 }) => {
   const [internalFile, setInternalFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   
-  // Use either the external value (if provided) or the internal state or currentFile
+  // Use external value prop if provided (for controlled component usage)
   const file = externalValue !== undefined ? externalValue : 
                (currentFile !== undefined ? currentFile : internalFile);
 
@@ -76,24 +76,20 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({
     }
     
     setInternalFile(file);
-    if (onFileChange) {
-      onFileChange(file);
-    }
-    if (onChange) {
-      onChange(file);
-    }
+    
+    // Call both handlers for maximum compatibility
+    if (onFileChange) onFileChange(file);
+    if (onChange) onChange(file);
     
     toast.success('Documento adicionado com sucesso!');
   };
 
   const removeFile = () => {
     setInternalFile(null);
-    if (onFileChange) {
-      onFileChange(null);
-    }
-    if (onChange) {
-      onChange(null);
-    }
+    
+    // Call both handlers for maximum compatibility
+    if (onFileChange) onFileChange(null);
+    if (onChange) onChange(null);
   };
 
   return (
