@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { CalendarIcon } from 'lucide-react';
 import DocumentUploader from './DocumentUploader';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 
 interface CNHTabProps {
   form: UseFormReturn<Funcionario>;
