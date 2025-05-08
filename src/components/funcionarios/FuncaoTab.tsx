@@ -74,7 +74,7 @@ const FuncaoTab: React.FC<FuncaoTabProps> = ({ form }) => {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Selecione uma função</SelectItem>
+                  <SelectItem value="sem_funcao">Selecione uma função</SelectItem>
                   {mockFuncoes.filter(f => f.ativo).map((funcao) => (
                     <SelectItem key={funcao.id} value={funcao.id}>
                       {funcao.nome}
@@ -149,7 +149,7 @@ const FuncaoTab: React.FC<FuncaoTabProps> = ({ form }) => {
               </CardHeader>
               <CardContent>
                 <Tabs value={activeExamTab} onValueChange={setActiveExamTab}>
-                  <TabsList className="grid grid-cols-5">
+                  <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="admissional">Admissional</TabsTrigger>
                     <TabsTrigger value="periodico">Periódico</TabsTrigger>
                     <TabsTrigger value="mudancaFuncao">Mudança de Função</TabsTrigger>

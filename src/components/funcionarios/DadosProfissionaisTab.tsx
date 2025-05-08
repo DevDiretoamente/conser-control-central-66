@@ -44,7 +44,7 @@ const DadosProfissionaisTab: React.FC<DadosProfissionaisTabProps> = ({ form }) =
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Selecione uma função</SelectItem>
+                  <SelectItem value="sem_funcao">Selecione uma função</SelectItem>
                   {mockFuncoes.filter(f => f.ativo).map((funcao) => (
                     <SelectItem key={funcao.id} value={funcao.id}>
                       {funcao.nome}
