@@ -19,6 +19,9 @@ import ConfiguracoesPage from "./pages/configuracoes/Configuracoes";
 import Clinicas from "./pages/configuracoes/Clinicas";
 import DocumentosOcupacionaisPage from "./pages/configuracoes/DocumentosOcupacionais";
 import ExamesMedicosPage from "./pages/funcionarios/ExamesMedicosPage";
+import FuncoesPage from "./pages/configuracoes/Funcoes";
+import SetoresPage from "./pages/configuracoes/Setores";
+import ExamesPage from "./pages/configuracoes/Exames";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +46,9 @@ const App = () => (
             <Route path="configuracoes" element={<ConfiguracoesPage />} />
             <Route path="configuracoes/clinicas" element={<Clinicas />} />
             <Route path="configuracoes/documentos-ocupacionais" element={<DocumentosOcupacionaisPage />} />
+            <Route path="configuracoes/funcoes" element={<FuncoesPage />} />
+            <Route path="configuracoes/setores" element={<SetoresPage />} />
+            <Route path="configuracoes/exames" element={<ExamesPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

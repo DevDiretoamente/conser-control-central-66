@@ -17,6 +17,12 @@ import {
   FileText,
   Stethoscope
 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import FuncoesTab from './FuncoesTab';
+import SetoresTab from './SetoresTab';
+import ExamesMedicosTab from './ExamesMedicosTab';
+import EPIsTab from './EPIsTab';
+import DocumentosTab from './DocumentosTab';
 
 const ConfiguracoesPage = () => {
   const configItems = [
@@ -28,13 +34,13 @@ const ConfiguracoesPage = () => {
         {
           title: 'Funções',
           description: 'Cadastro de funções e exigências',
-          href: '#',
+          href: '/configuracoes/funcoes',
           icon: <Briefcase className="h-4 w-4" />
         },
         {
           title: 'Setores',
           description: 'Organização de funcionários em setores',
-          href: '#',
+          href: '/configuracoes/setores',
           icon: <Building className="h-4 w-4" />
         }
       ]
@@ -66,7 +72,7 @@ const ConfiguracoesPage = () => {
         {
           title: 'Tipos de Exames',
           description: 'Cadastro de exames médicos',
-          href: '#',
+          href: '/configuracoes/exames',
           icon: <BadgeCheck className="h-4 w-4" />
         }
       ]
@@ -79,13 +85,13 @@ const ConfiguracoesPage = () => {
         {
           title: 'Usuários',
           description: 'Gerenciamento de usuários e permissões',
-          href: '#',
+          href: '/configuracoes/usuarios',
           icon: <UserCog className="h-4 w-4" />
         },
         {
           title: 'E-mails',
           description: 'Templates de e-mails e notificações',
-          href: '#',
+          href: '/configuracoes/emails',
           icon: <Mail className="h-4 w-4" />
         }
       ]
@@ -96,37 +102,80 @@ const ConfiguracoesPage = () => {
     <div className="w-full">
       <h1 className="text-2xl font-bold mb-6">Configurações do Sistema</h1>
       
-      <ScrollArea className="h-[calc(100vh-150px)]">
-        <div className="space-y-6 pr-4">
-          {configItems.map((section, i) => (
-            <div key={i} className="space-y-4">
-              <div className="flex items-center gap-2">
-                {section.icon}
-                <h2 className="text-xl font-semibold">{section.title}</h2>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {section.children.map((item, j) => (
-                  <Card key={j} className="overflow-hidden">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center gap-2">
-                        {item.icon}
-                        <CardTitle className="text-lg">{item.title}</CardTitle>
-                      </div>
-                      <CardDescription>{item.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <Button asChild className="w-full mt-4" variant="outline">
-                        <Link to={item.href}>Acessar</Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+      <Tabs defaultValue="cards" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="cards">Visão Geral</TabsTrigger>
+          <TabsTrigger value="funcoes">Funções</TabsTrigger>
+          <TabsTrigger value="setores">Setores</TabsTrigger>
+          <TabsTrigger value="exames">Exames Médicos</TabsTrigger>
+          <TabsTrigger value="epis">EPIs</TabsTrigger>
+          <TabsTrigger value="documentos">Documentos</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="cards">
+          <ScrollArea className="h-[calc(100vh-180px)]">
+            <div className="space-y-6 pr-4">
+              {configItems.map((section, i) => (
+                <div key={i} className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    {section.icon}
+                    <h2 className="text-xl font-semibold">{section.title}</h2>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {section.children.map((item, j) => (
+                      <Card key={j} className="overflow-hidden">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center gap-2">
+                            {item.icon}
+                            <CardTitle className="text-lg">{item.title}</CardTitle>
+                          </div>
+                          <CardDescription>{item.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <Button asChild className="w-full mt-4" variant="outline">
+                            <Link to={item.href}>{item.title}</Link>
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </ScrollArea>
+          </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="funcoes">
+          <ScrollArea className="h-[calc(100vh-180px)]">
+            <FuncoesTab />
+          </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="setores">
+          <ScrollArea className="h-[calc(100vh-180px)]">
+            <SetoresTab />
+          </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="exames">
+          <ScrollArea className="h-[calc(100vh-180px)]">
+            <ExamesMedicosTab />
+          </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="epis">
+          <ScrollArea className="h-[calc(100vh-180px)]">
+            <EPIsTab />
+          </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="documentos">
+          <ScrollArea className="h-[calc(100vh-180px)]">
+            <DocumentosTab />
+          </ScrollArea>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

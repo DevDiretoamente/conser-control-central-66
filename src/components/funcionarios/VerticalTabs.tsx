@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import {
   BadgeCheck,
@@ -36,6 +36,14 @@ const VerticalTabs: React.FC<VerticalTabsProps> = ({
 }) => {
   // Use the controlled value if provided, otherwise use internal state
   const [internalActiveTab, setInternalActiveTab] = React.useState(defaultValue);
+  
+  // Make sure we update the internal state when the controlled value changes
+  useEffect(() => {
+    if (value !== undefined) {
+      setInternalActiveTab(value);
+    }
+  }, [value]);
+  
   const activeTab = value !== undefined ? value : internalActiveTab;
 
   const handleTabChange = (tabValue: string) => {
