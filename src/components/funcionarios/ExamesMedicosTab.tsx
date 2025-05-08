@@ -9,7 +9,6 @@ import {
   FormControl,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -47,7 +46,21 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
     }
   }, [funcaoId]);
   
+  // Garantir que há apenas um exame Admissional
+  useEffect(() => {
+    // Se não houver nenhum exame e houver função selecionada com exames
+    if (examesRealizados.length === 0 && funcaoId && examesAdmissionais.length > 0) {
+      // Sugerir a criação do exame admissional, mas não criar automaticamente
+      // Deixando para o usuário decidir quando adicionar
+    }
+  }, [examesRealizados, funcaoId, examesAdmissionais]);
+  
   const adicionarExameAdmissional = () => {
+    // Verifica se já existe um exame admissional
+    if (examesRealizados.length > 0) {
+      return; // Já existe um exame admissional, não permite adicionar outro
+    }
+    
     const novoExame: ExameRealizado = {
       exameId: '',
       tipoSelecionado: 'admissional',
@@ -72,7 +85,9 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-medium">Exame Admissional</h3>
-          <Button type="button" onClick={adicionarExameAdmissional}>Adicionar ASO</Button>
+          {examesRealizados.length === 0 && (
+            <Button type="button" onClick={adicionarExameAdmissional}>Adicionar ASO</Button>
+          )}
         </div>
         
         {examesRealizados.length === 0 ? (
@@ -117,7 +132,7 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
                                   )}
                                 >
                                   {field.value ? (
-                                    format(field.value, "dd/MM/yyyy")
+                                    format(new Date(field.value), "dd/MM/yyyy")
                                   ) : (
                                     <span>Selecione uma data</span>
                                   )}
@@ -128,7 +143,7 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
                             <PopoverContent className="w-auto p-0" align="start">
                               <Calendar
                                 mode="single"
-                                selected={field.value || undefined}
+                                selected={field.value ? new Date(field.value) : undefined}
                                 onSelect={field.onChange}
                                 disabled={(date) => date > new Date()}
                                 initialFocus
@@ -157,7 +172,7 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
                                   )}
                                 >
                                   {field.value ? (
-                                    format(field.value, "dd/MM/yyyy")
+                                    format(new Date(field.value), "dd/MM/yyyy")
                                   ) : (
                                     <span>Selecione uma data</span>
                                   )}
@@ -168,7 +183,7 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
                             <PopoverContent className="w-auto p-0" align="start">
                               <Calendar
                                 mode="single"
-                                selected={field.value || undefined}
+                                selected={field.value ? new Date(field.value) : undefined}
                                 onSelect={field.onChange}
                                 initialFocus
                               />
@@ -294,6 +309,15 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
             </CardContent>
           </Card>
         )}
+        
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-sm text-muted-foreground">
+              <strong>Observação:</strong> Os exames periódicos, de mudança de função, retorno ao trabalho e 
+              demissionais devem ser gerenciados na seção de acompanhamento de exames médicos no sistema.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </ScrollArea>
   );

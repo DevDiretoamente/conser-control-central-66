@@ -38,10 +38,6 @@ const funcaoSchema = z.object({
   setorId: z.string().min(1, { message: 'Setor é obrigatório' }),
   atribuicoes: z.array(z.string()),
   ativo: z.boolean().default(true),
-  // These will be handled separately
-  // epis: z.array(z.any()),
-  // examesNecessarios: z.any(),
-  // uniformes: z.array(z.any()),
 });
 
 type FuncaoFormValues = z.infer<typeof funcaoSchema>;
@@ -303,8 +299,8 @@ const FuncoesTab: React.FC = () => {
               Nova Função
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-[700px]">
-            <DialogHeader>
+          <DialogContent className="max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle>{editingFuncao ? 'Editar' : 'Nova'} Função</DialogTitle>
               <DialogDescription>
                 {editingFuncao
@@ -312,315 +308,320 @@ const FuncoesTab: React.FC = () => {
                   : 'Preencha as informações para cadastrar uma nova função.'}
               </DialogDescription>
             </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="nome"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nome*</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Nome da função" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="setorId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Setor*</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
+            <ScrollArea className="flex-grow pr-4 max-h-[calc(90vh-180px)]">
+              <div className="pb-6">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="nome"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nome*</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Nome da função" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="setorId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Setor*</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecionar setor" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {mockSetores.filter(s => s.ativo).map((setor) => (
+                                  <SelectItem key={setor.id} value={setor.id}>
+                                    {setor.nome}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormDescription>
+                              Setor ao qual esta função está vinculada
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <FormField
+                      control={form.control}
+                      name="descricao"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Descrição*</FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecionar setor" />
-                            </SelectTrigger>
+                            <Textarea 
+                              {...field} 
+                              placeholder="Descrição detalhada da função"
+                              rows={2}
+                            />
                           </FormControl>
-                          <SelectContent>
-                            {mockSetores.filter(s => s.ativo).map((setor) => (
-                              <SelectItem key={setor.id} value={setor.id}>
-                                {setor.nome}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Setor ao qual esta função está vinculada
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="descricao"
-                  render={({ field }) => (
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
                     <FormItem>
-                      <FormLabel>Descrição*</FormLabel>
+                      <FormLabel>Atribuições</FormLabel>
                       <FormControl>
                         <Textarea 
-                          {...field} 
-                          placeholder="Descrição detalhada da função"
-                          rows={2}
+                          value={atribuicoesText}
+                          onChange={(e) => setAtribuicoesText(e.target.value)}
+                          placeholder="Cada atribuição em uma linha (conforme PGR)"
+                          rows={4}
                         />
                       </FormControl>
-                      <FormMessage />
+                      <FormDescription>
+                        Liste as atribuições da função conforme PGR (uma por linha)
+                      </FormDescription>
                     </FormItem>
-                  )}
-                />
-                
-                <FormItem>
-                  <FormLabel>Atribuições</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      value={atribuicoesText}
-                      onChange={(e) => setAtribuicoesText(e.target.value)}
-                      placeholder="Cada atribuição em uma linha (conforme PGR)"
-                      rows={4}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Liste as atribuições da função conforme PGR (uma por linha)
-                  </FormDescription>
-                </FormItem>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* EPIs Selection */}
-                  <FormItem>
-                    <div className="flex items-center gap-2 mb-2">
-                      <HardHat className="h-4 w-4" />
-                      <FormLabel>EPIs Necessários</FormLabel>
-                    </div>
-                    <Card>
-                      <ScrollArea className="h-[200px]">
-                        <CardContent className="pt-2">
-                          {mockEPIs.filter(epi => epi.ativo).map((epi) => (
-                            <div key={epi.id} className="flex items-center space-x-2 py-2 border-b">
-                              <Checkbox 
-                                id={`epi-${epi.id}`}
-                                checked={selectedEPIs.includes(epi.id)}
-                                onCheckedChange={() => 
-                                  handleCheckboxChange(epi.id, selectedEPIs, setSelectedEPIs)
-                                }
-                              />
-                              <Label htmlFor={`epi-${epi.id}`} className="flex-1 flex items-center justify-between">
-                                <span>{epi.nome}</span>
-                                {epi.obrigatorio && <Badge variant="destructive" className="ml-2">Obrigatório</Badge>}
-                              </Label>
-                            </div>
-                          ))}
-                        </CardContent>
-                      </ScrollArea>
-                    </Card>
-                    <FormDescription>
-                      Selecione os EPIs necessários para esta função
-                    </FormDescription>
-                  </FormItem>
-
-                  {/* Uniformes Selection */}
-                  <FormItem>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Shirt className="h-4 w-4" />
-                      <FormLabel>Uniformes Necessários</FormLabel>
-                    </div>
-                    <Card>
-                      <ScrollArea className="h-[200px]">
-                        <CardContent className="pt-2">
-                          {mockUniformes.map((uniforme) => (
-                            <div key={uniforme.id} className="flex items-center space-x-2 py-2 border-b">
-                              <Checkbox 
-                                id={`uniforme-${uniforme.id}`}
-                                checked={selectedUniformes.includes(uniforme.id)}
-                                onCheckedChange={() => 
-                                  handleCheckboxChange(uniforme.id, selectedUniformes, setSelectedUniformes)
-                                }
-                              />
-                              <Label htmlFor={`uniforme-${uniforme.id}`}>
-                                {uniforme.descricao}
-                              </Label>
-                            </div>
-                          ))}
-                        </CardContent>
-                      </ScrollArea>
-                    </Card>
-                    <FormDescription>
-                      Selecione os uniformes necessários para esta função
-                    </FormDescription>
-                  </FormItem>
-                </div>
-
-                {/* Exames Selection with Tabs */}
-                <FormItem className="col-span-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <FileText className="h-4 w-4" />
-                    <FormLabel>Exames Médicos por Tipo</FormLabel>
-                  </div>
-                  <Card>
-                    <CardContent className="pt-2">
-                      <Tabs value={activeExamTypeTab} onValueChange={setActiveExamTypeTab}>
-                        <TabsList className="mb-4 grid grid-cols-5">
-                          {examTypeTabs.map((tab) => (
-                            <TabsTrigger key={tab.value} value={tab.value} className="text-xs">
-                              {tab.label}
-                            </TabsTrigger>
-                          ))}
-                        </TabsList>
-
-                        {examTypeTabs.map((tab) => (
-                          <TabsContent key={tab.value} value={tab.value}>
-                            <div className="mb-2 flex justify-between items-center">
-                              <span className="text-sm font-medium">Exames para {tab.label}</span>
-                              <Badge variant="outline">
-                                {selectedExamesByType[tab.value]?.length || 0} selecionados
-                              </Badge>
-                            </div>
-                            <ScrollArea className="h-[200px] border rounded-md p-2">
-                              {getExamsForType(tab.value).length === 0 ? (
-                                <div className="text-center text-muted-foreground p-4">
-                                  Não há exames disponíveis para este tipo
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* EPIs Selection */}
+                      <FormItem>
+                        <div className="flex items-center gap-2 mb-2">
+                          <HardHat className="h-4 w-4" />
+                          <FormLabel>EPIs Necessários</FormLabel>
+                        </div>
+                        <Card>
+                          <ScrollArea className="h-[200px]">
+                            <CardContent className="pt-2">
+                              {mockEPIs.filter(epi => epi.ativo).map((epi) => (
+                                <div key={epi.id} className="flex items-center space-x-2 py-2 border-b">
+                                  <Checkbox 
+                                    id={`epi-${epi.id}`}
+                                    checked={selectedEPIs.includes(epi.id)}
+                                    onCheckedChange={() => 
+                                      handleCheckboxChange(epi.id, selectedEPIs, setSelectedEPIs)
+                                    }
+                                  />
+                                  <Label htmlFor={`epi-${epi.id}`} className="flex-1 flex items-center justify-between">
+                                    <span>{epi.nome}</span>
+                                    {epi.obrigatorio && <Badge variant="destructive" className="ml-2">Obrigatório</Badge>}
+                                  </Label>
                                 </div>
-                              ) : (
-                                getExamsForType(tab.value).map((exame) => (
-                                  <div key={exame.id} className="flex items-center space-x-2 py-2 border-b">
-                                    <Checkbox 
-                                      id={`exame-${tab.value}-${exame.id}`}
-                                      checked={selectedExamesByType[tab.value]?.includes(exame.id) || false}
-                                      onCheckedChange={() => handleExamCheckboxChange(exame.id, tab.value)}
-                                    />
-                                    <div className="flex-1">
-                                      <Label htmlFor={`exame-${tab.value}-${exame.id}`} className="font-medium">
-                                        {exame.nome}
-                                      </Label>
-                                      {exame.descricao && (
-                                        <p className="text-xs text-muted-foreground">{exame.descricao}</p>
-                                      )}
-                                    </div>
-                                    {exame.periodicidade && (
-                                      <Badge variant="outline" className="ml-auto">
-                                        {exame.periodicidade} meses
-                                      </Badge>
-                                    )}
-                                  </div>
-                                ))
-                              )}
-                            </ScrollArea>
-                            <FormDescription className="mt-2">
-                              Selecione os exames necessários para {tab.label.toLowerCase()}
-                            </FormDescription>
-                          </TabsContent>
-                        ))}
-                      </Tabs>
-                    </CardContent>
-                  </Card>
-                </FormItem>
-                
-                <FormField
-                  control={form.control}
-                  name="ativo"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-2">
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div>
-                        <FormLabel>Função Ativa</FormLabel>
+                              ))}
+                            </CardContent>
+                          </ScrollArea>
+                        </Card>
+                        <FormDescription>
+                          Selecione os EPIs necessários para esta função
+                        </FormDescription>
+                      </FormItem>
+
+                      {/* Uniformes Selection */}
+                      <FormItem>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Shirt className="h-4 w-4" />
+                          <FormLabel>Uniformes Necessários</FormLabel>
+                        </div>
+                        <Card>
+                          <ScrollArea className="h-[200px]">
+                            <CardContent className="pt-2">
+                              {mockUniformes.map((uniforme) => (
+                                <div key={uniforme.id} className="flex items-center space-x-2 py-2 border-b">
+                                  <Checkbox 
+                                    id={`uniforme-${uniforme.id}`}
+                                    checked={selectedUniformes.includes(uniforme.id)}
+                                    onCheckedChange={() => 
+                                      handleCheckboxChange(uniforme.id, selectedUniformes, setSelectedUniformes)
+                                    }
+                                  />
+                                  <Label htmlFor={`uniforme-${uniforme.id}`}>
+                                    {uniforme.descricao}
+                                  </Label>
+                                </div>
+                              ))}
+                            </CardContent>
+                          </ScrollArea>
+                        </Card>
+                        <FormDescription>
+                          Selecione os uniformes necessários para esta função
+                        </FormDescription>
+                      </FormItem>
+                    </div>
+
+                    {/* Exames Selection with Tabs */}
+                    <FormItem className="col-span-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FileText className="h-4 w-4" />
+                        <FormLabel>Exames Médicos por Tipo</FormLabel>
                       </div>
+                      <Card>
+                        <CardContent className="pt-2">
+                          <Tabs value={activeExamTypeTab} onValueChange={setActiveExamTypeTab}>
+                            <TabsList className="mb-4 grid grid-cols-5">
+                              {examTypeTabs.map((tab) => (
+                                <TabsTrigger key={tab.value} value={tab.value} className="text-xs">
+                                  {tab.label}
+                                </TabsTrigger>
+                              ))}
+                            </TabsList>
+
+                            {examTypeTabs.map((tab) => (
+                              <TabsContent key={tab.value} value={tab.value}>
+                                <div className="mb-2 flex justify-between items-center">
+                                  <span className="text-sm font-medium">Exames para {tab.label}</span>
+                                  <Badge variant="outline">
+                                    {selectedExamesByType[tab.value]?.length || 0} selecionados
+                                  </Badge>
+                                </div>
+                                <ScrollArea className="h-[200px] border rounded-md p-2">
+                                  {getExamsForType(tab.value).length === 0 ? (
+                                    <div className="text-center text-muted-foreground p-4">
+                                      Não há exames disponíveis para este tipo
+                                    </div>
+                                  ) : (
+                                    getExamsForType(tab.value).map((exame) => (
+                                      <div key={exame.id} className="flex items-center space-x-2 py-2 border-b">
+                                        <Checkbox 
+                                          id={`exame-${tab.value}-${exame.id}`}
+                                          checked={selectedExamesByType[tab.value]?.includes(exame.id) || false}
+                                          onCheckedChange={() => handleExamCheckboxChange(exame.id, tab.value)}
+                                        />
+                                        <div className="flex-1">
+                                          <Label htmlFor={`exame-${tab.value}-${exame.id}`} className="font-medium">
+                                            {exame.nome}
+                                          </Label>
+                                          {exame.descricao && (
+                                            <p className="text-xs text-muted-foreground">{exame.descricao}</p>
+                                          )}
+                                        </div>
+                                        {exame.periodicidade && (
+                                          <Badge variant="outline" className="ml-auto">
+                                            {exame.periodicidade} meses
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    ))
+                                  )}
+                                </ScrollArea>
+                                <FormDescription className="mt-2">
+                                  Selecione os exames necessários para {tab.label.toLowerCase()}
+                                </FormDescription>
+                              </TabsContent>
+                            ))}
+                          </Tabs>
+                        </CardContent>
+                      </Card>
                     </FormItem>
-                  )}
-                />
-                
-                <DialogFooter>
-                  <Button type="submit">
-                    {editingFuncao ? 'Salvar Alterações' : 'Cadastrar Função'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
+                    
+                    <FormField
+                      control={form.control}
+                      name="ativo"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-2">
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div>
+                            <FormLabel>Função Ativa</FormLabel>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </form>
+                </Form>
+              </div>
+            </ScrollArea>
+            <DialogFooter className="flex-shrink-0 pt-2">
+              <Button onClick={form.handleSubmit(onSubmit)}>
+                {editingFuncao ? 'Salvar Alterações' : 'Cadastrar Função'}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
       
       <Card>
         <CardContent className="pt-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Setor</TableHead>
-                <TableHead className="hidden md:table-cell">Descrição</TableHead>
-                <TableHead>Requisitos</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {funcoes.length === 0 ? (
+          <ScrollArea className="h-[calc(100vh-250px)]">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center">
-                    Nenhuma função cadastrada
-                  </TableCell>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Setor</TableHead>
+                  <TableHead className="hidden md:table-cell">Descrição</TableHead>
+                  <TableHead>Requisitos</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
-              ) : (
-                funcoes.map((funcao) => (
-                  <TableRow key={funcao.id}>
-                    <TableCell className="font-medium">{funcao.nome}</TableCell>
-                    <TableCell>{getSetorNome(funcao.setorId)}</TableCell>
-                    <TableCell className="hidden md:table-cell max-w-xs truncate">
-                      {funcao.descricao}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Badge variant="outline" className="flex items-center gap-1">
-                          <HardHat className="h-3 w-3" />
-                          {funcao.epis.length}
-                        </Badge>
-                        <Badge variant="outline" className="flex items-center gap-1">
-                          <FileText className="h-3 w-3" />
-                          {getTotalExamCount(funcao.examesNecessarios)}
-                        </Badge>
-                        <Badge variant="outline" className="flex items-center gap-1">
-                          <Shirt className="h-3 w-3" />
-                          {funcao.uniformes.length}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Switch 
-                          checked={funcao.ativo} 
-                          onCheckedChange={() => toggleAtivo(funcao.id)}
-                          aria-label={`Função ${funcao.ativo ? 'ativa' : 'inativa'}`}
-                        />
-                        <Label className="text-sm">{funcao.ativo ? 'Ativa' : 'Inativa'}</Label>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="outline" onClick={() => onOpenDialog(funcao)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => deleteFuncao(funcao.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {funcoes.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center">
+                      Nenhuma função cadastrada
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  funcoes.map((funcao) => (
+                    <TableRow key={funcao.id}>
+                      <TableCell className="font-medium">{funcao.nome}</TableCell>
+                      <TableCell>{getSetorNome(funcao.setorId)}</TableCell>
+                      <TableCell className="hidden md:table-cell max-w-xs truncate">
+                        {funcao.descricao}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Badge variant="outline" className="flex items-center gap-1">
+                            <HardHat className="h-3 w-3" />
+                            {funcao.epis.length}
+                          </Badge>
+                          <Badge variant="outline" className="flex items-center gap-1">
+                            <FileText className="h-3 w-3" />
+                            {getTotalExamCount(funcao.examesNecessarios)}
+                          </Badge>
+                          <Badge variant="outline" className="flex items-center gap-1">
+                            <Shirt className="h-3 w-3" />
+                            {funcao.uniformes.length}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Switch 
+                            checked={funcao.ativo} 
+                            onCheckedChange={() => toggleAtivo(funcao.id)}
+                            aria-label={`Função ${funcao.ativo ? 'ativa' : 'inativa'}`}
+                          />
+                          <Label className="text-sm">{funcao.ativo ? 'Ativa' : 'Inativa'}</Label>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline" onClick={() => onOpenDialog(funcao)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => deleteFuncao(funcao.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </ScrollArea>
         </CardContent>
       </Card>
     </div>

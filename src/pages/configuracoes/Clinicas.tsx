@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import GerenciamentoClinicas from '@/components/clinicas/GerenciamentoClinicas';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const Clinicas: React.FC = () => {
   const navigate = useNavigate();
@@ -34,7 +35,9 @@ const Clinicas: React.FC = () => {
         </p>
       </div>
 
-      <GerenciamentoClinicas />
+      <ScrollArea className="h-[calc(100vh-220px)]">
+        <GerenciamentoClinicas />
+      </ScrollArea>
     </div>
   );
 };

@@ -10,7 +10,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
@@ -27,6 +26,17 @@ interface CNHTabProps {
 }
 
 const CNHTab: React.FC<CNHTabProps> = ({ form, onCNHFileChange, cnhFile }) => {
+  // Ensure CNH data exists in the form
+  React.useEffect(() => {
+    if (!form.getValues('cnh')) {
+      form.setValue('cnh', { 
+        numero: '',
+        categoria: '',
+        validade: undefined,
+      });
+    }
+  }, [form]);
+
   return (
     <ScrollArea className="h-[calc(100vh-250px)] pr-4">
       <div className="space-y-6">
@@ -92,7 +102,7 @@ const CNHTab: React.FC<CNHTabProps> = ({ form, onCNHFileChange, cnhFile }) => {
                         )}
                       >
                         {field.value ? (
-                          format(field.value, "dd/MM/yyyy")
+                          format(new Date(field.value), "dd/MM/yyyy")
                         ) : (
                           <span>Selecione uma data</span>
                         )}
@@ -103,7 +113,7 @@ const CNHTab: React.FC<CNHTabProps> = ({ form, onCNHFileChange, cnhFile }) => {
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={field.value || undefined}
+                      selected={field.value ? new Date(field.value) : undefined}
                       onSelect={field.onChange}
                       initialFocus
                     />
