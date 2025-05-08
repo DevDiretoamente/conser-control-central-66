@@ -72,7 +72,7 @@ const CNHTab: React.FC<CNHTabProps> = ({ form, onCNHFileChange, cnhFile }) => {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Não possui</SelectItem>
+                    <SelectItem value="nao_possui">Não possui</SelectItem>
                     <SelectItem value="A">A</SelectItem>
                     <SelectItem value="B">B</SelectItem>
                     <SelectItem value="AB">AB</SelectItem>
