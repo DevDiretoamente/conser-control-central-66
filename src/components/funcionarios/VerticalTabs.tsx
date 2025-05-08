@@ -23,21 +23,25 @@ import {
 
 interface VerticalTabsProps {
   defaultValue?: string;
+  value?: string;
   onChange?: (value: string) => void;
   completedSections?: string[];
 }
 
 const VerticalTabs: React.FC<VerticalTabsProps> = ({
   defaultValue = 'dados-pessoais',
+  value,
   onChange,
   completedSections = [],
 }) => {
-  const [activeTab, setActiveTab] = React.useState(defaultValue);
+  // Use the controlled value if provided, otherwise use internal state
+  const [internalActiveTab, setInternalActiveTab] = React.useState(defaultValue);
+  const activeTab = value !== undefined ? value : internalActiveTab;
 
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
+  const handleTabChange = (tabValue: string) => {
+    setInternalActiveTab(tabValue);
     if (onChange) {
-      onChange(value);
+      onChange(tabValue);
     }
   };
 
@@ -70,6 +74,7 @@ const VerticalTabs: React.FC<VerticalTabsProps> = ({
               : 'text-muted-foreground'
           )}
           onClick={() => handleTabChange(tab.id)}
+          type="button" // Important: prevent form submission when clicking tabs
         >
           {tab.icon}
           <span className="flex-1 text-left">{tab.label}</span>

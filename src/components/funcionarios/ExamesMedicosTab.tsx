@@ -46,18 +46,17 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
     }
   }, [funcaoId]);
   
-  // Garantir que há apenas um exame Admissional
+  // Garantir que o array examesRealizados esteja inicializado
   useEffect(() => {
-    // Se não houver nenhum exame e houver função selecionada com exames
-    if (examesRealizados.length === 0 && funcaoId && examesAdmissionais.length > 0) {
-      // Sugerir a criação do exame admissional, mas não criar automaticamente
-      // Deixando para o usuário decidir quando adicionar
+    if (!form.getValues('examesRealizados')) {
+      form.setValue('examesRealizados', []);
     }
-  }, [examesRealizados, funcaoId, examesAdmissionais]);
+  }, [form]);
   
   const adicionarExameAdmissional = () => {
     // Verifica se já existe um exame admissional
-    if (examesRealizados.length > 0) {
+    const existingExams = form.getValues('examesRealizados') || [];
+    if (existingExams.length > 0) {
       return; // Já existe um exame admissional, não permite adicionar outro
     }
     
@@ -71,7 +70,7 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
       observacoes: ''
     };
     
-    form.setValue('examesRealizados', [...examesRealizados, novoExame]);
+    form.setValue('examesRealizados', [...existingExams, novoExame]);
   };
   
   const removerExame = (index: number) => {
@@ -85,12 +84,12 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-medium">Exame Admissional</h3>
-          {examesRealizados.length === 0 && (
+          {(examesRealizados?.length === 0 || !examesRealizados) && (
             <Button type="button" onClick={adicionarExameAdmissional}>Adicionar ASO</Button>
           )}
         </div>
         
-        {examesRealizados.length === 0 ? (
+        {(!examesRealizados || examesRealizados.length === 0) ? (
           <Card>
             <CardContent className="pt-6">
               <p className="text-center text-muted-foreground py-8">
@@ -300,7 +299,7 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
           </div>
         )}
         
-        {!funcaoId && examesRealizados.length > 0 && (
+        {!funcaoId && examesRealizados && examesRealizados.length > 0 && (
           <Card>
             <CardContent className="pt-4">
               <p className="text-center text-amber-500 flex items-center justify-center gap-2">

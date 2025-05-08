@@ -1,43 +1,19 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from '@/components/ui/card';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { 
-  ArrowLeft, 
-  Pencil, 
-  Trash2, 
-  User, 
-  Phone, 
-  Mail, 
-  Calendar, 
-  Home, 
-  Briefcase,
-  CreditCard,
-  Users,
-  FileText
-} from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { toast } from 'sonner';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ArrowLeft, Calendar, Pencil, File, Paperclip, Stethoscope, ShieldCheck } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Funcionario } from '@/types/funcionario';
-import DocumentosTab from '@/components/funcionarios/DocumentosTab';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-// Mock data for funcionario details based on ID
-const getMockFuncionarioById = (id: string): Funcionario | undefined => {
-  // This is a simplified mock for example purposes
+// This would be replaced with an API call in a real application
+const getMockFuncionarioById = (id) => {
+  // Mock data would go here
   return {
     id,
     dadosPessoais: {
@@ -46,20 +22,7 @@ const getMockFuncionarioById = (id: string): Funcionario | undefined => {
       rg: '12.345.678-9',
       dataNascimento: new Date('1985-05-15'),
       escolaridade: 'Ensino Médio Completo',
-      estadoCivil: 'Casado',
-      nomeConjuge: 'Maria Silva',
-      telefoneConjuge: '(11) 99999-8877',
-      contatoEmergenciaNome: 'José Silva',
-      contatoEmergenciaTelefone: '(11) 99999-7766'
-    },
-    endereco: {
-      cep: '01234-567',
-      rua: 'Rua das Flores',
-      numero: '123',
-      complemento: 'Apto 45',
-      bairro: 'Centro',
-      cidade: 'São Paulo',
-      uf: 'SP'
+      estadoCivil: 'Casado'
     },
     contato: {
       telefone: '(11) 99999-8888',
@@ -68,119 +31,49 @@ const getMockFuncionarioById = (id: string): Funcionario | undefined => {
     dadosProfissionais: {
       funcaoId: '1',
       cargo: 'Motorista',
-      salario: 5000,
       dataAdmissao: new Date('2022-01-10'),
-      ctpsNumero: '12345',
-      ctpsSerie: '123',
-      pis: '12345678901',
-      tituloEleitor: '123456789012',
-      certificadoReservista: '12345'
+      salario: 5000
     },
-    cnh: {
-      numero: '12345678901',
-      categoria: 'D',
-      validade: new Date('2026-12-31')
-    },
-    dadosBancarios: {
-      banco: 'Banco do Brasil',
-      agencia: '1234',
-      conta: '12345-6',
-      tipoConta: 'corrente'
-    },
-    documentos: {
-      rgFile: null,
-      cpfFile: null,
-      comprovanteResidencia: null,
-      fotoFile: null,
-      cnhFile: null,
-      ctpsFile: null,
-      exameMedicoFile: null,
-      outrosDocumentos: null
-    },
-    dependentes: [
+    uniformes: [],
+    documentos: {},
+    examesRealizados: [
       {
-        id: '1',
-        nome: 'Pedro Silva',
-        dataNascimento: new Date('2015-03-20'),
-        parentesco: 'Filho',
-        cpf: '987.654.321-00',
-        documentos: {
-          certidaoNascimento: null
-        }
-      },
-      {
-        id: '2',
-        nome: 'Ana Silva',
-        dataNascimento: new Date('2018-07-10'),
-        parentesco: 'Filha',
-        cpf: '876.543.210-00',
-        documentos: {
-          certidaoNascimento: null
-        }
+        exameId: '1',
+        tipoSelecionado: 'admissional',
+        dataRealizado: new Date('2022-01-05'),
+        dataValidade: new Date('2023-01-05'),
+        resultado: 'Apto',
+        documento: null
       }
-    ],
-    tamanhoUniforme: {
-      camisa: 'M',
-      calca: 'M',
-      calcado: 42
-    },
-    episEntregues: [],
-    uniformesEntregues: [],
-    examesRealizados: [],
-    documentosGerados: [] // Added this line to include the required property
+    ]
   };
 };
 
-const DetalheFuncionario: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+const DetalheFuncionario = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [funcionario, setFuncionario] = useState<Funcionario | undefined>(undefined);
-  const [activeTab, setActiveTab] = useState(() => {
-    const tab = searchParams.get('tab');
-    return tab || 'info';
-  });
+  const [funcionario, setFuncionario] = useState(null);
+  const [activeTab, setActiveTab] = useState('geral');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id) {
-      // In a real app, this would be an API call
-      const func = getMockFuncionarioById(id);
-      if (func) {
-        setFuncionario(func);
-      } else {
-        toast.error('Funcionário não encontrado');
-        navigate('/funcionarios');
-      }
+    // In a real app, this would be an API call
+    const func = getMockFuncionarioById(id);
+    if (func) {
+      setFuncionario(func);
+    } else {
+      // Handle not found
     }
-  }, [id, navigate]);
+    setLoading(false);
+  }, [id]);
 
-  if (!funcionario) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <p>Carregando...</p>
-      </div>
-    );
+  if (loading) {
+    return <div>Carregando...</div>;
   }
 
-  const handleDelete = () => {
-    // In a real app, this would be an API call
-    toast.success('Funcionário excluído com sucesso');
-    navigate('/funcionarios');
-  };
-
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('pt-BR');
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .slice(0, 2)
-      .join('')
-      .toUpperCase();
-  };
+  if (!funcionario) {
+    return <div>Funcionário não encontrado</div>;
+  }
 
   return (
     <div className="w-full">
@@ -196,406 +89,183 @@ const DetalheFuncionario: React.FC = () => {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={() => navigate('/funcionarios')}>
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <Button variant="outline" onClick={() => navigate('/funcionarios')} className="mb-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar
           </Button>
           <h1 className="text-2xl font-bold">{funcionario.dadosPessoais.nome}</h1>
+          <p className="text-muted-foreground">
+            {funcionario.dadosProfissionais.cargo} • CPF: {funcionario.dadosPessoais.cpf}
+          </p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={() => navigate(`/funcionarios/${id}/editar`)}>
-            <Pencil className="mr-2 h-4 w-4" />
-            Editar
+        
+        <div className="space-x-2">
+          <Button variant="outline" asChild>
+            <Link to={`/funcionarios/${id}/exames-medicos`}>
+              <Stethoscope className="mr-2 h-4 w-4" />
+              Exames Médicos
+            </Link>
           </Button>
-          <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Excluir
+          <Button variant="outline">
+            <File className="mr-2 h-4 w-4" />
+            Documentos
           </Button>
-        </div>
-      </div>
-
-      {/* Profile card */}
-      <div className="bg-white rounded-lg border p-6 mb-6">
-        <div className="flex flex-col md:flex-row gap-6 items-start">
-          <div className="relative">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={funcionario.documentos.fotoFile?.name} alt={funcionario.dadosPessoais.nome} />
-              <AvatarFallback className="bg-conserv-primary text-white text-xl">
-                {getInitials(funcionario.dadosPessoais.nome)}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1">
-            <div>
-              <p className="text-sm text-muted-foreground">Cargo</p>
-              <p className="font-medium">{funcionario.dadosProfissionais.cargo}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">CPF</p>
-              <p className="font-medium">{funcionario.dadosPessoais.cpf}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Contato</p>
-              <p className="font-medium">{funcionario.contato.telefone}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Email</p>
-              <p className="font-medium">{funcionario.contato.email || "Não informado"}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Data de Admissão</p>
-              <p className="font-medium">{formatDate(funcionario.dadosProfissionais.dataAdmissao)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Dependentes</p>
-              <Badge variant="outline" className="flex gap-1 items-center w-fit">
-                <Users size={14} />
-                <span>{funcionario.dependentes.length}</span>
-              </Badge>
-            </div>
-          </div>
+          <Button asChild>
+            <Link to={`/funcionarios/${id}/editar`}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Editar
+            </Link>
+          </Button>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-6 flex flex-wrap">
-          <TabsTrigger value="info" className="flex gap-2">
-            <User size={16} />
-            <span>Informações Pessoais</span>
-          </TabsTrigger>
-          <TabsTrigger value="profissional" className="flex gap-2">
-            <Briefcase size={16} />
-            <span>Informações Profissionais</span>
-          </TabsTrigger>
-          <TabsTrigger value="dependentes" className="flex gap-2">
-            <Users size={16} />
-            <span>Dependentes</span>
-          </TabsTrigger>
-          <TabsTrigger value="documentos" className="flex gap-2">
-            <FileText size={16} />
-            <span>Documentos</span>
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="geral">Informações Gerais</TabsTrigger>
+          <TabsTrigger value="documentos">Documentos</TabsTrigger>
+          <TabsTrigger value="historico">Histórico</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="info">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                  <User size={18} />
-                  Dados Pessoais
-                </h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Nome Completo</p>
-                      <p className="font-medium">{funcionario.dadosPessoais.nome}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Data de Nascimento</p>
-                      <p className="font-medium">{formatDate(funcionario.dadosPessoais.dataNascimento)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">CPF</p>
-                      <p className="font-medium">{funcionario.dadosPessoais.cpf}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">RG</p>
-                      <p className="font-medium">{funcionario.dadosPessoais.rg}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Estado Civil</p>
-                      <p className="font-medium">{funcionario.dadosPessoais.estadoCivil}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Escolaridade</p>
-                      <p className="font-medium">{funcionario.dadosPessoais.escolaridade}</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                  <Home size={18} />
-                  Endereço
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Endereço Completo</p>
-                    <p className="font-medium">
-                      {funcionario.endereco.rua}, {funcionario.endereco.numero}
-                      {funcionario.endereco.complemento && `, ${funcionario.endereco.complemento}`}
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Bairro</p>
-                      <p className="font-medium">{funcionario.endereco.bairro}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Cidade</p>
-                      <p className="font-medium">{funcionario.endereco.cidade}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">UF</p>
-                      <p className="font-medium">{funcionario.endereco.uf}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">CEP</p>
-                    <p className="font-medium">{funcionario.endereco.cep}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                  <Phone size={18} />
-                  Contato
-                </h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Telefone</p>
-                      <p className="font-medium">{funcionario.contato.telefone}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Email</p>
-                      <p className="font-medium">{funcionario.contato.email || "Não informado"}</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                  <Calendar size={18} />
-                  Contatos de Emergência
-                </h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Nome do Contato</p>
-                      <p className="font-medium">{funcionario.dadosPessoais.contatoEmergenciaNome}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Telefone do Contato</p>
-                      <p className="font-medium">{funcionario.dadosPessoais.contatoEmergenciaTelefone}</p>
-                    </div>
-                    
-                    {funcionario.dadosPessoais.nomeConjuge && (
-                      <>
-                        <div className="border-t pt-4">
-                          <p className="text-sm text-muted-foreground">Nome do Cônjuge</p>
-                          <p className="font-medium">{funcionario.dadosPessoais.nomeConjuge}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Telefone do Cônjuge</p>
-                          <p className="font-medium">{funcionario.dadosPessoais.telefoneConjuge}</p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="profissional">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                  <Briefcase size={18} />
-                  Dados Profissionais
-                </h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Cargo</p>
-                      <p className="font-medium">{funcionario.dadosProfissionais.cargo}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Data de Admissão</p>
-                      <p className="font-medium">{formatDate(funcionario.dadosProfissionais.dataAdmissao)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Salário</p>
-                      <p className="font-medium">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(funcionario.dadosProfissionais.salario)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                  <FileText size={18} />
-                  Documentos Profissionais
-                </h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">CTPS Número</p>
-                      <p className="font-medium">{funcionario.dadosProfissionais.ctpsNumero}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">CTPS Série</p>
-                      <p className="font-medium">{funcionario.dadosProfissionais.ctpsSerie}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">PIS/PASEP</p>
-                      <p className="font-medium">{funcionario.dadosProfissionais.pis}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Título de Eleitor</p>
-                      <p className="font-medium">{funcionario.dadosProfissionais.tituloEleitor || "Não informado"}</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {funcionario.cnh.numero && (
+        
+        <ScrollArea className="h-[calc(100vh-250px)]">
+          <TabsContent value="geral" className="p-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
               <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                    <FileText size={18} />
-                    CNH
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Número da CNH</p>
-                        <p className="font-medium">{funcionario.cnh.numero}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Categoria</p>
-                        <p className="font-medium">{funcionario.cnh.categoria}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Validade</p>
-                        <p className="font-medium">{formatDate(funcionario.cnh.validade!)}</p>
-                      </div>
-                    </div>
+                <CardHeader>
+                  <CardTitle>Dados Pessoais</CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-2">
+                  <div>
+                    <span className="text-sm font-medium">Nome Completo:</span>
+                    <p>{funcionario.dadosPessoais.nome}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium">CPF:</span>
+                    <p>{funcionario.dadosPessoais.cpf}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium">RG:</span>
+                    <p>{funcionario.dadosPessoais.rg}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium">Data de Nascimento:</span>
+                    <p>{format(funcionario.dadosPessoais.dataNascimento, 'dd/MM/yyyy')}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium">Escolaridade:</span>
+                    <p>{funcionario.dadosPessoais.escolaridade}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium">Estado Civil:</span>
+                    <p>{funcionario.dadosPessoais.estadoCivil}</p>
                   </div>
                 </CardContent>
               </Card>
-            )}
-
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                  <CreditCard size={18} />
-                  Dados Bancários
-                </h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Banco</p>
-                      <p className="font-medium">{funcionario.dadosBancarios.banco}</p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Agência</p>
-                        <p className="font-medium">{funcionario.dadosBancarios.agencia}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Conta</p>
-                        <p className="font-medium">{funcionario.dadosBancarios.conta}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Tipo de Conta</p>
-                      <p className="font-medium capitalize">{funcionario.dadosBancarios.tipoConta}</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="dependentes">
-          <div className="bg-white rounded-lg border">
-            <div className="p-6">
-              <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                <Users size={18} />
-                Dependentes ({funcionario.dependentes.length})
-              </h3>
               
-              {funcionario.dependentes.length > 0 ? (
-                <div className="space-y-6">
-                  {funcionario.dependentes.map((dependente) => (
-                    <Card key={dependente.id} className="bg-slate-50">
-                      <CardContent className="p-4">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Dados de Contato</CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-2">
+                  <div>
+                    <span className="text-sm font-medium">Telefone:</span>
+                    <p>{funcionario.contato.telefone}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium">Email:</span>
+                    <p>{funcionario.contato.email}</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Dados Profissionais</CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-2">
+                  <div>
+                    <span className="text-sm font-medium">Cargo:</span>
+                    <p>{funcionario.dadosProfissionais.cargo}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium">Data de Admissão:</span>
+                    <p>{format(funcionario.dadosProfissionais.dataAdmissao, 'dd/MM/yyyy')}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium">Salário:</span>
+                    <p>R$ {funcionario.dadosProfissionais.salario.toLocaleString('pt-BR')}</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Exames Médicos</CardTitle>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to={`/funcionarios/${id}/exames-medicos`}>
+                      Ver Todos
+                    </Link>
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {funcionario.examesRealizados && funcionario.examesRealizados.length > 0 ? (
+                    <div className="space-y-2">
+                      {funcionario.examesRealizados.slice(0, 3).map((exame, idx) => (
+                        <div key={idx} className="flex items-center justify-between border-b pb-2 last:border-0">
                           <div>
-                            <h4 className="text-base font-medium">{dependente.nome}</h4>
-                            <p className="text-sm text-muted-foreground">{dependente.parentesco}</p>
+                            <p className="font-medium">{
+                              exame.tipoSelecionado === 'admissional' ? 'Exame Admissional' :
+                              exame.tipoSelecionado === 'periodico' ? 'Exame Periódico' :
+                              exame.tipoSelecionado === 'mudancaFuncao' ? 'Mudança de Função' :
+                              exame.tipoSelecionado === 'retornoTrabalho' ? 'Retorno ao Trabalho' :
+                              'Exame Demissional'
+                            }</p>
+                            <p className="text-sm text-muted-foreground">
+                              {format(exame.dataRealizado, 'dd/MM/yyyy')}
+                            </p>
                           </div>
-                          <div className="mt-2 md:mt-0 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <p className="text-sm text-muted-foreground">Data de Nascimento</p>
-                              <p className="font-medium">{formatDate(dependente.dataNascimento)}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-muted-foreground">CPF</p>
-                              <p className="font-medium">{dependente.cpf || "Não informado"}</p>
-                            </div>
-                          </div>
+                          <Badge variant={exame.resultado === 'Apto' ? 'outline' : 'secondary'}>
+                            {exame.resultado}
+                          </Badge>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">Nenhum dependente cadastrado.</p>
-              )}
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">Nenhum exame médico registrado</p>
+                  )}
+                </CardContent>
+              </Card>
             </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="documentos">
-          <Card>
-            <CardContent className="p-6">
-              <DocumentosTab funcionario={funcionario} />
-            </CardContent>
-          </Card>
-        </TabsContent>
+          </TabsContent>
+          
+          <TabsContent value="documentos" className="p-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Documentos Pessoais</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Lista de documentos anexados ao cadastro</p>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="historico" className="p-1">
+            <div className="grid grid-cols-1 gap-6 mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Histórico de Eventos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Registro de alterações e eventos</p>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </ScrollArea>
       </Tabs>
-
-      {/* Delete confirmation dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir Funcionário</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir o funcionário {funcionario.dadosPessoais.nome}? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
