@@ -7,13 +7,25 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Table, TableHeader, TableRow, TableHead, TableCell, TableBody } from '@/components/ui/table';
 import { Funcionario, ExameRealizado } from '@/types/funcionario';
-import { CalendarIcon, Plus } from 'lucide-react';
+import { CalendarIcon, Plus, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, addYears, addMonths, isPast, differenceInMonths } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 interface ExamesMedicosTabProps {
   form: UseFormReturn<Funcionario>;
 }
+
+// Determine the validity period based on exam type
+const getExameValidityPeriod = (exameId: string): number => {
+  // Espirometria has a validity period of 2 years
+  if (exameId && exameId.toLowerCase().includes('espirometria')) {
+    return 24; // 24 months (2 years)
+  }
+  
+  // All other exams have a validity period of 1 year
+  return 12; // 12 months (1 year)
+};
 
 const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
   const [examesRealizados, setExamesRealizados] = useState<ExameRealizado[]>([]);
@@ -40,6 +52,23 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
       window.location.href = `/funcionarios/${funcionarioId}/exames-medicos`;
     } else {
       toast.error('É necessário salvar o funcionário antes de gerenciar todos os exames.');
+    }
+  };
+
+  // Calculate exam status (valid, expiring, expired)
+  const getExamStatus = (exame: ExameRealizado) => {
+    if (!exame.dataRealizado || !exame.dataValidade) return 'unknown';
+    
+    const today = new Date();
+    const validityDate = new Date(exame.dataValidade);
+    const monthsLeft = differenceInMonths(validityDate, today);
+    
+    if (isPast(validityDate)) {
+      return 'expired';
+    } else if (monthsLeft <= 1) {
+      return 'expiring';
+    } else {
+      return 'valid';
     }
   };
 
@@ -78,20 +107,57 @@ const ExamesMedicosTab: React.FC<ExamesMedicosTabProps> = ({ form }) => {
                     <TableHead>Exame</TableHead>
                     <TableHead>Clínica</TableHead>
                     <TableHead>Data</TableHead>
+                    <TableHead>Validade</TableHead>
                     <TableHead>Resultado</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {admissionExames.map((exame, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{exame.exameId}</TableCell>
-                      <TableCell>{exame.clinicaId}</TableCell>
-                      <TableCell>
-                        {exame.dataRealizado ? format(new Date(exame.dataRealizado), 'dd/MM/yyyy') : 'Agendado'}
-                      </TableCell>
-                      <TableCell>{exame.resultado || 'Pendente'}</TableCell>
-                    </TableRow>
-                  ))}
+                  {admissionExames.map((exame, index) => {
+                    const status = getExamStatus(exame);
+                    const isSpirometry = exame.exameId?.toLowerCase().includes('espirometria');
+                    
+                    return (
+                      <TableRow key={index}>
+                        <TableCell>
+                          {exame.exameId}
+                          {isSpirometry && (
+                            <Badge className="ml-2 bg-blue-100 text-blue-800 border-blue-200">
+                              Bienal
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>{exame.clinicaId}</TableCell>
+                        <TableCell>
+                          {exame.dataRealizado ? format(new Date(exame.dataRealizado), 'dd/MM/yyyy') : 'Agendado'}
+                        </TableCell>
+                        <TableCell>
+                          {exame.dataValidade ? format(new Date(exame.dataValidade), 'dd/MM/yyyy') : 'N/A'}
+                        </TableCell>
+                        <TableCell>{exame.resultado || 'Pendente'}</TableCell>
+                        <TableCell>
+                          {status === 'valid' && (
+                            <div className="flex items-center text-green-600">
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              <span className="text-xs">Válido</span>
+                            </div>
+                          )}
+                          {status === 'expiring' && (
+                            <div className="flex items-center text-amber-600">
+                              <AlertTriangle className="h-4 w-4 mr-1" />
+                              <span className="text-xs">A vencer</span>
+                            </div>
+                          )}
+                          {status === 'expired' && (
+                            <div className="flex items-center text-red-600">
+                              <AlertTriangle className="h-4 w-4 mr-1" />
+                              <span className="text-xs">Vencido</span>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>

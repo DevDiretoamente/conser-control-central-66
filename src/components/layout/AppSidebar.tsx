@@ -35,7 +35,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
           "hover:bg-sidebar-accent hover:text-sidebar-foreground",
           isActive 
             ? "bg-sidebar-accent text-sidebar-foreground font-medium" 
-            : "text-sidebar-foreground/80 hover:bg-sidebar-accent/70"
+            : "text-sidebar-foreground hover:bg-sidebar-accent/70"
         )
       }
     >
