@@ -1,4 +1,3 @@
-
 import { CartaoPonto, RegistroPonto, StatusDia } from "@/types/cartaoPonto";
 import { User } from "@/types/auth";
 import { Funcionario, Funcao, Setor } from "@/types/funcionario";
@@ -135,9 +134,9 @@ export const createEmptyCartaoPonto = (funcionarioId: string, mes: number, ano: 
     // Determine default status for the day
     let statusDia: StatusDia = 'normal';
     
-    // Weekends are automatically marked as 'folga'
+    // Weekends are automatically marked as 'feriado' (changed from 'folga')
     if (dataObj.getDay() === 0 || dataObj.getDay() === 6) {
-      statusDia = 'folga';
+      statusDia = 'feriado';
     }
     
     // Fixed public holidays could be added here

@@ -282,13 +282,13 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
       case 'falta_injustificada':
         variant = 'destructive';
         break;
-      case 'falta_justificada':
       case 'atestado':
         variant = 'secondary';
         break;
       case 'ferias':
       case 'dispensado':
       case 'feriado':
+      case 'a_disposicao':
         variant = 'outline';
         break;
     }
