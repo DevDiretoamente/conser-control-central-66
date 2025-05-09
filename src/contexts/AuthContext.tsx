@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, AuthState, UserRole, Permission, PermissionArea, PermissionLevel } from '@/types/auth';
+import { User, AuthState, UserRole, Permission, PermissionArea, PermissionLevel, UserActivationHistoryEntry } from '@/types/auth';
 import { useToast } from '@/components/ui/use-toast';
 
 interface AuthContextType extends AuthState {
@@ -14,6 +14,8 @@ interface AuthContextType extends AuthState {
   updateUser: (id: string, userData: Partial<User>) => void;
   deleteUser: (id: string) => void;
   updateUserPermissions: (userId: string, permissions: Permission[]) => void;
+  toggleUserActivation: (userId: string, active: boolean) => void;
+  userActivationHistory: UserActivationHistoryEntry[];
 }
 
 const initialState: AuthState = {
@@ -80,6 +82,21 @@ const mockUsers: User[] = [
       { area: 'exames', level: 'read' },
     ]
   },
+  {
+    id: '4',
+    email: 'inativo@conservias.com',
+    password: 'inativo123',
+    name: 'Usuário Inativo',
+    role: 'operator' as UserRole,
+    avatar: '',
+    isActive: false,
+    createdAt: '2023-04-10T11:25:00Z',
+    lastLogin: '2023-09-15T14:20:00Z',
+    permissions: [
+      { area: 'rh', level: 'read' },
+      { area: 'funcionarios', level: 'read' },
+    ]
+  },
 ];
 
 // Helper function to get the highest permission level for an area from a user
@@ -103,6 +120,7 @@ export const getHighestPermissionForArea = (user: User, area: PermissionArea): P
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AuthState>(initialState);
   const [users, setUsers] = useState<User[]>(mockUsers);
+  const [userActivationHistory, setUserActivationHistory] = useState<UserActivationHistoryEntry[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -332,6 +350,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  const toggleUserActivation = (userId: string, active: boolean) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    // Update user active status
+    const updatedUsers = users.map(user => {
+      if (user.id === userId) {
+        return { ...user, isActive: active };
+      }
+      return user;
+    });
+    
+    setUsers(updatedUsers);
+
+    // Add to activation history
+    const historyEntry: UserActivationHistoryEntry = {
+      userId,
+      timestamp: new Date().toISOString(),
+      action: active ? 'activated' : 'deactivated',
+      performedBy: state.user?.name || 'Sistema',
+    };
+
+    setUserActivationHistory([...userActivationHistory, historyEntry]);
+    
+    toast({
+      title: active ? 'Usuário ativado' : 'Usuário desativado',
+      description: `O usuário ${user.name} foi ${active ? 'ativado' : 'desativado'} com sucesso.`,
+      variant: active ? 'default' : 'destructive',
+    });
+  };
+
   const value = {
     ...state,
     login,
@@ -343,7 +392,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     createUser,
     updateUser,
     deleteUser,
-    updateUserPermissions
+    updateUserPermissions,
+    toggleUserActivation,
+    userActivationHistory
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

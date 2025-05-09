@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,7 +20,6 @@ import {
   DialogTrigger,
   DialogFooter
 } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { 
@@ -34,31 +34,40 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { 
-  CheckCircle, 
-  XCircle, 
   MoreVertical, 
   UserPlus, 
   Edit, 
   Trash, 
-  Key, 
+  Shield,
   UserCog,
-  Shield
+  History,
+  Users,
+  RefreshCw,
+  Clock,
+  Calendar
 } from 'lucide-react';
-import { User, PermissionArea, PermissionLevel, Permission, UserRole } from '@/types/auth';
-import { formatDistanceToNow } from 'date-fns';
+import { User, UserRole, UserFilterOptions } from '@/types/auth';
+import { formatDistanceToNow, formatRelative } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import UserPermissionsDialog from '@/components/usuarios/UserPermissionsDialog';
+import UserActivationToggle from '@/components/usuarios/UserActivationToggle';
+import UserFilterToolbar from '@/components/usuarios/UserFilterToolbar';
+import UserActivationHistory from '@/components/usuarios/UserActivationHistory';
+import UserPermissionsSummary from '@/components/usuarios/UserPermissionsSummary';
 
 const userFormSchema = z.object({
   name: z.string().min(3, { message: 'Nome deve ter pelo menos 3 caracteres' }),
   email: z.string().email({ message: 'Email inválido' }),
-  password: z.string().min(6, { message: 'Senha deve ter pelo menos 6 caracteres' }),
+  password: z.string().min(6, { message: 'Senha deve ter pelo menos 6 caracteres' }).optional().or(z.literal('')),
   role: z.enum(['admin', 'manager', 'operator'] as const),
   isActive: z.boolean().default(true),
 });
@@ -71,6 +80,8 @@ const Usuarios: React.FC = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
+  const [filterOptions, setFilterOptions] = useState<UserFilterOptions>({});
+  const [filteredUsers, setFilteredUsers] = useState<User[]>(users);
   
   const createForm = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
@@ -93,10 +104,59 @@ const Usuarios: React.FC = () => {
     },
   });
 
+  // Apply filtering and sorting
+  useEffect(() => {
+    let result = [...users];
+    
+    // Filter by search term
+    if (filterOptions.searchTerm) {
+      const searchLower = filterOptions.searchTerm.toLowerCase();
+      result = result.filter(
+        user => user.name.toLowerCase().includes(searchLower) || 
+                user.email.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Filter by role
+    if (filterOptions.role) {
+      result = result.filter(user => user.role === filterOptions.role);
+    }
+    
+    // Filter by active status
+    if (filterOptions.isActive !== undefined) {
+      result = result.filter(user => user.isActive === filterOptions.isActive);
+    }
+    
+    // Sort users
+    if (filterOptions.sortField) {
+      const direction = filterOptions.sortDirection === 'desc' ? -1 : 1;
+      
+      result.sort((a, b) => {
+        if (filterOptions.sortField === 'name') {
+          return a.name.localeCompare(b.name) * direction;
+        }
+        
+        if (filterOptions.sortField === 'createdAt') {
+          return (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * direction;
+        }
+        
+        if (filterOptions.sortField === 'lastLogin') {
+          const aTime = a.lastLogin ? new Date(a.lastLogin).getTime() : 0;
+          const bTime = b.lastLogin ? new Date(b.lastLogin).getTime() : 0;
+          return (aTime - bTime) * direction;
+        }
+        
+        return 0;
+      });
+    }
+    
+    setFilteredUsers(result);
+  }, [users, filterOptions]);
+
   const handleCreateSubmit = (data: UserFormValues) => {
     createUser({
-      name: data.name,        // Ensuring name is provided (not optional)
-      email: data.email,      // Ensuring email is provided
+      name: data.name,
+      email: data.email,
       password: data.password,
       role: data.role,
       avatar: '',
@@ -175,7 +235,11 @@ const Usuarios: React.FC = () => {
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Gerenciamento de Usuários</h1>
+        <div className="flex items-center gap-2">
+          <Users className="h-6 w-6" />
+          <h1 className="text-2xl font-bold">Gerenciamento de Usuários</h1>
+        </div>
+        
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2">
@@ -273,58 +337,71 @@ const Usuarios: React.FC = () => {
         </Dialog>
       </div>
 
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="all">Todos</TabsTrigger>
-          <TabsTrigger value="admin">Administradores</TabsTrigger>
-          <TabsTrigger value="manager">Gerentes</TabsTrigger>
-          <TabsTrigger value="operator">Operadores</TabsTrigger>
-        </TabsList>
+      <div className="mb-6">
+        <UserFilterToolbar onFilterChange={setFilterOptions} />
+      </div>
 
-        <TabsContent value="all">
-          <UserTable 
-            users={users}
-            onEdit={handleEditUser}
-            onDelete={handleDeleteUser}
-            onManagePermissions={handleManagePermissions}
-            getRoleBadge={getRoleBadge}
-            formatDate={formatDate}
-          />
-        </TabsContent>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="all" className="relative">
+                Todos
+                <Badge className="ml-2 text-xs" variant="secondary">{users.length}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="active" className="relative">
+                Ativos
+                <Badge className="ml-2 text-xs" variant="secondary">
+                  {users.filter(u => u.isActive).length}
+                </Badge>
+              </TabsTrigger>
+              <TabsTrigger value="inactive" className="relative">
+                Inativos
+                <Badge className="ml-2 text-xs" variant="secondary">
+                  {users.filter(u => !u.isActive).length}
+                </Badge>
+              </TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="admin">
-          <UserTable 
-            users={users.filter(u => u.role === 'admin')}
-            onEdit={handleEditUser}
-            onDelete={handleDeleteUser}
-            onManagePermissions={handleManagePermissions}
-            getRoleBadge={getRoleBadge}
-            formatDate={formatDate}
-          />
-        </TabsContent>
+            <TabsContent value="all">
+              <UserTable 
+                users={filteredUsers}
+                onEdit={handleEditUser}
+                onDelete={handleDeleteUser}
+                onManagePermissions={handleManagePermissions}
+                getRoleBadge={getRoleBadge}
+                formatDate={formatDate}
+              />
+            </TabsContent>
 
-        <TabsContent value="manager">
-          <UserTable 
-            users={users.filter(u => u.role === 'manager')}
-            onEdit={handleEditUser}
-            onDelete={handleDeleteUser}
-            onManagePermissions={handleManagePermissions}
-            getRoleBadge={getRoleBadge}
-            formatDate={formatDate}
-          />
-        </TabsContent>
+            <TabsContent value="active">
+              <UserTable 
+                users={filteredUsers.filter(u => u.isActive)}
+                onEdit={handleEditUser}
+                onDelete={handleDeleteUser}
+                onManagePermissions={handleManagePermissions}
+                getRoleBadge={getRoleBadge}
+                formatDate={formatDate}
+              />
+            </TabsContent>
 
-        <TabsContent value="operator">
-          <UserTable 
-            users={users.filter(u => u.role === 'operator')}
-            onEdit={handleEditUser}
-            onDelete={handleDeleteUser}
-            onManagePermissions={handleManagePermissions}
-            getRoleBadge={getRoleBadge}
-            formatDate={formatDate}
-          />
-        </TabsContent>
-      </Tabs>
+            <TabsContent value="inactive">
+              <UserTable 
+                users={filteredUsers.filter(u => !u.isActive)}
+                onEdit={handleEditUser}
+                onDelete={handleDeleteUser}
+                onManagePermissions={handleManagePermissions}
+                getRoleBadge={getRoleBadge}
+                formatDate={formatDate}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <div className="space-y-6">
+          <UserActivationHistory />
+        </div>
+      </div>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
@@ -474,6 +551,16 @@ const UserTable: React.FC<UserTableProps> = ({
   getRoleBadge,
   formatDate
 }) => {
+  const [expandedUser, setExpandedUser] = useState<string | null>(null);
+
+  const toggleExpand = (userId: string) => {
+    if (expandedUser === userId) {
+      setExpandedUser(null);
+    } else {
+      setExpandedUser(userId);
+    }
+  };
+
   return (
     <Card>
       <CardContent className="p-0">
@@ -484,8 +571,8 @@ const UserTable: React.FC<UserTableProps> = ({
               <TableHead>Email</TableHead>
               <TableHead>Perfil</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Criado em</TableHead>
-              <TableHead>Último login</TableHead>
+              <TableHead className="hidden md:table-cell">Criado em</TableHead>
+              <TableHead className="hidden lg:table-cell">Último login</TableHead>
               <TableHead className="w-[80px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -498,49 +585,109 @@ const UserTable: React.FC<UserTableProps> = ({
               </TableRow>
             ) : (
               users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{getRoleBadge(user.role)}</TableCell>
-                  <TableCell>
-                    {user.isActive ? (
+                <React.Fragment key={user.id}>
+                  <TableRow 
+                    className="cursor-pointer" 
+                    onClick={() => toggleExpand(user.id)}
+                  >
+                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{getRoleBadge(user.role)}</TableCell>
+                    <TableCell>
+                      <UserActivationToggle user={user} />
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <div className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                        <span>Ativo</span>
+                        <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                        {formatDate(user.createdAt)}
                       </div>
-                    ) : (
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <div className="flex items-center">
-                        <XCircle className="h-4 w-4 text-red-500 mr-2" />
-                        <span>Inativo</span>
+                        <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                        {formatDate(user.lastLogin)}
                       </div>
-                    )}
-                  </TableCell>
-                  <TableCell>{formatDate(user.createdAt)}</TableCell>
-                  <TableCell>{formatDate(user.lastLogin)}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(user)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          <span>Editar</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onManagePermissions(user)}>
-                          <Shield className="mr-2 h-4 w-4" />
-                          <span>Permissões</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onDelete(user.id)} className="text-red-600">
-                          <Trash className="mr-2 h-4 w-4" />
-                          <span>Excluir</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(user); }}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            <span>Editar</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onManagePermissions(user); }}>
+                            <Shield className="mr-2 h-4 w-4" />
+                            <span>Permissões</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={(e) => { e.stopPropagation(); onDelete(user.id); }} 
+                            className="text-red-600"
+                          >
+                            <Trash className="mr-2 h-4 w-4" />
+                            <span>Excluir</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                  {expandedUser === user.id && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="p-0">
+                        <div className="bg-slate-50 p-4 space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <h3 className="text-sm font-medium mb-2">Detalhes do Usuário</h3>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">ID:</span>
+                                  <span>{user.id}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Criado:</span>
+                                  <span>{new Date(user.createdAt).toLocaleDateString('pt-BR')}</span>
+                                </div>
+                                {user.lastLogin && (
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Último login:</span>
+                                    <span>{new Date(user.lastLogin).toLocaleDateString('pt-BR')} às {new Date(user.lastLogin).toLocaleTimeString('pt-BR')}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-medium mb-2">Permissões</h3>
+                              <UserPermissionsSummary user={user} />
+                            </div>
+                          </div>
+                          <div className="flex justify-end gap-2 pt-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={(e) => { e.stopPropagation(); onEdit(user); }}
+                            >
+                              <Edit className="mr-2 h-4 w-4" />
+                              Editar
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="default"
+                              onClick={(e) => { e.stopPropagation(); onManagePermissions(user); }}
+                            >
+                              <Shield className="mr-2 h-4 w-4" />
+                              Gerenciar Permissões
+                            </Button>
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
               ))
             )}
           </TableBody>

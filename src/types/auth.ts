@@ -47,3 +47,23 @@ export interface AuthState {
   isLoading: boolean;
   error: string | null;
 }
+
+// Sorting and filtering options for users
+export interface UserSortOption {
+  field: 'name' | 'email' | 'role' | 'createdAt' | 'lastLogin' | 'isActive';
+  direction: 'asc' | 'desc';
+}
+
+export interface UserFilterOptions {
+  role?: UserRole;
+  isActive?: boolean;
+  searchTerm?: string;
+}
+
+export interface UserActivationHistoryEntry {
+  userId: string;
+  timestamp: string;
+  action: 'activated' | 'deactivated';
+  performedBy: string;
+}
+
