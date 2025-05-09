@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Printer, Download, ChevronLeft } from 'lucide-react';
@@ -9,29 +8,32 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { User } from '@/types/auth';
 
 interface CartaoPontoImpressaoProps {
-  funcionarioId?: string;
-  mes?: number;
-  ano?: number;
+  funcionarios: User[];
+  funcionarioSelecionadoId: string;
+  onChangeFuncionario: (id: string) => void;
+  mes: number;
+  ano: number;
+  onChangeMes: (mes: number) => void;
+  onChangeAno: (ano: number) => void;
   onBack?: () => void;
 }
 
 const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
-  funcionarioId,
+  funcionarios,
+  funcionarioSelecionadoId,
+  onChangeFuncionario,
   mes: initialMes,
   ano: initialAno,
+  onChangeMes,
+  onChangeAno,
   onBack,
 }) => {
   const [mes, setMes] = useState(initialMes || new Date().getMonth() + 1);
   const [ano, setAno] = useState(initialAno || new Date().getFullYear());
-  const [funcionarios, setFuncionarios] = useState<{id: string, nome: string}[]>([
-    {id: '1', nome: 'João Silva'},
-    {id: '2', nome: 'Maria Santos'},
-    {id: '3', nome: 'Pedro Almeida'},
-    {id: '4', nome: 'Ana Oliveira'},
-  ]);
-  const [selectedFuncionarioId, setSelectedFuncionarioId] = useState(funcionarioId || '');
+  const [selectedFuncionarioId, setSelectedFuncionarioId] = useState(funcionarioSelecionadoId || '');
   const { toast } = useToast();
 
   useEffect(() => {

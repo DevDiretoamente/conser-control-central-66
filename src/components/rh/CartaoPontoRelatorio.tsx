@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -90,8 +90,7 @@ export const CartaoPontoRelatorio: React.FC<CartaoPontoRelatorioProps> = ({
       ['Lanches', `${resumo.totalLanches} (R$ ${resumo.valorLanches.toFixed(2)})`]
     ];
     
-    // @ts-ignore - The type definitions for jspdf-autotable are incomplete
-    doc.autoTable({
+    autoTable(doc, {
       head: [['Tipo', 'Total']],
       body: summaryData,
       startY: 40,
@@ -123,18 +122,19 @@ export const CartaoPontoRelatorio: React.FC<CartaoPontoRelatorioProps> = ({
       ];
     });
     
-    // @ts-ignore - The type definitions for jspdf-autotable are incomplete
-    doc.autoTable({
+    const finalY = (doc as any).lastAutoTable.finalY || 40;
+    
+    autoTable(doc, {
       head: [['Dia', 'DS', 'Horário', 'Normal', 'Extra']],
       body: detailsData,
-      startY: doc.autoTable.previous.finalY + 15,
+      startY: finalY + 15,
       theme: 'striped',
       headStyles: { fillColor: [41, 128, 185] },
       styles: { fontSize: 9 }
     });
     
     // Signatures
-    const signY = doc.autoTable.previous.finalY + 30;
+    const signY = (doc as any).lastAutoTable.finalY + 30;
     doc.line(20, signY, 90, signY);
     doc.line(120, signY, 190, signY);
     
@@ -181,8 +181,7 @@ export const CartaoPontoRelatorio: React.FC<CartaoPontoRelatorioProps> = ({
       ['Lanches', `${resumo.totalLanches} (R$ ${resumo.valorLanches.toFixed(2)})`]
     ];
     
-    // @ts-ignore - The type definitions for jspdf-autotable are incomplete
-    doc.autoTable({
+    autoTable(doc, {
       head: [['Tipo', 'Total']],
       body: summaryData,
       startY: 40,
@@ -214,18 +213,19 @@ export const CartaoPontoRelatorio: React.FC<CartaoPontoRelatorioProps> = ({
       ];
     });
     
-    // @ts-ignore - The type definitions for jspdf-autotable are incomplete
-    doc.autoTable({
+    const finalY = (doc as any).lastAutoTable.finalY || 40;
+    
+    autoTable(doc, {
       head: [['Dia', 'DS', 'Horário', 'Normal', 'Extra']],
       body: detailsData,
-      startY: doc.autoTable.previous.finalY + 15,
+      startY: finalY + 15,
       theme: 'striped',
       headStyles: { fillColor: [41, 128, 185] },
       styles: { fontSize: 9 }
     });
     
     // Signatures
-    const signY = doc.autoTable.previous.finalY + 30;
+    const signY = (doc as any).lastAutoTable.finalY + 30;
     doc.line(20, signY, 90, signY);
     doc.line(120, signY, 190, signY);
     

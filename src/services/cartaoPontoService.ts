@@ -1,4 +1,5 @@
 import { CartaoPonto, RegistroPonto, StatusDia } from "@/types/cartaoPonto";
+import { User } from "@/types/auth";
 
 // Mock data for CartaoPonto
 const mockCartaoPontoData: CartaoPonto[] = [
@@ -114,6 +115,77 @@ export const saveCartaoPonto = (cartaoPonto: CartaoPonto): Promise<CartaoPonto> 
       });
     }, 500);
   });
+};
+
+// Function to save or update a registro ponto
+export const salvarRegistroPonto = async (
+  cartaoPontoId: string, 
+  registroId: string,
+  dadosRegistro: Partial<RegistroPonto>,
+  user: User
+): Promise<RegistroPonto> => {
+  // In a real app, this would send data to the API
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const novoRegistro: RegistroPonto = {
+        id: registroId || `reg-${Math.random().toString(36).substring(2, 10)}`,
+        funcionarioId: dadosRegistro.funcionarioId || '',
+        data: dadosRegistro.data || '',
+        horaEntradaManha: dadosRegistro.horaEntradaManha,
+        entradaExtra: dadosRegistro.entradaExtra,
+        horaSaidaAlmoco: dadosRegistro.horaSaidaAlmoco,
+        horaRetornoAlmoco: dadosRegistro.horaRetornoAlmoco,
+        horaSaidaTarde: dadosRegistro.horaSaidaTarde,
+        horaSaidaExtra: dadosRegistro.horaSaidaExtra,
+        statusDia: dadosRegistro.statusDia || 'normal',
+        observacoes: dadosRegistro.observacoes,
+        totalHorasNormais: calculateHorasNormais(dadosRegistro),
+        totalHorasExtras50: calculateHorasExtras50(dadosRegistro),
+        totalHorasExtras80: calculateHorasExtras80(dadosRegistro),
+        totalHorasExtras110: calculateHorasExtras110(dadosRegistro),
+        totalHorasNoturno: calculateHorasNoturno(dadosRegistro),
+        temDireitoLanche: calculateTemDireitoLanche(dadosRegistro),
+        registradoPor: user.id,
+        dataRegistro: new Date().toISOString(),
+        modificadoPor: user.id,
+        ultimaModificacao: new Date().toISOString(),
+        bloqueado: false
+      };
+      
+      resolve(novoRegistro);
+    }, 500);
+  });
+};
+
+// Helper functions for calculations
+const calculateHorasNormais = (registro: Partial<RegistroPonto>): number => {
+  // Simple implementation for now - just return a reasonable amount
+  return 480; // 8 hours in minutes
+};
+
+const calculateHorasExtras50 = (registro: Partial<RegistroPonto>): number => {
+  // Simplified calculation
+  return 0;
+};
+
+const calculateHorasExtras80 = (registro: Partial<RegistroPonto>): number => {
+  // Simplified calculation
+  return 0;
+};
+
+const calculateHorasExtras110 = (registro: Partial<RegistroPonto>): number => {
+  // Simplified calculation
+  return 0;
+};
+
+const calculateHorasNoturno = (registro: Partial<RegistroPonto>): number => {
+  // Simplified calculation
+  return 0;
+};
+
+const calculateTemDireitoLanche = (registro: Partial<RegistroPonto>): boolean => {
+  // If total extra hours > 1h, they get a snack
+  return false;
 };
 
 // Check if a specific day is a holiday
