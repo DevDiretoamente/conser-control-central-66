@@ -18,11 +18,11 @@ const PermissionBadge: React.FC<PermissionBadgeProps> = ({
     | 'default'    // manage (blue)
     | 'destructive' // delete (red)
     | 'secondary'   // write (purple)
-    | 'success'     // create (green)
-    | 'outline';    // read (gray)
+    | 'outline';    // read/create (gray)
   
   let label: string;
   let icon: JSX.Element | null = null;
+  let customStyles = '';
   
   switch (level) {
     case 'manage':
@@ -38,7 +38,8 @@ const PermissionBadge: React.FC<PermissionBadgeProps> = ({
       label = 'Editar';
       break;
     case 'create':
-      variant = 'success';
+      variant = 'outline';
+      customStyles = 'bg-green-500 hover:bg-green-600 text-white';
       label = 'Incluir';
       break;
     case 'read':
@@ -53,7 +54,7 @@ const PermissionBadge: React.FC<PermissionBadgeProps> = ({
   return (
     <Badge 
       variant={variant} 
-      className={`${className} px-2 py-1 ${level === 'create' ? 'bg-green-500 hover:bg-green-600 text-white' : ''}`}
+      className={`${className} px-2 py-1 ${customStyles}`}
     >
       {icon}
       {showLabel && <span className="ml-1">{label}</span>}
