@@ -1,10 +1,13 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
+import AccessDenied from "./pages/AccessDenied";
 import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import ListaFuncionarios from "./pages/funcionarios/ListaFuncionarios";
@@ -27,33 +30,114 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<AppLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="funcionarios" element={<ListaFuncionarios />} />
-            <Route path="funcionarios/novo" element={<NovoFuncionario />} />
-            <Route path="funcionarios/:id" element={<DetalheFuncionario />} />
-            <Route path="funcionarios/:id/editar" element={<EditarFuncionario />} />
-            <Route path="funcionarios/:id/exames-medicos" element={<ExamesMedicosPage />} />
-            <Route path="obras" element={<ObrasPage />} />
-            <Route path="frota" element={<FrotaPage />} />
-            <Route path="patrimonio" element={<PatrimonioPage />} />
-            <Route path="financeiro" element={<FinanceiroPage />} />
-            <Route path="configuracoes" element={<ConfiguracoesPage />} />
-            <Route path="configuracoes/clinicas" element={<Clinicas />} />
-            <Route path="configuracoes/documentos-ocupacionais" element={<DocumentosOcupacionaisPage />} />
-            <Route path="configuracoes/funcoes" element={<FuncoesPage />} />
-            <Route path="configuracoes/setores" element={<SetoresPage />} />
-            <Route path="configuracoes/exames" element={<ExamesPage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/acesso-negado" element={<AccessDenied />} />
+            
+            {/* Protected routes */}
+            <Route 
+              path="/" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Dashboard />} />
+              
+              {/* RH Routes - Manager or Admin */}
+              <Route path="funcionarios" element={
+                <ProtectedRoute requiredRole="manager">
+                  <ListaFuncionarios />
+                </ProtectedRoute>
+              } />
+              <Route path="funcionarios/novo" element={
+                <ProtectedRoute requiredRole="manager">
+                  <NovoFuncionario />
+                </ProtectedRoute>
+              } />
+              <Route path="funcionarios/:id" element={
+                <ProtectedRoute requiredRole="operator">
+                  <DetalheFuncionario />
+                </ProtectedRoute>
+              } />
+              <Route path="funcionarios/:id/editar" element={
+                <ProtectedRoute requiredRole="manager">
+                  <EditarFuncionario />
+                </ProtectedRoute>
+              } />
+              <Route path="funcionarios/:id/exames-medicos" element={
+                <ProtectedRoute requiredRole="operator">
+                  <ExamesMedicosPage />
+                </ProtectedRoute>
+              } />
+              
+              {/* Other module routes */}
+              <Route path="obras" element={
+                <ProtectedRoute requiredRole="operator">
+                  <ObrasPage />
+                </ProtectedRoute>
+              } />
+              <Route path="frota" element={
+                <ProtectedRoute requiredRole="operator">
+                  <FrotaPage />
+                </ProtectedRoute>
+              } />
+              <Route path="patrimonio" element={
+                <ProtectedRoute requiredRole="operator">
+                  <PatrimonioPage />
+                </ProtectedRoute>
+              } />
+              <Route path="financeiro" element={
+                <ProtectedRoute requiredRole="manager">
+                  <FinanceiroPage />
+                </ProtectedRoute>
+              } />
+              
+              {/* Configuration routes - Admin only */}
+              <Route path="configuracoes" element={
+                <ProtectedRoute requiredRole="admin">
+                  <ConfiguracoesPage />
+                </ProtectedRoute>
+              } />
+              <Route path="configuracoes/clinicas" element={
+                <ProtectedRoute requiredRole="admin">
+                  <Clinicas />
+                </ProtectedRoute>
+              } />
+              <Route path="configuracoes/documentos-ocupacionais" element={
+                <ProtectedRoute requiredRole="admin">
+                  <DocumentosOcupacionaisPage />
+                </ProtectedRoute>
+              } />
+              <Route path="configuracoes/funcoes" element={
+                <ProtectedRoute requiredRole="admin">
+                  <FuncoesPage />
+                </ProtectedRoute>
+              } />
+              <Route path="configuracoes/setores" element={
+                <ProtectedRoute requiredRole="admin">
+                  <SetoresPage />
+                </ProtectedRoute>
+              } />
+              <Route path="configuracoes/exames" element={
+                <ProtectedRoute requiredRole="admin">
+                  <ExamesPage />
+                </ProtectedRoute>
+              } />
+            </Route>
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

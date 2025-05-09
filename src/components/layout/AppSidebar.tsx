@@ -12,20 +12,31 @@ import {
   Truck,
   LayoutDashboard
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { UserRole } from '@/types/auth';
 
 interface SidebarItemProps {
   to: string;
   icon: React.ElementType;
   label: string;
   isCollapsed?: boolean;
+  requiredRole?: UserRole;
 }
 
 const SidebarItem: React.FC<SidebarItemProps> = ({ 
   to, 
   icon: Icon, 
   label, 
-  isCollapsed = false 
+  isCollapsed = false,
+  requiredRole
 }) => {
+  const { hasPermission } = useAuth();
+  
+  // Don't render the item if the user doesn't have the required role
+  if (requiredRole && !hasPermission(requiredRole)) {
+    return null;
+  }
+  
   return (
     <NavLink
       to={to}
@@ -50,6 +61,8 @@ interface AppSidebarProps {
 }
 
 const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
+  const { user, logout } = useAuth();
+
   return (
     <div 
       className={cn(
@@ -75,11 +88,11 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
           )}
           <div className="space-y-1">
             <SidebarItem to="/" icon={LayoutDashboard} label="Dashboard" isCollapsed={isCollapsed} />
-            <SidebarItem to="/funcionarios" icon={Users} label="Recursos Humanos" isCollapsed={isCollapsed} />
-            <SidebarItem to="/obras" icon={Building} label="Obras" isCollapsed={isCollapsed} />
-            <SidebarItem to="/frota" icon={Truck} label="Frota" isCollapsed={isCollapsed} />
-            <SidebarItem to="/patrimonio" icon={Briefcase} label="Patrimônio" isCollapsed={isCollapsed} />
-            <SidebarItem to="/financeiro" icon={FileText} label="Financeiro" isCollapsed={isCollapsed} />
+            <SidebarItem to="/funcionarios" icon={Users} label="Recursos Humanos" isCollapsed={isCollapsed} requiredRole="operator" />
+            <SidebarItem to="/obras" icon={Building} label="Obras" isCollapsed={isCollapsed} requiredRole="operator" />
+            <SidebarItem to="/frota" icon={Truck} label="Frota" isCollapsed={isCollapsed} requiredRole="operator" />
+            <SidebarItem to="/patrimonio" icon={Briefcase} label="Patrimônio" isCollapsed={isCollapsed} requiredRole="operator" />
+            <SidebarItem to="/financeiro" icon={FileText} label="Financeiro" isCollapsed={isCollapsed} requiredRole="manager" />
           </div>
         </div>
 
@@ -90,18 +103,20 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
             </h2>
           )}
           <div className="space-y-1">
-            <SidebarItem to="/configuracoes" icon={Settings} label="Configurações" isCollapsed={isCollapsed} />
+            <SidebarItem to="/configuracoes" icon={Settings} label="Configurações" isCollapsed={isCollapsed} requiredRole="admin" />
           </div>
         </div>
       </nav>
 
       <div className="mt-auto border-t border-sidebar-border p-4">
-        {!isCollapsed && (
+        {user && !isCollapsed && (
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-sidebar-accent" />
+            <div className="h-8 w-8 rounded-full bg-sidebar-accent flex items-center justify-center font-medium text-sidebar-foreground">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
             <div>
-              <p className="text-sm font-medium text-sidebar-foreground">Administrador</p>
-              <p className="text-xs text-sidebar-foreground/60">admin@conservias.com</p>
+              <p className="text-sm font-medium text-sidebar-foreground">{user.name}</p>
+              <p className="text-xs text-sidebar-foreground/60">{user.email}</p>
             </div>
           </div>
         )}

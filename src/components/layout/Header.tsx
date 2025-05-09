@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Menu, Bell, Search, X } from 'lucide-react';
+import { Menu, Bell, Search, X, LogOut } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -20,7 +22,7 @@ interface HeaderProps {
 function getPageTitle(pathname: string): string {
   switch (pathname) {
     case '/':
-      return 'Recursos Humanos';
+      return 'Dashboard';
     case '/obras':
       return 'Obras';
     case '/frota':
@@ -41,6 +43,26 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const [showSearch, setShowSearch] = React.useState(false);
   const location = useLocation();
   const pageTitle = getPageTitle(location.pathname);
+  const { user, logout } = useAuth();
+
+  // Get user initials for avatar
+  const getInitials = () => {
+    if (!user || !user.name) return 'U';
+    
+    const names = user.name.split(' ');
+    if (names.length === 1) return names[0].charAt(0).toUpperCase();
+    return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+  };
+
+  // Get role display name
+  const getRoleDisplay = () => {
+    switch (user?.role) {
+      case 'admin': return 'Administrador';
+      case 'manager': return 'Gerente';
+      case 'operator': return 'Operador';
+      default: return 'Usuário';
+    }
+  };
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center border-b bg-background px-4 md:px-6">
@@ -107,6 +129,39 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        
+        {/* User menu */}
+        {user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {getInitials()}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{user.name}</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user.email}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground mt-1">
+                    {getRoleDisplay()}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={logout} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Sair</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </header>
   );
