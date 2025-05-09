@@ -58,6 +58,8 @@ export interface UserFilterOptions {
   role?: UserRole;
   isActive?: boolean;
   searchTerm?: string;
+  sortField?: 'name' | 'email' | 'role' | 'createdAt' | 'lastLogin' | 'isActive'; // Added sortField
+  sortDirection?: 'asc' | 'desc'; // Added sortDirection
 }
 
 export interface UserActivationHistoryEntry {
@@ -66,4 +68,3 @@ export interface UserActivationHistoryEntry {
   action: 'activated' | 'deactivated';
   performedBy: string;
 }
-
