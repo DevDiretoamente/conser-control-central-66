@@ -10,6 +10,14 @@ import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { User } from '@/types/auth';
+import { Funcionario } from '@/types/funcionario';
+import { getFuncionarioDetails } from '@/services/cartaoPontoService';
+
+interface EmployeeDetails {
+  name: string;
+  setor: string;
+  funcao: string;
+}
 
 interface CartaoPontoImpressaoProps {
   funcionarios: User[];
@@ -35,12 +43,16 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
   const [mes, setMes] = useState(initialMes || new Date().getMonth() + 1);
   const [ano, setAno] = useState(initialAno || new Date().getFullYear());
   const [selectedFuncionarioId, setSelectedFuncionarioId] = useState(funcionarioSelecionadoId || '');
+  const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Em uma implementação real, buscaríamos os funcionários da API
-    // Por enquanto usamos dados mockados definidos acima
-  }, []);
+    if (selectedFuncionarioId) {
+      // Fetch employee details including sector and function
+      const details = getFuncionarioDetails(selectedFuncionarioId);
+      setEmployeeDetails(details);
+    }
+  }, [selectedFuncionarioId]);
 
   const getNomeMes = (mesNum: number) => {
     const data = new Date();
@@ -96,37 +108,45 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
     const larguraUtil = pdf.internal.pageSize.width - (margemEsquerda * 2);
     
     // Título
-    pdf.setFontSize(16);
+    pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
     pdf.text('CONSERVIAS CONSTRUÇÃO CIVIL LTDA', margemEsquerda, margemSuperior);
     
-    pdf.setFontSize(14);
-    pdf.text(`CARTÃO PONTO - ${nomeMes.toUpperCase()} / ${ano}`, margemEsquerda, margemSuperior + 10);
+    pdf.setFontSize(12);
+    pdf.text(`CARTÃO PONTO - ${nomeMes.toUpperCase()} / ${ano}`, margemEsquerda, margemSuperior + 6);
 
     // Dados do funcionário
-    pdf.setFontSize(12);
+    pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
-    pdf.text(`Funcionário: ${funcionario.name}`, margemEsquerda, margemSuperior + 20);
+    pdf.text(`Funcionário: ${funcionario.name}`, margemEsquerda, margemSuperior + 12);
+    
+    // Adicionar setor e função se disponíveis
+    if (employeeDetails) {
+      pdf.text(`Setor: ${employeeDetails.setor}`, margemEsquerda, margemSuperior + 16);
+      pdf.text(`Função: ${employeeDetails.funcao}`, margemEsquerda, margemSuperior + 20);
+      pdf.line(margemEsquerda, margemSuperior + 22, margemEsquerda + larguraUtil, margemSuperior + 22);
+    }
     
     // Tabela de horários
-    const linhaInicial = margemSuperior + 30;
-    const alturaLinha = 10;
-    const larguraColunaDia = 15;
-    const larguraColunaDiaSemana = 15;
+    const linhaInicial = margemSuperior + 25;
+    const alturaLinha = 7; // Reduzido para caber mais linhas em uma página
+    const larguraColunaDia = 10;
+    const larguraColunaDiaSemana = 10;
     const larguraColunaHorario = (larguraUtil - larguraColunaDia - larguraColunaDiaSemana) / 4;
     
     // Cabeçalho da tabela
     pdf.setFillColor(220, 220, 220);
     pdf.rect(margemEsquerda, linhaInicial, larguraUtil, alturaLinha, 'F');
     
+    pdf.setFontSize(8);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Dia', margemEsquerda + 3, linhaInicial + 6);
-    pdf.text('DS', margemEsquerda + larguraColunaDia + 3, linhaInicial + 6);
+    pdf.text('Dia', margemEsquerda + 2, linhaInicial + 5);
+    pdf.text('DS', margemEsquerda + larguraColunaDia + 2, linhaInicial + 5);
     
-    pdf.text('Entrada', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + 15, linhaInicial + 6);
-    pdf.text('Almoço', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + larguraColunaHorario + 15, linhaInicial + 6);
-    pdf.text('Retorno', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + (larguraColunaHorario * 2) + 15, linhaInicial + 6);
-    pdf.text('Saída', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + (larguraColunaHorario * 3) + 15, linhaInicial + 6);
+    pdf.text('Entrada', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + 15, linhaInicial + 5);
+    pdf.text('Almoço', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + larguraColunaHorario + 15, linhaInicial + 5);
+    pdf.text('Retorno', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + (larguraColunaHorario * 2) + 15, linhaInicial + 5);
+    pdf.text('Saída', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + (larguraColunaHorario * 3) + 15, linhaInicial + 5);
     
     // Linhas da tabela
     pdf.setFont('helvetica', 'normal');
@@ -135,28 +155,7 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
     const diasSemana = getDiasDaSemana();
     
     diasDoMes.forEach((dia, index) => {
-      // Verificar se precisamos de uma nova página
-      if (posicaoY > pdf.internal.pageSize.height - 20) {
-        pdf.addPage();
-        posicaoY = margemSuperior;
-        
-        // Repetir cabeçalho na nova página
-        pdf.setFillColor(220, 220, 220);
-        pdf.rect(margemEsquerda, posicaoY, larguraUtil, alturaLinha, 'F');
-        
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('Dia', margemEsquerda + 3, posicaoY + 6);
-        pdf.text('DS', margemEsquerda + larguraColunaDia + 3, posicaoY + 6);
-        
-        pdf.text('Entrada', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + 15, posicaoY + 6);
-        pdf.text('Almoço', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + larguraColunaHorario + 15, posicaoY + 6);
-        pdf.text('Retorno', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + (larguraColunaHorario * 2) + 15, posicaoY + 6);
-        pdf.text('Saída', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + (larguraColunaHorario * 3) + 15, posicaoY + 6);
-        
-        posicaoY += alturaLinha;
-      }
-      
-      // Alternar cores das linhas
+      // Alternador de cores das linhas
       if (index % 2 === 0) {
         pdf.setFillColor(245, 245, 245);
         pdf.rect(margemEsquerda, posicaoY, larguraUtil, alturaLinha, 'F');
@@ -169,8 +168,9 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
       }
       
       // Dia e dia da semana
-      pdf.text(dia.dia.toString().padStart(2, '0'), margemEsquerda + 3, posicaoY + 6);
-      pdf.text(diasSemana[dia.diaSemana], margemEsquerda + larguraColunaDia + 3, posicaoY + 6);
+      pdf.setFontSize(8);
+      pdf.text(dia.dia.toString().padStart(2, '0'), margemEsquerda + 2, posicaoY + 5);
+      pdf.text(diasSemana[dia.diaSemana], margemEsquerda + larguraColunaDia + 2, posicaoY + 5);
       
       // Bordas das células para campos de preenchimento manual
       const posX1 = margemEsquerda + larguraColunaDia + larguraColunaDiaSemana;
@@ -191,35 +191,32 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
     });
     
     // Assinaturas
-    posicaoY += 10;
+    posicaoY += 5;
+    pdf.setFontSize(8);
     pdf.text("Data: _____/_____/_____", margemEsquerda, posicaoY);
     
-    posicaoY += 20;
+    posicaoY += 10;
     const larguraAssinatura = 80;
     pdf.line(margemEsquerda, posicaoY, margemEsquerda + larguraAssinatura, posicaoY);
-    pdf.text("Assinatura do Funcionário", margemEsquerda + 15, posicaoY + 5);
+    pdf.text("Assinatura do Funcionário", margemEsquerda + 15, posicaoY + 4);
     
     pdf.line(margemEsquerda + larguraUtil - larguraAssinatura, posicaoY, margemEsquerda + larguraUtil, posicaoY);
-    pdf.text("Assinatura do Responsável", margemEsquerda + larguraUtil - larguraAssinatura + 10, posicaoY + 5);
+    pdf.text("Assinatura do Responsável", margemEsquerda + larguraUtil - larguraAssinatura + 10, posicaoY + 4);
     
     // Observações
-    posicaoY += 15;
-    pdf.setFontSize(10);
+    posicaoY += 10;
+    pdf.setFontSize(8);
     pdf.text("Observações:", margemEsquerda, posicaoY);
     
-    posicaoY += 5;
+    posicaoY += 4;
     pdf.line(margemEsquerda, posicaoY, margemEsquerda + larguraUtil, posicaoY);
     
-    posicaoY += 5;
-    pdf.line(margemEsquerda, posicaoY, margemEsquerda + larguraUtil, posicaoY);
-    
-    posicaoY += 5;
+    posicaoY += 4;
     pdf.line(margemEsquerda, posicaoY, margemEsquerda + larguraUtil, posicaoY);
     
     // Rodapé
-    const posicaoRodape = pdf.internal.pageSize.height - 10;
-    pdf.setFontSize(8);
-    pdf.text(`Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}`, margemEsquerda, posicaoRodape);
+    pdf.setFontSize(6);
+    pdf.text(`Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}`, margemEsquerda, pdf.internal.pageSize.height - 5);
     
     if (imprimir) {
       pdf.autoPrint();
@@ -280,7 +277,10 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
             <Label htmlFor="funcionario">Funcionário</Label>
             <Select 
               value={selectedFuncionarioId}
-              onValueChange={setSelectedFuncionarioId}
+              onValueChange={(id) => {
+                setSelectedFuncionarioId(id);
+                onChangeFuncionario(id);
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um funcionário" />
@@ -299,7 +299,11 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
             <Label htmlFor="mes">Mês</Label>
             <Select 
               value={mes.toString()} 
-              onValueChange={(value) => setMes(parseInt(value))}
+              onValueChange={(value) => {
+                const newMes = parseInt(value);
+                setMes(newMes);
+                onChangeMes(newMes);
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um mês" />
@@ -320,7 +324,11 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
             <Label htmlFor="ano">Ano</Label>
             <Select 
               value={ano.toString()} 
-              onValueChange={(value) => setAno(parseInt(value))}
+              onValueChange={(value) => {
+                const newAno = parseInt(value);
+                setAno(newAno);
+                onChangeAno(newAno);
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um ano" />
@@ -339,12 +347,18 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
         
         <div className="bg-muted/30 p-4 rounded-md mb-4">
           <h3 className="font-medium mb-2">Pré-visualização</h3>
-          <p className="text-sm text-muted-foreground">
-            Aqui será exibida uma prévia do cartão ponto que será gerado para {selectedFuncionarioId ? funcionarios.find(f => f.id === selectedFuncionarioId)?.name : "o funcionário selecionado"}.
-          </p>
-          <p className="text-sm text-muted-foreground mt-2">
-            O cartão ponto será gerado para o mês de {getNomeMes(mes)} de {ano}.
-          </p>
+          {employeeDetails && funcionarios.find(f => f.id === selectedFuncionarioId) ? (
+            <>
+              <p className="text-sm mb-1"><strong>Funcionário:</strong> {funcionarios.find(f => f.id === selectedFuncionarioId)?.name}</p>
+              <p className="text-sm mb-1"><strong>Setor:</strong> {employeeDetails.setor}</p>
+              <p className="text-sm mb-1"><strong>Função:</strong> {employeeDetails.funcao}</p>
+              <p className="text-sm mb-1"><strong>Período:</strong> {getNomeMes(mes)} de {ano}</p>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Selecione um funcionário para visualizar os detalhes do cartão ponto.
+            </p>
+          )}
           <div className="mt-4 text-center">
             <p className="text-xs text-muted-foreground italic">
               Para visualizar o cartão ponto completo, clique em "Baixar PDF" ou "Imprimir".

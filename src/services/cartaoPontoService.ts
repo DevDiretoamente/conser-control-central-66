@@ -1,5 +1,7 @@
+
 import { CartaoPonto, RegistroPonto, StatusDia } from "@/types/cartaoPonto";
 import { User } from "@/types/auth";
+import { Funcionario, Funcao, Setor } from "@/types/funcionario";
 
 // Mock data for CartaoPonto
 const mockCartaoPontoData: CartaoPonto[] = [
@@ -36,6 +38,28 @@ const mockCartaoPontoData: CartaoPonto[] = [
   }
 ];
 
+// Mock data for employee details
+const mockFuncionariosDetails = [
+  {
+    id: '1',
+    name: 'João Silva',
+    setor: 'Operacional',
+    funcao: 'Pedreiro'
+  },
+  {
+    id: '2',
+    name: 'Maria Souza',
+    setor: 'Administrativo',
+    funcao: 'Assistente Administrativo'
+  },
+  {
+    id: '3',
+    name: 'Pedro Santos',
+    setor: 'Engenharia',
+    funcao: 'Engenheiro Civil'
+  }
+];
+
 // Function to get CartaoPonto for a specific employee and period
 export const getCartaoPonto = (funcionarioId: string, mes: number, ano: number): CartaoPonto => {
   // In a real app, this would fetch from the API
@@ -49,6 +73,25 @@ export const getCartaoPonto = (funcionarioId: string, mes: number, ano: number):
   
   // If not found, create a new empty one
   return createEmptyCartaoPonto(funcionarioId, mes, ano);
+};
+
+// Function to get employee details including sector and function
+export const getFuncionarioDetails = (funcionarioId: string) => {
+  const funcionario = mockFuncionariosDetails.find(f => f.id === funcionarioId);
+  
+  if (funcionario) {
+    return {
+      name: funcionario.name,
+      setor: funcionario.setor,
+      funcao: funcionario.funcao
+    };
+  }
+  
+  return {
+    name: 'Funcionário não encontrado',
+    setor: 'Não definido',
+    funcao: 'Não definida'
+  };
 };
 
 // Function to create an empty CartaoPonto with initialized days
