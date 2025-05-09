@@ -2,19 +2,24 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserRole } from '@/types/auth';
+import { UserRole, PermissionArea, PermissionLevel } from '@/types/auth';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: UserRole;
+  requiredPermission?: {
+    area: PermissionArea;
+    level?: PermissionLevel;
+  };
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  requiredRole 
+  requiredRole,
+  requiredPermission
 }) => {
-  const { isAuthenticated, isLoading, user, hasPermission } = useAuth();
+  const { isAuthenticated, isLoading, user, hasPermission, hasSpecificPermission } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -32,6 +37,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // If a specific role is required, check if the user has permission
   if (requiredRole && user && !hasPermission(requiredRole)) {
+    return <Navigate to="/acesso-negado" replace />;
+  }
+
+  // If a specific permission is required, check if the user has it
+  if (requiredPermission && user && 
+      !hasSpecificPermission(
+        requiredPermission.area, 
+        requiredPermission.level
+      )) {
     return <Navigate to="/acesso-negado" replace />;
   }
 

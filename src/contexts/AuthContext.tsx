@@ -1,12 +1,18 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, AuthState, UserRole } from '@/types/auth';
+import { User, AuthState, UserRole, Permission, PermissionArea, PermissionLevel } from '@/types/auth';
 import { useToast } from '@/components/ui/use-toast';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   hasPermission: (requiredRole: UserRole) => boolean;
+  hasSpecificPermission: (area: PermissionArea, level?: PermissionLevel) => boolean;
+  users: User[];
+  createUser: (user: Omit<User, 'id' | 'createdAt'>) => void;
+  updateUser: (id: string, userData: Partial<User>) => void;
+  deleteUser: (id: string) => void;
+  updateUserPermissions: (userId: string, permissions: Permission[]) => void;
 }
 
 const initialState: AuthState = {
@@ -18,8 +24,8 @@ const initialState: AuthState = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demonstration
-const mockUsers = [
+// Enhanced mock users for demonstration with permissions
+const mockUsers: User[] = [
   {
     id: '1',
     email: 'admin@conservias.com',
@@ -27,6 +33,18 @@ const mockUsers = [
     name: 'Administrador',
     role: 'admin' as UserRole,
     avatar: '',
+    isActive: true,
+    createdAt: '2023-01-01T10:00:00Z',
+    lastLogin: '2024-05-09T08:30:00Z',
+    permissions: [
+      { area: 'rh', level: 'manage' },
+      { area: 'obras', level: 'manage' },
+      { area: 'frota', level: 'manage' },
+      { area: 'patrimonio', level: 'manage' },
+      { area: 'financeiro', level: 'manage' },
+      { area: 'configuracoes', level: 'manage' },
+      { area: 'usuarios', level: 'manage' },
+    ]
   },
   {
     id: '2',
@@ -35,6 +53,15 @@ const mockUsers = [
     name: 'Gerente de RH',
     role: 'manager' as UserRole,
     avatar: '',
+    isActive: true,
+    createdAt: '2023-02-15T14:30:00Z',
+    lastLogin: '2024-05-08T16:45:00Z',
+    permissions: [
+      { area: 'rh', level: 'manage' },
+      { area: 'funcionarios', level: 'write' },
+      { area: 'exames', level: 'write' },
+      { area: 'documentos', level: 'read' },
+    ]
   },
   {
     id: '3',
@@ -43,11 +70,20 @@ const mockUsers = [
     name: 'Operador',
     role: 'operator' as UserRole,
     avatar: '',
+    isActive: true,
+    createdAt: '2023-03-20T09:15:00Z',
+    lastLogin: '2024-05-09T10:20:00Z',
+    permissions: [
+      { area: 'rh', level: 'read' },
+      { area: 'funcionarios', level: 'read' },
+      { area: 'exames', level: 'read' },
+    ]
   },
 ];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AuthState>(initialState);
+  const [users, setUsers] = useState<User[]>(mockUsers);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -83,29 +119,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       // In a real app, this would be an API call
-      const foundUser = mockUsers.find(
-        (user) => user.email === email && user.password === password
+      const foundUser = users.find(
+        (user) => user.email === email && user.password === password && user.isActive
       );
 
       if (!foundUser) {
-        throw new Error('Credenciais inválidas');
+        throw new Error('Credenciais inválidas ou usuário inativo');
       }
 
       const { password: _, ...userWithoutPassword } = foundUser;
       
+      // Update last login time
+      const updatedUser = {
+        ...userWithoutPassword,
+        lastLogin: new Date().toISOString()
+      };
+
+      // Update users list with new login time
+      setUsers(users.map(u => u.id === updatedUser.id ? {...u, lastLogin: updatedUser.lastLogin} : u));
+      
       // Store user in localStorage
-      localStorage.setItem('conservias-user', JSON.stringify(userWithoutPassword));
+      localStorage.setItem('conservias-user', JSON.stringify(updatedUser));
       
       setState({
         isAuthenticated: true,
-        user: userWithoutPassword,
+        user: updatedUser,
         isLoading: false,
         error: null,
       });
 
       toast({
         title: 'Login realizado com sucesso',
-        description: `Bem-vindo, ${userWithoutPassword.name}!`,
+        description: `Bem-vindo, ${updatedUser.name}!`,
       });
     } catch (error) {
       setState({
@@ -153,11 +198,132 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return userRoleLevel >= requiredRoleLevel;
   };
 
+  const hasSpecificPermission = (area: PermissionArea, level?: PermissionLevel): boolean => {
+    if (!state.isAuthenticated || !state.user) return false;
+    
+    // Admin role has all permissions
+    if (state.user.role === 'admin') return true;
+    
+    // Check specific permissions
+    if (state.user.permissions) {
+      // For specific area and level
+      if (level) {
+        const levelHierarchy: Record<PermissionLevel, number> = {
+          'read': 1,
+          'write': 2,
+          'delete': 3,
+          'manage': 4
+        };
+
+        const permission = state.user.permissions.find(p => p.area === area);
+        if (permission) {
+          const userPermissionLevel = levelHierarchy[permission.level];
+          const requiredPermissionLevel = levelHierarchy[level];
+          return userPermissionLevel >= requiredPermissionLevel;
+        }
+      } 
+      // Just check if user has any permission for the area
+      else {
+        return state.user.permissions.some(p => p.area === area);
+      }
+    }
+    
+    return false;
+  };
+
+  const createUser = (userData: Omit<User, 'id' | 'createdAt'>) => {
+    const newUser: User = {
+      ...userData,
+      id: (users.length + 1).toString(),
+      createdAt: new Date().toISOString(),
+    };
+    
+    setUsers([...users, newUser]);
+    
+    toast({
+      title: 'Usuário criado',
+      description: `Usuário ${newUser.name} criado com sucesso.`,
+    });
+  };
+
+  const updateUser = (id: string, userData: Partial<User>) => {
+    const updatedUsers = users.map(user => {
+      if (user.id === id) {
+        return { ...user, ...userData };
+      }
+      return user;
+    });
+    
+    setUsers(updatedUsers);
+    
+    // If the logged in user was updated, update the logged in state
+    if (state.user && state.user.id === id) {
+      const updatedUser = updatedUsers.find(u => u.id === id);
+      if (updatedUser) {
+        setState({
+          ...state,
+          user: updatedUser,
+        });
+        localStorage.setItem('conservias-user', JSON.stringify(updatedUser));
+      }
+    }
+    
+    toast({
+      title: 'Usuário atualizado',
+      description: 'Informações do usuário atualizadas com sucesso.',
+    });
+  };
+
+  const deleteUser = (id: string) => {
+    // In a real app, you might want to soft-delete instead
+    setUsers(users.filter(user => user.id !== id));
+    
+    toast({
+      title: 'Usuário removido',
+      description: 'Usuário removido com sucesso.',
+      variant: 'destructive'
+    });
+  };
+
+  const updateUserPermissions = (userId: string, permissions: Permission[]) => {
+    const updatedUsers = users.map(user => {
+      if (user.id === userId) {
+        return { ...user, permissions };
+      }
+      return user;
+    });
+    
+    setUsers(updatedUsers);
+    
+    // If the logged in user was updated, update the logged in state
+    if (state.user && state.user.id === userId) {
+      const updatedUser = updatedUsers.find(u => u.id === userId);
+      if (updatedUser) {
+        setState({
+          ...state,
+          user: updatedUser,
+        });
+        localStorage.setItem('conservias-user', JSON.stringify(updatedUser));
+      }
+    }
+    
+    toast({
+      title: 'Permissões atualizadas',
+      description: 'As permissões do usuário foram atualizadas com sucesso.',
+    });
+  };
+
   const value = {
     ...state,
     login,
     logout,
     hasPermission,
+    hasSpecificPermission,
+    users,
+    createUser,
+    updateUser,
+    deleteUser,
+    updateUserPermissions
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

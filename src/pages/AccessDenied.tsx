@@ -1,20 +1,35 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocation } from 'react-router-dom';
 
 const AccessDenied: React.FC = () => {
   const { user } = useAuth();
+  const location = useLocation();
+  
+  // Try to determine which resource was being accessed
+  const getResourceName = (path: string) => {
+    if (path.includes('/funcionarios')) return 'Funcionários';
+    if (path.includes('/obras')) return 'Obras';
+    if (path.includes('/frota')) return 'Frota';
+    if (path.includes('/patrimonio')) return 'Patrimônio';
+    if (path.includes('/financeiro')) return 'Financeiro';
+    if (path.includes('/configuracoes')) return 'Configurações';
+    return 'este recurso';
+  };
+  
+  const resourceName = getResourceName(location.pathname);
   
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
-      <Card className="w-[500px] shadow-lg">
+      <Card className="w-[550px] shadow-lg">
         <CardHeader className="bg-destructive/10 border-b">
           <CardTitle className="text-destructive flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
+            <ShieldAlert className="h-5 w-5" />
             Acesso Negado
           </CardTitle>
         </CardHeader>
@@ -27,8 +42,14 @@ const AccessDenied: React.FC = () => {
             <p className="text-muted-foreground">
               {user ? (
                 <>
-                  Olá <span className="font-medium">{user.name}</span>, você não tem permissão para acessar esta página.
-                  Seu perfil atual (<span className="font-medium">{user.role}</span>) não possui as permissões necessárias.
+                  Olá <span className="font-medium">{user.name}</span>, você não tem permissão para acessar <span className="font-medium">{resourceName}</span>.
+                  <div className="mt-2">
+                    Seu perfil atual (<span className="font-medium">{user.role === 'admin' ? 'Administrador' : 
+                      user.role === 'manager' ? 'Gerente' : 'Operador'}</span>) não possui as permissões necessárias para esta operação.
+                  </div>
+                  <div className="mt-4 text-sm">
+                    Para solicitar acesso, entre em contato com o administrador do sistema.
+                  </div>
                 </>
               ) : (
                 <>Você não tem permissão para acessar esta página.</>
