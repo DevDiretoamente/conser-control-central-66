@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CartaoPontoForm } from '@/components/rh/CartaoPontoForm';
 import { CartaoPontoRelatorio } from '@/components/rh/CartaoPontoRelatorio';
-import { CartaoPontoImpressao } from '@/components/rh/CartaoPontoImpressao';
+import CartaoPontoImpressao from '@/components/rh/CartaoPontoImpressao';
 import { Button } from '@/components/ui/button';
 import { getCartaoPonto } from '@/services/cartaoPontoService';
 import { CartaoPonto as CartaoPontoType } from '@/types/cartaoPonto';

@@ -1,14 +1,19 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import GerenciamentoClinicas from '@/components/clinicas/GerenciamentoClinicas';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 
-const Clinicas: React.FC = () => {
-  const navigate = useNavigate();
+const ClinicasPage: React.FC = () => {
+  const { toast } = useToast();
+
+  React.useEffect(() => {
+    toast({
+      title: "Módulo em desenvolvimento",
+      description: "O módulo de gerenciamento de clínicas está em desenvolvimento."
+    });
+  }, []);
 
   return (
     <div className="w-full">
@@ -24,22 +29,20 @@ const Clinicas: React.FC = () => {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className="mb-6">
-        <Button variant="outline" onClick={() => navigate('/configuracoes')} className="mb-4">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar
-        </Button>
-        <h1 className="text-2xl font-bold">Gerenciamento de Clínicas</h1>
-        <p className="text-muted-foreground">
-          Cadastre e gerencie clínicas para realização de exames ocupacionais
-        </p>
-      </div>
-
-      <ScrollArea className="h-[calc(100vh-220px)]">
-        <GerenciamentoClinicas />
+      <h1 className="text-2xl font-bold mb-6">Gerenciamento de Clínicas</h1>
+      
+      <ScrollArea className="h-[calc(100vh-180px)]">
+        <div className="pr-4">
+          <Card className="p-6 text-center">
+            <h2 className="text-xl font-medium mb-2">Módulo em Desenvolvimento</h2>
+            <p className="text-muted-foreground">
+              O módulo de gerenciamento de clínicas está sendo implementado e estará disponível em breve.
+            </p>
+          </Card>
+        </div>
       </ScrollArea>
     </div>
   );
 };
 
-export default Clinicas;
+export default ClinicasPage;

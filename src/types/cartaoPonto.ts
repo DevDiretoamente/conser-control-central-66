@@ -113,3 +113,30 @@ export const getHorarioSaidaRegular = (data: string): string => {
   const dia = diaDaSemana(data);
   return dia === 5 ? '16:00' : '17:00';
 };
+
+// Adding the missing function
+export const calcularResumoHoras = (cartaoPonto: CartaoPonto): ResumoHoras => {
+  if (!cartaoPonto || !cartaoPonto.registros) {
+    return {
+      totalNormal: 0,
+      totalExtra50: 0,
+      totalExtra80: 0,
+      totalExtra110: 0,
+      totalNoturno: 0,
+      totalLanches: 0,
+      valorLanches: 0
+    };
+  }
+
+  const resumo = {
+    totalNormal: cartaoPonto.totalHorasNormais || 0,
+    totalExtra50: cartaoPonto.totalHorasExtras50 || 0,
+    totalExtra80: cartaoPonto.totalHorasExtras80 || 0,
+    totalExtra110: cartaoPonto.totalHorasExtras110 || 0,
+    totalNoturno: cartaoPonto.totalHorasNoturno || 0,
+    totalLanches: cartaoPonto.totalLanches || 0,
+    valorLanches: (cartaoPonto.totalLanches || 0) * 5 // R$ 5,00 por lanche
+  };
+  
+  return resumo;
+};

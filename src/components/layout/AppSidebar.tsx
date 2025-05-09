@@ -13,7 +13,7 @@ import {
   Clock
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserRole } from '@/types/auth';
+import { UserRole, PermissionLevel } from '@/types/auth';
 
 interface SidebarItemProps {
   to: string;

@@ -2,19 +2,19 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
-import Login from './pages/Login'; // Fixed import path
+import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import FuncionariosPage from './pages/FuncionariosPage';
-import DetalheFuncionario from './pages/DetalheFuncionario';
-import EditarFuncionario from './pages/EditarFuncionario';
-import FuncoesPage from './pages/FuncoesPage';
-import SetoresPage from './pages/SetoresPage';
-import ExamesMedicosPage from './pages/ExamesMedicosPage';
-import Obras from './pages/Obras';
+import FuncionariosPage from './pages/funcionarios/ListaFuncionarios';
+import DetalheFuncionario from './pages/funcionarios/DetalheFuncionario';
+import EditarFuncionario from './pages/funcionarios/EditarFuncionario';
+import FuncoesPage from './pages/configuracoes/Funcoes';
+import SetoresPage from './pages/configuracoes/Setores';
+import ExamesMedicosPage from './pages/funcionarios/ExamesMedicosPage';
+import Obras from './pages/obras/Obras';
 import { Permission } from './types/auth';
 import AppSidebar from './components/layout/AppSidebar';
-import ClinicasPage from './pages/ClinicasPage';
-import RHPage from './pages/RHPage';
+import ClinicasPage from './pages/configuracoes/Clinicas';
+import RHPage from './pages/rh/RHPage';
 import CartaoPontoPage from "./pages/rh/CartaoPonto";
 
 interface ProtectedRouteProps {
@@ -53,7 +53,7 @@ const App: React.FC = () => {
 
         <div className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
           <Routes>
-            <Route path="/login" element={<Login />} /> {/* Changed from LoginPage to Login */}
+            <Route path="/login" element={<Login />} />
             <Route path="/" element={<ProtectedRoute requiredPermissions={[{ area: 'rh', level: 'read' }]}><Dashboard /></ProtectedRoute>} />
 
             {/* RH Routes */}
