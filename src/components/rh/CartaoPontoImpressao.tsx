@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Printer, Download, ChevronLeft } from 'lucide-react';
@@ -105,7 +106,7 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
     // Dados do funcionário
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'normal');
-    pdf.text(`Funcionário: ${funcionario.nome}`, margemEsquerda, margemSuperior + 20);
+    pdf.text(`Funcionário: ${funcionario.name}`, margemEsquerda, margemSuperior + 20);
     
     // Tabela de horários
     const linhaInicial = margemSuperior + 30;
@@ -224,7 +225,7 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
       pdf.autoPrint();
       window.open(pdf.output('bloburl'), '_blank');
     } else {
-      const nomeArquivo = `cartao-ponto-${funcionario.nome.replace(/\s+/g, '-').toLowerCase()}-${mes}-${ano}.pdf`;
+      const nomeArquivo = `cartao-ponto-${funcionario.name.replace(/\s+/g, '-').toLowerCase()}-${mes}-${ano}.pdf`;
       pdf.save(nomeArquivo);
       
       toast({
@@ -288,7 +289,7 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
                 <SelectGroup>
                   <SelectLabel>Funcionários</SelectLabel>
                   {funcionarios.map(f => (
-                    <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
+                    <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
                   ))}
                 </SelectGroup>
               </SelectContent>
@@ -339,7 +340,7 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
         <div className="bg-muted/30 p-4 rounded-md mb-4">
           <h3 className="font-medium mb-2">Pré-visualização</h3>
           <p className="text-sm text-muted-foreground">
-            Aqui será exibida uma prévia do cartão ponto que será gerado para {selectedFuncionarioId ? funcionarios.find(f => f.id === selectedFuncionarioId)?.nome : "o funcionário selecionado"}.
+            Aqui será exibida uma prévia do cartão ponto que será gerado para {selectedFuncionarioId ? funcionarios.find(f => f.id === selectedFuncionarioId)?.name : "o funcionário selecionado"}.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
             O cartão ponto será gerado para o mês de {getNomeMes(mes)} de {ano}.
