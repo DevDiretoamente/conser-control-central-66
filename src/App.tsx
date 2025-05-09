@@ -27,6 +27,7 @@ import FuncoesPage from "./pages/configuracoes/Funcoes";
 import SetoresPage from "./pages/configuracoes/Setores";
 import ExamesPage from "./pages/configuracoes/Exames";
 import Usuarios from "./pages/configuracoes/Usuarios";
+import InactiveAccount from "./pages/InactiveAccount";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/acesso-negado" element={<AccessDenied />} />
+            <Route path="/conta-inativa" element={<InactiveAccount />} />
             
             {/* Protected routes */}
             <Route 
