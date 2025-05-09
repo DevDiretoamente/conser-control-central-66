@@ -83,16 +83,15 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
   const anoAtual = new Date().getFullYear();
   const anos = [anoAtual - 2, anoAtual - 1, anoAtual, anoAtual + 1];
   
-  // Lista de status para seleção
+  // Updated status options - removed "falta_justificada" and "folga", added "a_disposicao"
   const statusOptions: { valor: StatusDia, nome: string }[] = [
     { valor: 'normal', nome: 'Normal' },
     { valor: 'falta_injustificada', nome: 'Falta Injustificada' },
-    { valor: 'falta_justificada', nome: 'Falta Justificada' },
     { valor: 'atestado', nome: 'Atestado' },
     { valor: 'ferias', nome: 'Férias' },
     { valor: 'dispensado', nome: 'Dispensado' },
     { valor: 'feriado', nome: 'Feriado' },
-    { valor: 'folga', nome: 'Folga' }
+    { valor: 'a_disposicao', nome: 'À Disposição' }
   ];
 
   // Fetch employee details when funcionarioId changes
@@ -288,7 +287,6 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
         variant = 'secondary';
         break;
       case 'ferias':
-      case 'folga':
       case 'dispensado':
       case 'feriado':
         variant = 'outline';

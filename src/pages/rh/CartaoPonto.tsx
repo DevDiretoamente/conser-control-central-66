@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -9,6 +10,13 @@ import { Button } from '@/components/ui/button';
 import { getCartaoPonto } from '@/services/cartaoPontoService';
 import { CartaoPonto as CartaoPontoType } from '@/types/cartaoPonto';
 import { useToast } from '@/components/ui/use-toast';
+import { HelpCircle } from 'lucide-react';
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from '@/components/ui/tooltip';
 
 const CartaoPontoPage: React.FC = () => {
   const { users, user, hasSpecificPermission } = useAuth();
@@ -133,22 +141,44 @@ const CartaoPontoPage: React.FC = () => {
           </Button>
           
           {cartaoPonto && temPermissaoGerenciar && (
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                disabled={cartaoPonto.fechado}
-                onClick={() => {/* Implementar fechamento */}}
-              >
-                {cartaoPonto.fechado ? "Fechado" : "Fechar Período"}
-              </Button>
+            <div className="flex gap-2 items-center">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      disabled={cartaoPonto.fechado}
+                      onClick={() => {/* Implementar fechamento */}}
+                      className="flex items-center"
+                    >
+                      {cartaoPonto.fechado ? "Fechado" : "Fechar Período"}
+                      <HelpCircle className="ml-1 h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-sm p-4">
+                    <p><strong>Fechar Período</strong>: Ao fechar o período, o cartão de ponto não poderá mais ser editado. Esta ação indica que todos os registros foram conferidos e estão corretos para o mês atual.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               
-              <Button 
-                variant="default" 
-                disabled={cartaoPonto.validado}
-                onClick={() => {/* Implementar validação */}}
-              >
-                {cartaoPonto.validado ? "Validado" : "Validar"}
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="default" 
+                      disabled={cartaoPonto.validado || !cartaoPonto.fechado}
+                      onClick={() => {/* Implementar validação */}}
+                      className="flex items-center"
+                    >
+                      {cartaoPonto.validado ? "Validado" : "Validar"}
+                      <HelpCircle className="ml-1 h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-sm p-4">
+                    <p><strong>Validar</strong>: A validação é a etapa final do processo, realizada pelo RH ou gestor, confirmando que os dados foram revisados e aprovados. Somente cartões com período fechado podem ser validados.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           )}
         </CardFooter>

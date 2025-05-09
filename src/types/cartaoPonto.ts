@@ -1,15 +1,13 @@
-
 // Types for TimeCard (Cartão Ponto) system
 
 export type StatusDia = 
   | 'normal'
   | 'falta_injustificada'
-  | 'falta_justificada'
   | 'atestado'
   | 'ferias'
   | 'dispensado'
   | 'feriado'
-  | 'folga';
+  | 'a_disposicao';
 
 export interface RegistroPonto {
   id?: string;
