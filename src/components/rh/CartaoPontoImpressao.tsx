@@ -1,499 +1,356 @@
 
-import React, { useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { User } from '@/types/auth';
-import { Printer } from 'lucide-react';
+import { Printer, Download, ChevronLeft } from 'lucide-react';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface CartaoPontoImpressaoProps {
-  funcionarios: User[];
-  funcionarioSelecionadoId: string;
-  onChangeFuncionario: (id: string) => void;
-  mes: number;
-  ano: number;
-  onChangeMes: (mes: number) => void;
-  onChangeAno: (ano: number) => void;
+  funcionarioId?: string;
+  mes?: number;
+  ano?: number;
+  onBack?: () => void;
 }
 
-export const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
-  funcionarios,
-  funcionarioSelecionadoId,
-  onChangeFuncionario,
-  mes,
-  ano,
-  onChangeMes,
-  onChangeAno
+const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
+  funcionarioId,
+  mes: initialMes,
+  ano: initialAno,
+  onBack,
 }) => {
-  const previewRef = useRef<HTMLDivElement>(null);
-  
-  const funcionarioSelecionado = funcionarios.find(f => f.id === funcionarioSelecionadoId);
-  
-  const meses = [
-    { valor: 1, nome: 'Janeiro' },
-    { valor: 2, nome: 'Fevereiro' },
-    { valor: 3, nome: 'Março' },
-    { valor: 4, nome: 'Abril' },
-    { valor: 5, nome: 'Maio' },
-    { valor: 6, nome: 'Junho' },
-    { valor: 7, nome: 'Julho' },
-    { valor: 8, nome: 'Agosto' },
-    { valor: 9, nome: 'Setembro' },
-    { valor: 10, nome: 'Outubro' },
-    { valor: 11, nome: 'Novembro' },
-    { valor: 12, nome: 'Dezembro' }
-  ];
-  
-  // Gerar anos para seleção (do ano atual - 2 até ano atual + 1)
-  const anoAtual = new Date().getFullYear();
-  const anos = [anoAtual - 2, anoAtual - 1, anoAtual, anoAtual + 1];
-  
-  // Gerar dias do mês
-  const diasNoMes = new Date(ano, mes, 0).getDate();
-  const diasPrimQuinzena = Array.from({ length: 15 }, (_, i) => i + 1);
-  const diasSegQuinzena = Array.from({ length: diasNoMes - 15 }, (_, i) => i + 16);
-  
-  // Determinar dias de semana
-  const diaDaSemana = (dia: number) => {
-    const data = new Date(ano, mes - 1, dia);
-    return data.getDay(); // 0 = domingo, 6 = sábado
+  const [mes, setMes] = useState(initialMes || new Date().getMonth() + 1);
+  const [ano, setAno] = useState(initialAno || new Date().getFullYear());
+  const [funcionarios, setFuncionarios] = useState<{id: string, nome: string}[]>([
+    {id: '1', nome: 'João Silva'},
+    {id: '2', nome: 'Maria Santos'},
+    {id: '3', nome: 'Pedro Almeida'},
+    {id: '4', nome: 'Ana Oliveira'},
+  ]);
+  const [selectedFuncionarioId, setSelectedFuncionarioId] = useState(funcionarioId || '');
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Em uma implementação real, buscaríamos os funcionários da API
+    // Por enquanto usamos dados mockados definidos acima
+  }, []);
+
+  const getNomeMes = (mesNum: number) => {
+    const data = new Date();
+    data.setMonth(mesNum - 1);
+    return format(data, 'MMMM', { locale: ptBR });
   };
-  
-  // Gerar PDF de cartão ponto em branco para impressão
-  const gerarCartaoPontoPDF = () => {
-    if (!funcionarioSelecionado) return;
+
+  const getDiasDaSemana = () => {
+    return ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  };
+
+  const getDiasDoMes = (mes: number, ano: number) => {
+    const numDias = new Date(ano, mes, 0).getDate();
+    const dias = [];
     
-    const doc = new jsPDF();
-    
-    // Função auxiliar para criar as tabelas
-    const criarTabelaQuinzena = (
-      titulo: string, 
-      dias: number[], 
-      startY: number
-    ) => {
-      // Cabeçalho
-      doc.setFontSize(14);
-      doc.text(titulo, 105, startY, { align: 'center' });
-      
-      // Tabela de registro
-      const tableData: any[][] = [];
-      
-      // Linha de cabeçalho com os dias
-      dias.forEach(dia => {
-        const diaStr = dia.toString().padStart(2, '0');
-        const diaSemanaNum = diaDaSemana(dia);
-        // Marcar finais de semana em cinza
-        const estilo = diaSemanaNum === 0 || diaSemanaNum === 6 ? { fillColor: [220, 220, 220] } : {};
-        
-        tableData.push([
-          { content: diaStr, styles: estilo },
-          { content: '', styles: estilo }, // entrada extra
-          { content: '', styles: estilo }, // entrada normal
-          { content: '', styles: estilo }, // início intervalo
-          { content: '', styles: estilo }, // fim intervalo
-          { content: '', styles: estilo }, // saída normal
-          { content: '', styles: estilo }, // saída extra
-          { content: '', styles: estilo }, // extras
-          { content: '', styles: estilo }, // 110%
-          { content: '', styles: estilo }, // lanche
-          { content: '', styles: estilo }, // visto
-        ]);
+    for (let i = 1; i <= numDias; i++) {
+      const data = new Date(ano, mes - 1, i);
+      const diaSemana = data.getDay();
+      dias.push({
+        dia: i,
+        diaSemana,
+        ehFimDeSemana: diaSemana === 0 || diaSemana === 6
       });
-      
-      // @ts-ignore - jsPDF-AutoTable não tem tipos
-      doc.autoTable({
-        head: [[
-          { content: 'DIA', styles: { fillColor: [60, 60, 60], halign: 'center' } },
-          { content: 'INÍCIO EXTRA', colSpan: 2, styles: { fillColor: [60, 60, 60], halign: 'center' } },
-          { content: 'INÍCIO NORMAL', styles: { fillColor: [60, 60, 60], halign: 'center' } },
-          { content: 'INTERVALO REFEIÇÃO', colSpan: 2, styles: { fillColor: [60, 60, 60], halign: 'center' } },
-          { content: 'SAÍDA NORMAL', styles: { fillColor: [60, 60, 60], halign: 'center' } },
-          { content: 'SAÍDA EXTRA', styles: { fillColor: [60, 60, 60], halign: 'center' } },
-          { content: 'SOMA DIÁRIA DE EXTRAS', colSpan: 3, styles: { fillColor: [60, 60, 60], halign: 'center' } },
-          { content: 'VISTO FUNCIONÁRIO', styles: { fillColor: [60, 60, 60], halign: 'center' } }
-        ], 
-        [
-          { content: '', styles: { fillColor: [60, 60, 60] } },
-          { content: 'INÍCIO\nEXTRA', styles: { fillColor: [120, 120, 120], halign: 'center' } },
-          { content: 'INÍCIO\nNORMAL', styles: { fillColor: [120, 120, 120], halign: 'center' } },
-          { content: 'INÍCIO', styles: { fillColor: [120, 120, 120], halign: 'center' } },
-          { content: 'TÉRMINO', styles: { fillColor: [120, 120, 120], halign: 'center' } },
-          { content: 'SAÍDA\nNORMAL', styles: { fillColor: [120, 120, 120], halign: 'center' } },
-          { content: 'SAÍDA\nEXTRA', styles: { fillColor: [120, 120, 120], halign: 'center' } },
-          { content: 'EXTRAS', styles: { fillColor: [120, 120, 120], halign: 'center' } },
-          { content: '110%', styles: { fillColor: [120, 120, 120], halign: 'center' } },
-          { content: 'LANCHE', styles: { fillColor: [120, 120, 120], halign: 'center' } },
-          { content: '', styles: { fillColor: [120, 120, 120] } }
-        ]],
-        body: tableData,
-        startY: startY + 10,
-        theme: 'grid',
-        styles: {
-          fontSize: 8,
-          cellPadding: 1,
-        },
-        columnStyles: {
-          0: { cellWidth: 15 },
-          1: { cellWidth: 15 },
-          2: { cellWidth: 15 },
-          3: { cellWidth: 15 },
-          4: { cellWidth: 15 },
-          5: { cellWidth: 15 },
-          6: { cellWidth: 15 },
-          7: { cellWidth: 15 },
-          8: { cellWidth: 15 },
-          9: { cellWidth: 15 },
-          10: { cellWidth: 30 }
-        }
+    }
+    
+    return dias;
+  };
+
+  const gerarPDF = (imprimir: boolean = false) => {
+    const funcionario = funcionarios.find(f => f.id === selectedFuncionarioId);
+    
+    if (!funcionario) {
+      toast({
+        title: "Erro",
+        description: "Selecione um funcionário para gerar o cartão ponto",
+        variant: "destructive"
       });
-      
-      // Adicionar linha de soma
-      const finalY = (doc as any).lastAutoTable.finalY;
-      
-      // @ts-ignore - jsPDF-AutoTable não tem tipos
-      doc.autoTable({
-        body: [[
-          { content: 'SOMA QUINZENA >>>', colSpan: 7, styles: { fontStyle: 'bold', halign: 'right' } },
-          { content: '', styles: {} },
-          { content: '', styles: {} },
-          { content: '', styles: {} },
-          { content: '', styles: {} }
-        ]],
-        startY: finalY,
-        theme: 'grid',
-        styles: {
-          fontSize: 8,
-          cellPadding: 1,
-        },
-        columnStyles: {
-          0: { cellWidth: 105 },
-          1: { cellWidth: 15 },
-          2: { cellWidth: 15 },
-          3: { cellWidth: 15 },
-          4: { cellWidth: 30 }
-        }
-      });
-      
-      if (titulo.includes('2ª')) {
-        const finalY = (doc as any).lastAutoTable.finalY + 5;
-        
-        // Adicionar observações para a segunda quinzena
-        // @ts-ignore - jsPDF-AutoTable não tem tipos
-        doc.autoTable({
-          body: [[
-            { content: 'RESUMO DE HORAS', colSpan: 1, styles: { fontStyle: 'bold' } },
-            { content: '', colSpan: 2, styles: {} }
-          ], [
-            { content: '50% →', styles: { fontStyle: 'bold' } },
-            { content: '', colSpan: 2, styles: {} }
-          ], [
-            { content: '80% →', styles: { fontStyle: 'bold' } },
-            { content: '', colSpan: 2, styles: {} }
-          ], [
-            { content: '110% →', styles: { fontStyle: 'bold' } },
-            { content: '', colSpan: 2, styles: {} }
-          ], [
-            { content: '> 1 H.E. →', styles: { fontStyle: 'bold' } },
-            { content: '', colSpan: 2, styles: {} }
-          ]],
-          startY: finalY,
-          theme: 'grid',
-          styles: {
-            fontSize: 8,
-            cellPadding: 1,
-          },
-          columnStyles: {
-            0: { cellWidth: 40 },
-            1: { cellWidth: 140 }
-          }
-        });
-        
-        const resumoY = (doc as any).lastAutoTable.finalY + 5;
-        
-        // Horário de trabalho
-        doc.setFontSize(10);
-        doc.text('HORÁRIO DE TRABALHO - CONSERVIAS', 105, resumoY, { align: 'center' });
-        doc.setFontSize(8);
-        doc.text('Segunda a Quinta: 07:00 às 12:00 - 13:00 às 17:00', 105, resumoY + 5, { align: 'center' });
-        doc.text('Sexta-feira: 07:00 às 12:00 - 13:00 às 16:00', 105, resumoY + 10, { align: 'center' });
-        
-        const assinaturaY = resumoY + 20;
-        
-        // Linhas para assinaturas
-        doc.line(20, assinaturaY, 90, assinaturaY);
-        doc.line(110, assinaturaY, 180, assinaturaY);
-        
-        doc.setFontSize(8);
-        doc.text(funcionarioSelecionado.name, 55, assinaturaY + 5, { align: 'center' });
-        doc.text(`DATA: _____ de ${meses.find(m => m.valor === mes)?.nome.toUpperCase()} de ${ano}.`, 145, assinaturaY + 5, { align: 'center' });
-      }
-      
-      return (doc as any).lastAutoTable.finalY + 10;
-    };
-    
-    // Cabeçalho principal
-    doc.setFontSize(16);
-    doc.text('CARTÃO PONTO INDIVIDUAL', 105, 15, { align: 'center' });
-    
-    // Logo no canto superior esquerdo
-    doc.setFillColor(255, 255, 0);
-    doc.rect(15, 15, 35, 15, 'F');
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(14);
-    doc.text('CONSERVIAS', 32, 25, { align: 'center' });
-    doc.setTextColor(0, 0, 0);
-    
-    // Informações do funcionário
-    // @ts-ignore - jsPDF-AutoTable não tem tipos
-    doc.autoTable({
-      body: [
-        [
-          { content: 'FUNCIONÁRIO:', styles: { fontStyle: 'bold' } }, 
-          { content: funcionarioSelecionado.name }
-        ],
-        [
-          { content: 'SETOR/FUNÇÃO:', styles: { fontStyle: 'bold' } }, 
-          { content: 'A DEFINIR' } // Substituir por informação real se disponível
-        ],
-        [
-          { content: 'MÊS:', styles: { fontStyle: 'bold' } }, 
-          { content: meses.find(m => m.valor === mes)?.nome.toUpperCase() },
-          { content: 'ANO:', styles: { fontStyle: 'bold' } }, 
-          { content: ano.toString() }
-        ],
-        [
-          { content: 'OBRA:', styles: { fontStyle: 'bold' } }, 
-          { content: '' }
-        ]
-      ],
-      startY: 35,
-      theme: 'grid',
-      styles: {
-        fontSize: 10,
-        cellPadding: 1,
-        halign: 'left'
-      },
-      columnStyles: {
-        0: { cellWidth: 40 },
-        1: { cellWidth: 100 },
-        2: { cellWidth: 25 },
-        3: { cellWidth: 25 }
-      }
+      return;
+    }
+
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
     });
     
-    // Primeira quinzena
-    const finalY1 = criarTabelaQuinzena('1ª QUINZENA', diasPrimQuinzena, 70);
+    const diasDoMes = getDiasDoMes(mes, ano);
+    const nomeMes = getNomeMes(mes);
     
-    // Adicionar observações primeira quinzena
-    // @ts-ignore - jsPDF-AutoTable não tem tipos
-    doc.autoTable({
-      body: [[
-        { content: 'OBSERVAÇÕES:', styles: { fontStyle: 'bold' } }
-      ], [
-        { content: '' }
-      ]],
-      startY: finalY1,
-      theme: 'grid',
-      styles: {
-        fontSize: 8,
-        cellPadding: 1,
-        minCellHeight: 10
-      },
-      columnStyles: {
-        0: { cellWidth: 180 }
+    // Configurações
+    const margemEsquerda = 10;
+    const margemSuperior = 10;
+    const larguraUtil = pdf.internal.pageSize.width - (margemEsquerda * 2);
+    
+    // Título
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('CONSERVIAS CONSTRUÇÃO CIVIL LTDA', margemEsquerda, margemSuperior);
+    
+    pdf.setFontSize(14);
+    pdf.text(`CARTÃO PONTO - ${nomeMes.toUpperCase()} / ${ano}`, margemEsquerda, margemSuperior + 10);
+
+    // Dados do funcionário
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Funcionário: ${funcionario.nome}`, margemEsquerda, margemSuperior + 20);
+    
+    // Tabela de horários
+    const linhaInicial = margemSuperior + 30;
+    const alturaLinha = 10;
+    const larguraColunaDia = 15;
+    const larguraColunaDiaSemana = 15;
+    const larguraColunaHorario = (larguraUtil - larguraColunaDia - larguraColunaDiaSemana) / 4;
+    
+    // Cabeçalho da tabela
+    pdf.setFillColor(220, 220, 220);
+    pdf.rect(margemEsquerda, linhaInicial, larguraUtil, alturaLinha, 'F');
+    
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Dia', margemEsquerda + 3, linhaInicial + 6);
+    pdf.text('DS', margemEsquerda + larguraColunaDia + 3, linhaInicial + 6);
+    
+    pdf.text('Entrada', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + 15, linhaInicial + 6);
+    pdf.text('Almoço', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + larguraColunaHorario + 15, linhaInicial + 6);
+    pdf.text('Retorno', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + (larguraColunaHorario * 2) + 15, linhaInicial + 6);
+    pdf.text('Saída', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + (larguraColunaHorario * 3) + 15, linhaInicial + 6);
+    
+    // Linhas da tabela
+    pdf.setFont('helvetica', 'normal');
+    
+    let posicaoY = linhaInicial + alturaLinha;
+    const diasSemana = getDiasDaSemana();
+    
+    diasDoMes.forEach((dia, index) => {
+      // Verificar se precisamos de uma nova página
+      if (posicaoY > pdf.internal.pageSize.height - 20) {
+        pdf.addPage();
+        posicaoY = margemSuperior;
+        
+        // Repetir cabeçalho na nova página
+        pdf.setFillColor(220, 220, 220);
+        pdf.rect(margemEsquerda, posicaoY, larguraUtil, alturaLinha, 'F');
+        
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Dia', margemEsquerda + 3, posicaoY + 6);
+        pdf.text('DS', margemEsquerda + larguraColunaDia + 3, posicaoY + 6);
+        
+        pdf.text('Entrada', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + 15, posicaoY + 6);
+        pdf.text('Almoço', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + larguraColunaHorario + 15, posicaoY + 6);
+        pdf.text('Retorno', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + (larguraColunaHorario * 2) + 15, posicaoY + 6);
+        pdf.text('Saída', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + (larguraColunaHorario * 3) + 15, posicaoY + 6);
+        
+        posicaoY += alturaLinha;
       }
+      
+      // Alternar cores das linhas
+      if (index % 2 === 0) {
+        pdf.setFillColor(245, 245, 245);
+        pdf.rect(margemEsquerda, posicaoY, larguraUtil, alturaLinha, 'F');
+      }
+      
+      // Destacar fins de semana
+      if (dia.ehFimDeSemana) {
+        pdf.setFillColor(230, 230, 250); // Cor lilás bem clara
+        pdf.rect(margemEsquerda, posicaoY, larguraUtil, alturaLinha, 'F');
+      }
+      
+      // Dia e dia da semana
+      pdf.text(dia.dia.toString().padStart(2, '0'), margemEsquerda + 3, posicaoY + 6);
+      pdf.text(diasSemana[dia.diaSemana], margemEsquerda + larguraColunaDia + 3, posicaoY + 6);
+      
+      // Bordas das células para campos de preenchimento manual
+      const posX1 = margemEsquerda + larguraColunaDia + larguraColunaDiaSemana;
+      const posX2 = posX1 + larguraColunaHorario;
+      const posX3 = posX2 + larguraColunaHorario;
+      const posX4 = posX3 + larguraColunaHorario;
+      
+      pdf.line(posX1, posicaoY, posX1, posicaoY + alturaLinha);
+      pdf.line(posX2, posicaoY, posX2, posicaoY + alturaLinha);
+      pdf.line(posX3, posicaoY, posX3, posicaoY + alturaLinha);
+      pdf.line(posX4, posicaoY, posX4, posicaoY + alturaLinha);
+      pdf.line(posX4 + larguraColunaHorario, posicaoY, posX4 + larguraColunaHorario, posicaoY + alturaLinha);
+      
+      // Linha horizontal inferior
+      pdf.line(margemEsquerda, posicaoY + alturaLinha, margemEsquerda + larguraUtil, posicaoY + alturaLinha);
+      
+      posicaoY += alturaLinha;
     });
     
-    // Nova página para a segunda quinzena
-    doc.addPage();
+    // Assinaturas
+    posicaoY += 10;
+    pdf.text("Data: _____/_____/_____", margemEsquerda, posicaoY);
     
-    // Segunda quinzena
-    criarTabelaQuinzena('2ª QUINZENA', diasSegQuinzena, 15);
+    posicaoY += 20;
+    const larguraAssinatura = 80;
+    pdf.line(margemEsquerda, posicaoY, margemEsquerda + larguraAssinatura, posicaoY);
+    pdf.text("Assinatura do Funcionário", margemEsquerda + 15, posicaoY + 5);
     
-    // Salvar ou imprimir o PDF
-    doc.save(`cartao_ponto_${funcionarioSelecionado.name.replace(/\s+/g, '_')}_${mes}_${ano}.pdf`);
+    pdf.line(margemEsquerda + larguraUtil - larguraAssinatura, posicaoY, margemEsquerda + larguraUtil, posicaoY);
+    pdf.text("Assinatura do Responsável", margemEsquerda + larguraUtil - larguraAssinatura + 10, posicaoY + 5);
+    
+    // Observações
+    posicaoY += 15;
+    pdf.setFontSize(10);
+    pdf.text("Observações:", margemEsquerda, posicaoY);
+    
+    posicaoY += 5;
+    pdf.line(margemEsquerda, posicaoY, margemEsquerda + larguraUtil, posicaoY);
+    
+    posicaoY += 5;
+    pdf.line(margemEsquerda, posicaoY, margemEsquerda + larguraUtil, posicaoY);
+    
+    posicaoY += 5;
+    pdf.line(margemEsquerda, posicaoY, margemEsquerda + larguraUtil, posicaoY);
+    
+    // Rodapé
+    const posicaoRodape = pdf.internal.pageSize.height - 10;
+    pdf.setFontSize(8);
+    pdf.text(`Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}`, margemEsquerda, posicaoRodape);
+    
+    if (imprimir) {
+      pdf.autoPrint();
+      window.open(pdf.output('bloburl'), '_blank');
+    } else {
+      const nomeArquivo = `cartao-ponto-${funcionario.nome.replace(/\s+/g, '-').toLowerCase()}-${mes}-${ano}.pdf`;
+      pdf.save(nomeArquivo);
+      
+      toast({
+        title: "PDF Gerado",
+        description: `O arquivo ${nomeArquivo} foi baixado com sucesso.`,
+        variant: "default"
+      });
+    }
   };
-  
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="w-full md:w-1/3">
-          <Select 
-            value={funcionarioSelecionadoId} 
-            onValueChange={(value) => onChangeFuncionario(value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um funcionário" />
-            </SelectTrigger>
-            <SelectContent>
-              {funcionarios.map((funcionario) => (
-                <SelectItem key={funcionario.id} value={funcionario.id}>
-                  {funcionario.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="w-full md:w-1/3">
-          <Select 
-            value={mes.toString()} 
-            onValueChange={(value) => onChangeMes(Number(value))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o mês" />
-            </SelectTrigger>
-            <SelectContent>
-              {meses.map((mes) => (
-                <SelectItem key={mes.valor} value={mes.valor.toString()}>
-                  {mes.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="w-full md:w-1/3">
-          <Select 
-            value={ano.toString()} 
-            onValueChange={(value) => onChangeAno(Number(value))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o ano" />
-            </SelectTrigger>
-            <SelectContent>
-              {anos.map((ano) => (
-                <SelectItem key={ano} value={ano.toString()}>
-                  {ano}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Impressão de Cartão Ponto em Branco</CardTitle>
-          <CardDescription>
-            Gere cartões de ponto em branco para preenchimento manual
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent>
-          <div className="flex justify-center mb-4">
-            {funcionarioSelecionado && (
-              <Button onClick={gerarCartaoPontoPDF}>
-                <Printer className="mr-2 h-4 w-4" />
-                Imprimir Cartão Ponto
+    <Card className="w-full shadow-sm">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {onBack && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={onBack}
+                className="mr-2"
+              >
+                <ChevronLeft className="h-4 w-4" />
               </Button>
             )}
+            <CardTitle>Cartão Ponto para Impressão</CardTitle>
           </div>
-          
-          <div ref={previewRef} className="bg-background p-4 border rounded-md">
-            <div className="text-center mb-4 text-lg font-bold">
-              CARTÃO PONTO INDIVIDUAL
-            </div>
-            
-            <div className="flex justify-between mb-4">
-              <div className="bg-yellow-300 px-3 py-1 font-bold">
-                CONSERVIAS
-              </div>
-              
-              <div className="flex-1 ml-4">
-                <table className="w-full border-collapse">
-                  <tbody>
-                    <tr>
-                      <td className="border px-2 py-1 font-semibold w-1/4">FUNCIONÁRIO:</td>
-                      <td className="border px-2 py-1">{funcionarioSelecionado?.name || ''}</td>
-                    </tr>
-                    <tr>
-                      <td className="border px-2 py-1 font-semibold">SETOR/FUNÇÃO:</td>
-                      <td className="border px-2 py-1">A DEFINIR</td>
-                    </tr>
-                    <tr>
-                      <td className="border px-2 py-1 font-semibold">MÊS:</td>
-                      <td className="border px-2 py-1 flex justify-between">
-                        <span>{meses.find(m => m.valor === mes)?.nome.toUpperCase()}</span>
-                        <span className="font-semibold">ANO:</span>
-                        <span>{ano}</span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="border px-2 py-1 font-semibold">OBRA:</td>
-                      <td className="border px-2 py-1"></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            
-            <div className="text-center mb-2 font-semibold">
-              1ª QUINZENA
-            </div>
-            
-            <table className="w-full border-collapse mb-4 text-xs">
-              <thead>
-                <tr>
-                  <th className="border px-1 py-1 bg-gray-700 text-white" rowSpan={2}>DIA</th>
-                  <th className="border px-1 py-1 bg-gray-700 text-white" colSpan={2}>MANHÃ</th>
-                  <th className="border px-1 py-1 bg-gray-700 text-white" colSpan={2}>INTERVALO REFEIÇÃO</th>
-                  <th className="border px-1 py-1 bg-gray-700 text-white" colSpan={2}>TARDE</th>
-                  <th className="border px-1 py-1 bg-gray-700 text-white" colSpan={3}>SOMA DIÁRIA DE EXTRAS</th>
-                  <th className="border px-1 py-1 bg-gray-700 text-white" rowSpan={2}>VISTO FUNCIONÁRIO</th>
-                </tr>
-                <tr>
-                  <th className="border px-1 py-1 bg-gray-500 text-white">INÍCIO EXTRA</th>
-                  <th className="border px-1 py-1 bg-gray-500 text-white">INÍCIO NORMAL</th>
-                  <th className="border px-1 py-1 bg-gray-500 text-white">INÍCIO</th>
-                  <th className="border px-1 py-1 bg-gray-500 text-white">TÉRMINO</th>
-                  <th className="border px-1 py-1 bg-gray-500 text-white">SAÍDA NORMAL</th>
-                  <th className="border px-1 py-1 bg-gray-500 text-white">SAÍDA EXTRA</th>
-                  <th className="border px-1 py-1 bg-gray-500 text-white">EXTRAS</th>
-                  <th className="border px-1 py-1 bg-gray-500 text-white">110%</th>
-                  <th className="border px-1 py-1 bg-gray-500 text-white">LANCHE</th>
-                </tr>
-              </thead>
-              <tbody>
-                {diasPrimQuinzena.map(dia => (
-                  <tr key={dia} className={diaDaSemana(dia) === 0 || diaDaSemana(dia) === 6 ? 'bg-gray-100' : ''}>
-                    <td className="border px-1 py-1">{dia}</td>
-                    <td className="border px-1 py-1"></td>
-                    <td className="border px-1 py-1"></td>
-                    <td className="border px-1 py-1"></td>
-                    <td className="border px-1 py-1"></td>
-                    <td className="border px-1 py-1"></td>
-                    <td className="border px-1 py-1"></td>
-                    <td className="border px-1 py-1"></td>
-                    <td className="border px-1 py-1"></td>
-                    <td className="border px-1 py-1"></td>
-                    <td className="border px-1 py-1"></td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td className="border px-1 py-1 text-right font-semibold" colSpan={7}>SOMA QUINZENA >>></td>
-                  <td className="border px-1 py-1"></td>
-                  <td className="border px-1 py-1"></td>
-                  <td className="border px-1 py-1"></td>
-                  <td className="border px-1 py-1"></td>
-                </tr>
-              </tfoot>
-            </table>
-            
-            <div className="text-center mt-4 mb-2 font-semibold">
-              2ª QUINZENA (Preview)
-            </div>
-            
-            <p className="text-center text-sm mt-4">
-              Clique em "Imprimir Cartão Ponto" para gerar o PDF completo.
+          <div>
+            <Button 
+              onClick={() => gerarPDF(false)}
+              variant="outline" 
+              size="sm"
+              className="mr-2"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Baixar PDF
+            </Button>
+            <Button 
+              onClick={() => gerarPDF(true)} 
+              variant="default" 
+              size="sm"
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              Imprimir
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div>
+            <Label htmlFor="funcionario">Funcionário</Label>
+            <Select 
+              value={selectedFuncionarioId}
+              onValueChange={setSelectedFuncionarioId}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um funcionário" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Funcionários</SelectLabel>
+                  {funcionarios.map(f => (
+                    <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="mes">Mês</Label>
+            <Select 
+              value={mes.toString()} 
+              onValueChange={(value) => setMes(parseInt(value))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um mês" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Meses</SelectLabel>
+                  {Array.from({length: 12}, (_, i) => i + 1).map(m => (
+                    <SelectItem key={m} value={m.toString()}>
+                      {format(new Date(2000, m - 1, 1), 'MMMM', { locale: ptBR })}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="ano">Ano</Label>
+            <Select 
+              value={ano.toString()} 
+              onValueChange={(value) => setAno(parseInt(value))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um ano" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Anos</SelectLabel>
+                  {Array.from({length: 5}, (_, i) => new Date().getFullYear() - 2 + i).map(a => (
+                    <SelectItem key={a} value={a.toString()}>{a}</SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        <div className="bg-muted/30 p-4 rounded-md mb-4">
+          <h3 className="font-medium mb-2">Pré-visualização</h3>
+          <p className="text-sm text-muted-foreground">
+            Aqui será exibida uma prévia do cartão ponto que será gerado para {selectedFuncionarioId ? funcionarios.find(f => f.id === selectedFuncionarioId)?.nome : "o funcionário selecionado"}.
+          </p>
+          <p className="text-sm text-muted-foreground mt-2">
+            O cartão ponto será gerado para o mês de {getNomeMes(mes)} de {ano}.
+          </p>
+          <div className="mt-4 text-center">
+            <p className="text-xs text-muted-foreground italic">
+              Para visualizar o cartão ponto completo, clique em "Baixar PDF" ou "Imprimir".
             </p>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
+
+export default CartaoPontoImpressao;

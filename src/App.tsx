@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
-import LoginPage from './pages/LoginPage';
+import Login from './pages/Login'; // Fixed import path
 import Dashboard from './pages/Dashboard';
 import FuncionariosPage from './pages/FuncionariosPage';
 import DetalheFuncionario from './pages/DetalheFuncionario';
@@ -52,7 +53,7 @@ const App: React.FC = () => {
 
         <div className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
           <Routes>
-            <Route path="/login" element={<LoginPage />} />
+            <Route path="/login" element={<Login />} /> {/* Changed from LoginPage to Login */}
             <Route path="/" element={<ProtectedRoute requiredPermissions={[{ area: 'rh', level: 'read' }]}><Dashboard /></ProtectedRoute>} />
 
             {/* RH Routes */}
