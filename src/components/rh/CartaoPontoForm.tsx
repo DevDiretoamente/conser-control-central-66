@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Table, 
@@ -582,7 +581,7 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
               )}
               
               {currentRegistro.bloqueado && (
-                <Alert className="mt-4" variant="warning">
+                <Alert className="mt-4" variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertTitle>Registro bloqueado</AlertTitle>
                   <AlertDescription>
