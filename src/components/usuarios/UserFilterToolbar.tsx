@@ -153,7 +153,7 @@ const UserFilterToolbar: React.FC<UserFilterToolbarProps> = ({ onFilterChange })
           <DropdownMenuCheckboxItem
             checked={filters.sortField === 'name'}
             onCheckedChange={() => {
-              const newFilters = { 
+              const newFilters: UserFilterOptions = { 
                 ...filters, 
                 sortField: 'name',
                 sortDirection: filters.sortDirection || 'asc'
@@ -167,7 +167,7 @@ const UserFilterToolbar: React.FC<UserFilterToolbarProps> = ({ onFilterChange })
           <DropdownMenuCheckboxItem
             checked={filters.sortField === 'createdAt'}
             onCheckedChange={() => {
-              const newFilters = { 
+              const newFilters: UserFilterOptions = { 
                 ...filters, 
                 sortField: 'createdAt',
                 sortDirection: filters.sortDirection || 'desc' 
@@ -181,7 +181,7 @@ const UserFilterToolbar: React.FC<UserFilterToolbarProps> = ({ onFilterChange })
           <DropdownMenuCheckboxItem
             checked={filters.sortField === 'lastLogin'}
             onCheckedChange={() => {
-              const newFilters = { 
+              const newFilters: UserFilterOptions = { 
                 ...filters, 
                 sortField: 'lastLogin',
                 sortDirection: filters.sortDirection || 'desc' 
@@ -198,7 +198,7 @@ const UserFilterToolbar: React.FC<UserFilterToolbarProps> = ({ onFilterChange })
           <DropdownMenuCheckboxItem
             checked={filters.sortDirection === 'asc'}
             onCheckedChange={() => {
-              const newFilters = { 
+              const newFilters: UserFilterOptions = { 
                 ...filters, 
                 sortDirection: 'asc',
                 sortField: filters.sortField || 'name'
@@ -215,7 +215,7 @@ const UserFilterToolbar: React.FC<UserFilterToolbarProps> = ({ onFilterChange })
           <DropdownMenuCheckboxItem
             checked={filters.sortDirection === 'desc'}
             onCheckedChange={() => {
-              const newFilters = { 
+              const newFilters: UserFilterOptions = { 
                 ...filters, 
                 sortDirection: 'desc',
                 sortField: filters.sortField || 'name'
