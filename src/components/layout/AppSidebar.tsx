@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -10,7 +9,8 @@ import {
   FileText,
   Settings,
   Truck,
-  LayoutDashboard
+  LayoutDashboard,
+  Clock
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types/auth';
@@ -62,6 +62,27 @@ interface AppSidebarProps {
 
 const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
   const { user, logout } = useAuth();
+
+  const rhItems = [
+    {
+      title: "Funcionários",
+      icon: <Users className="h-5 w-5" />,
+      link: "/funcionarios",
+      permission: { area: 'funcionarios', level: 'read' as PermissionLevel },
+    },
+    {
+      title: "Exames Médicos",
+      icon: <FileText className="h-5 w-5" />,
+      link: "/funcionarios/exames",
+      permission: { area: 'exames', level: 'read' as PermissionLevel },
+    },
+    {
+      title: "Cartão Ponto",
+      icon: <Clock className="h-5 w-5" />,
+      link: "/rh/cartao-ponto",
+      permission: { area: 'cartaoponto', level: 'read' as PermissionLevel },
+    },
+  ];
 
   return (
     <div 

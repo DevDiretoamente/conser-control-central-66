@@ -17,7 +17,8 @@ export type PermissionArea =
   | 'usuarios'
   | 'funcoes'
   | 'setores'
-  | 'clinicas';
+  | 'clinicas'
+  | 'cartaoponto'; // Adicionando área para cartão ponto
 
 // Define permission levels
 export type PermissionLevel = 'read' | 'create' | 'write' | 'delete' | 'manage';

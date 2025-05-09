@@ -47,6 +47,7 @@ const mockUsers: User[] = [
       { area: 'financeiro', level: 'manage' },
       { area: 'configuracoes', level: 'manage' },
       { area: 'usuarios', level: 'manage' },
+      { area: 'cartaoponto', level: 'manage' }, // Added permission for cartão ponto
     ]
   },
   {
@@ -64,6 +65,7 @@ const mockUsers: User[] = [
       { area: 'funcionarios', level: 'write' },
       { area: 'exames', level: 'write' },
       { area: 'documentos', level: 'read' },
+      { area: 'cartaoponto', level: 'write' }, // Added permission for cartão ponto
     ]
   },
   {
@@ -80,6 +82,7 @@ const mockUsers: User[] = [
       { area: 'rh', level: 'read' },
       { area: 'funcionarios', level: 'read' },
       { area: 'exames', level: 'read' },
+      { area: 'cartaoponto', level: 'create' }, // Added permission for cartão ponto (can create/edit records)
     ]
   },
   {
