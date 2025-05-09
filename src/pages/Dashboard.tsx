@@ -2,7 +2,10 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import DashboardCard from '@/components/dashboard/DashboardCard';
-import { Users, Building, Briefcase, Truck, FileText, AlertTriangle } from 'lucide-react';
+import { Users, Building, Briefcase, Truck, FileText } from 'lucide-react';
+import StatisticsPanel from '@/components/dashboard/StatisticsPanel';
+import AlertsSummary from '@/components/dashboard/AlertsSummary';
+import ComplianceOverview from '@/components/dashboard/ComplianceOverview';
 
 const Dashboard = () => {
   return (
@@ -22,7 +25,7 @@ const Dashboard = () => {
           description="Gestão de funcionários"
           icon={<Users size={24} />}
           to="/funcionarios"
-          value="5"
+          value="26"
           color="primary"
           footer="10 ASOs a vencer nos próximos 30 dias"
         />
@@ -32,9 +35,9 @@ const Dashboard = () => {
           description="Projetos e licitações"
           icon={<Building size={24} />}
           to="/obras"
-          value="3"
+          value="5"
           color="accent"
-          footer="2 obras em andamento, 1 licitação pendente"
+          footer="3 obras em andamento, 2 licitações pendentes"
         />
         
         <DashboardCard
@@ -42,7 +45,7 @@ const Dashboard = () => {
           description="Veículos e equipamentos"
           icon={<Truck size={24} />}
           to="/frota"
-          value="8"
+          value="12"
           color="success"
           footer="2 manutenções preventivas agendadas"
         />
@@ -52,57 +55,26 @@ const Dashboard = () => {
           description="Contas a pagar e receber"
           icon={<FileText size={24} />}
           to="/financeiro"
-          value="R$ 12.500,00"
+          value="R$ 125.450,00"
           color="info"
           footer="Próximo vencimento em 3 dias"
         />
       </div>
 
-      <h2 className="text-lg font-medium mb-4">Alertas</h2>
-      
-      <div className="grid grid-cols-1 gap-4">
-        <Card className="border-l-4 border-l-conserv-danger">
-          <CardHeader className="py-3">
-            <CardTitle className="text-base font-medium flex items-center">
-              <AlertTriangle className="mr-2 h-5 w-5 text-conserv-danger" />
-              ASO de 3 funcionários vencendo esta semana
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pb-3 pt-0">
-            <p className="text-sm text-muted-foreground">
-              Agende os exames médicos o quanto antes para evitar não conformidades.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+        <div className="lg:col-span-2">
+          <h2 className="text-lg font-medium mb-4">Estatísticas</h2>
+          <StatisticsPanel title="Estatísticas de Exames Médicos" />
+        </div>
         
-        <Card className="border-l-4 border-l-conserv-warning">
-          <CardHeader className="py-3">
-            <CardTitle className="text-base font-medium flex items-center">
-              <AlertTriangle className="mr-2 h-5 w-5 text-conserv-warning" />
-              Manutenção preventiva de 2 veículos agendada para amanhã
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pb-3 pt-0">
-            <p className="text-sm text-muted-foreground">
-              Veículos XYZ-1234 e ABC-5678 devem ser levados ao mecânico amanhã às 08:00.
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-l-4 border-l-conserv-info">
-          <CardHeader className="py-3">
-            <CardTitle className="text-base font-medium flex items-center">
-              <AlertTriangle className="mr-2 h-5 w-5 text-conserv-info" />
-              Licitação #2023-001 com prazo final em 5 dias
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pb-3 pt-0">
-            <p className="text-sm text-muted-foreground">
-              Prefeitura Municipal de São Paulo - Manutenção de Vias Urbanas.
-            </p>
-          </CardContent>
-        </Card>
+        <div>
+          <h2 className="text-lg font-medium mb-4">Conformidade</h2>
+          <ComplianceOverview />
+        </div>
       </div>
+
+      <h2 className="text-lg font-medium mb-4">Alertas</h2>
+      <AlertsSummary />
     </div>
   );
 };
