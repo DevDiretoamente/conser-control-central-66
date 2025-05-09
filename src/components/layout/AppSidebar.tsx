@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -19,7 +18,7 @@ import {
   Stethoscope
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserRole, PermissionLevel } from '@/types/auth';
+import { UserRole, PermissionLevel, PermissionArea } from '@/types/auth';
 
 interface SidebarItemProps {
   to: string;
@@ -74,19 +73,19 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
       title: "Funcionários",
       icon: <Users className="h-5 w-5" />,
       link: "/funcionarios",
-      permission: { area: 'funcionarios', level: 'read' as PermissionLevel },
+      permission: { area: 'funcionarios' as PermissionArea, level: 'read' as PermissionLevel },
     },
     {
       title: "Exames Médicos",
       icon: <FileText className="h-5 w-5" />,
       link: "/funcionarios/exames",
-      permission: { area: 'exames', level: 'read' as PermissionLevel },
+      permission: { area: 'exames' as PermissionArea, level: 'read' as PermissionLevel },
     },
     {
       title: "Cartão Ponto",
       icon: <Clock className="h-5 w-5" />,
       link: "/rh/cartao-ponto",
-      permission: { area: 'cartaoponto', level: 'read' as PermissionLevel },
+      permission: { area: 'cartaoponto' as PermissionArea, level: 'read' as PermissionLevel },
     },
   ];
 
@@ -95,37 +94,37 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
       title: "Funções",
       icon: <Briefcase className="h-5 w-5" />,
       link: "/funcoes",
-      permission: { area: 'funcoes', level: 'read' as PermissionLevel },
+      permission: { area: 'funcoes' as PermissionArea, level: 'read' as PermissionLevel },
     },
     {
       title: "Setores",
       icon: <Building className="h-5 w-5" />,
       link: "/setores",
-      permission: { area: 'setores', level: 'read' as PermissionLevel },
+      permission: { area: 'setores' as PermissionArea, level: 'read' as PermissionLevel },
     },
     {
       title: "Clínicas",
       icon: <Building2 className="h-5 w-5" />,
       link: "/clinicas",
-      permission: { area: 'clinicas', level: 'read' as PermissionLevel },
+      permission: { area: 'clinicas' as PermissionArea, level: 'read' as PermissionLevel },
     },
     {
       title: "Exames",
       icon: <BadgeCheck className="h-5 w-5" />,
       link: "/exames",
-      permission: { area: 'exames', level: 'read' as PermissionLevel },
+      permission: { area: 'exames' as PermissionArea, level: 'read' as PermissionLevel },
     },
     {
       title: "Usuários",
       icon: <UserCog className="h-5 w-5" />,
       link: "/configuracoes/usuarios",
-      permission: { area: 'usuarios', level: 'read' as PermissionLevel },
+      permission: { area: 'usuarios' as PermissionArea, level: 'read' as PermissionLevel },
     },
     {
       title: "E-mails",
       icon: <Mail className="h-5 w-5" />,
       link: "/configuracoes/emails",
-      permission: { area: 'emails', level: 'read' as PermissionLevel },
+      permission: { area: 'emails' as PermissionArea, level: 'read' as PermissionLevel },
     },
   ];
 
@@ -173,7 +172,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
             <SidebarItem to="/configuracoes" icon={Settings} label="Configurações" isCollapsed={isCollapsed} requiredRole="admin" />
             
             {/* Only render if not collapsed */}
-            {!isCollapsed && hasSpecificPermission('configuracoes', 'read') && (
+            {!isCollapsed && hasSpecificPermission('configuracoes' as PermissionArea, 'read') && (
               <div className="ml-6 mt-1 space-y-1">
                 {configItems.map((item, index) => (
                   hasSpecificPermission(item.permission.area, item.permission.level) && (
