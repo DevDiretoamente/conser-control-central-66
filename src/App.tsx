@@ -16,6 +16,8 @@ import ClinicasPage from './pages/configuracoes/Clinicas';
 import RHPage from './pages/rh/RHPage';
 import CartaoPontoPage from "./pages/rh/CartaoPonto";
 import AppLayout from './components/layout/AppLayout';
+import ExamesPage from './pages/configuracoes/Exames';
+import ConfiguracoesPage from './pages/configuracoes/Configuracoes';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -69,6 +71,13 @@ const App: React.FC = () => {
               <FuncionariosPage />
             </ProtectedRoute>
           } />
+          
+          {/* Configurações Routes */}
+          <Route path="/configuracoes" element={
+            <ProtectedRoute requiredPermissions={[{ area: 'configuracoes', level: 'read' }]}>
+              <ConfiguracoesPage />
+            </ProtectedRoute>
+          } />
           <Route path="/funcoes" element={
             <ProtectedRoute requiredPermissions={[{ area: 'funcoes', level: 'read' }]}>
               <FuncoesPage />
@@ -82,6 +91,11 @@ const App: React.FC = () => {
           <Route path="/clinicas" element={
             <ProtectedRoute requiredPermissions={[{ area: 'clinicas', level: 'read' }]}>
               <ClinicasPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/exames" element={
+            <ProtectedRoute requiredPermissions={[{ area: 'exames', level: 'read' }]}>
+              <ExamesPage />
             </ProtectedRoute>
           } />
           <Route path="/funcionarios/exames" element={

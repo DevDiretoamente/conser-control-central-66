@@ -11,7 +11,12 @@ import {
   Settings,
   Truck,
   LayoutDashboard,
-  Clock
+  Clock,
+  Building2,
+  BadgeCheck,
+  UserCog,
+  Mail,
+  Stethoscope
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole, PermissionLevel } from '@/types/auth';
@@ -62,7 +67,7 @@ interface AppSidebarProps {
 }
 
 const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, hasSpecificPermission } = useAuth();
 
   const rhItems = [
     {
@@ -82,6 +87,45 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
       icon: <Clock className="h-5 w-5" />,
       link: "/rh/cartao-ponto",
       permission: { area: 'cartaoponto', level: 'read' as PermissionLevel },
+    },
+  ];
+
+  const configItems = [
+    {
+      title: "Funções",
+      icon: <Briefcase className="h-5 w-5" />,
+      link: "/funcoes",
+      permission: { area: 'funcoes', level: 'read' as PermissionLevel },
+    },
+    {
+      title: "Setores",
+      icon: <Building className="h-5 w-5" />,
+      link: "/setores",
+      permission: { area: 'setores', level: 'read' as PermissionLevel },
+    },
+    {
+      title: "Clínicas",
+      icon: <Building2 className="h-5 w-5" />,
+      link: "/clinicas",
+      permission: { area: 'clinicas', level: 'read' as PermissionLevel },
+    },
+    {
+      title: "Exames",
+      icon: <BadgeCheck className="h-5 w-5" />,
+      link: "/exames",
+      permission: { area: 'exames', level: 'read' as PermissionLevel },
+    },
+    {
+      title: "Usuários",
+      icon: <UserCog className="h-5 w-5" />,
+      link: "/configuracoes/usuarios",
+      permission: { area: 'usuarios', level: 'read' as PermissionLevel },
+    },
+    {
+      title: "E-mails",
+      icon: <Mail className="h-5 w-5" />,
+      link: "/configuracoes/emails",
+      permission: { area: 'emails', level: 'read' as PermissionLevel },
     },
   ];
 
@@ -118,14 +162,43 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
           </div>
         </div>
 
+        {/* Configuration Section */}
         <div className="pt-2">
           {!isCollapsed && (
             <h2 className="mb-2 px-2 text-xs font-semibold text-sidebar-foreground/60">
-              SISTEMA
+              CONFIGURAÇÕES
             </h2>
           )}
           <div className="space-y-1">
             <SidebarItem to="/configuracoes" icon={Settings} label="Configurações" isCollapsed={isCollapsed} requiredRole="admin" />
+            
+            {/* Only render if not collapsed */}
+            {!isCollapsed && hasSpecificPermission('configuracoes', 'read') && (
+              <div className="ml-6 mt-1 space-y-1">
+                {configItems.map((item, index) => (
+                  hasSpecificPermission(item.permission.area, item.permission.level) && (
+                    <NavLink
+                      key={index}
+                      to={item.link}
+                      className={({ isActive }) =>
+                        cn(
+                          "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors",
+                          "hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                          isActive 
+                            ? "bg-sidebar-accent text-sidebar-foreground font-medium" 
+                            : "text-sidebar-foreground hover:bg-sidebar-accent/70"
+                        )
+                      }
+                    >
+                      {item.icon}
+                      <span>{item.title}</span>
+                    </NavLink>
+                  )
+                ))}
+              </div>
+            )}
+            
+            <SidebarItem to="/exames" icon={Stethoscope} label="Exames" isCollapsed={isCollapsed} requiredRole="operator" />
           </div>
         </div>
       </nav>
