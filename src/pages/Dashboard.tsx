@@ -3,9 +3,8 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import DashboardCard from '@/components/dashboard/DashboardCard';
 import { Users, Building, Briefcase, Truck, FileText } from 'lucide-react';
-import StatisticsPanel from '@/components/dashboard/StatisticsPanel';
-import AlertsSummary from '@/components/dashboard/AlertsSummary';
 import ComplianceOverview from '@/components/dashboard/ComplianceOverview';
+import AlertsSummary from '@/components/dashboard/AlertsSummary';
 
 const Dashboard = () => {
   return (
@@ -27,7 +26,7 @@ const Dashboard = () => {
           to="/funcionarios"
           value="26"
           color="primary"
-          footer="10 ASOs a vencer nos próximos 30 dias"
+          footer="8 ASOs a vencer nos próximos 30 dias"
         />
         
         <DashboardCard
@@ -62,13 +61,8 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-        <div className="lg:col-span-2">
-          <h2 className="text-lg font-medium mb-4">Estatísticas</h2>
-          <StatisticsPanel title="Estatísticas de Exames Médicos" />
-        </div>
-        
-        <div>
-          <h2 className="text-lg font-medium mb-4">Conformidade</h2>
+        <div className="lg:col-span-3">
+          <h2 className="text-lg font-medium mb-4">Conformidade Ocupacional</h2>
           <ComplianceOverview />
         </div>
       </div>

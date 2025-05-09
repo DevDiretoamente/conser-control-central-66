@@ -60,7 +60,12 @@ const ComplianceOverview: React.FC = () => {
                     {item.compliant} de {item.total} ({percentage}%)
                   </div>
                 </div>
-                <Progress value={percentage} className="h-2" indicatorClassName={`bg-[${item.color}]`} />
+                <Progress 
+                  value={percentage} 
+                  className="h-2" 
+                  style={{ "--progress-color": item.color } as React.CSSProperties} 
+                  indicatorClassName={`bg-[color:var(--progress-color)]`} 
+                />
               </div>
             );
           })}
