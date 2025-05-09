@@ -84,7 +84,7 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
   const gerarPDF = (imprimir: boolean = false) => {
     const funcionario = funcionarios.find(f => f.id === selectedFuncionarioId);
     
-    if (!funcionario) {
+    if (!funcionario || !employeeDetails) {
       toast({
         title: "Erro",
         description: "Selecione um funcionário para gerar o cartão ponto",
@@ -102,51 +102,49 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
     const diasDoMes = getDiasDoMes(mes, ano);
     const nomeMes = getNomeMes(mes);
     
-    // Configurações
+    // Configurações para caber em uma única página A4
     const margemEsquerda = 10;
     const margemSuperior = 10;
     const larguraUtil = pdf.internal.pageSize.width - (margemEsquerda * 2);
     
     // Título
-    pdf.setFontSize(14);
+    pdf.setFontSize(12);
     pdf.setFont('helvetica', 'bold');
     pdf.text('CONSERVIAS CONSTRUÇÃO CIVIL LTDA', margemEsquerda, margemSuperior);
     
-    pdf.setFontSize(12);
-    pdf.text(`CARTÃO PONTO - ${nomeMes.toUpperCase()} / ${ano}`, margemEsquerda, margemSuperior + 6);
-
-    // Dados do funcionário
     pdf.setFontSize(10);
+    pdf.text(`CARTÃO PONTO - ${nomeMes.toUpperCase()} / ${ano}`, margemEsquerda, margemSuperior + 5);
+
+    // Dados do funcionário - Mais compactos para caber em uma página
+    pdf.setFontSize(9);
     pdf.setFont('helvetica', 'normal');
-    pdf.text(`Funcionário: ${funcionario.name}`, margemEsquerda, margemSuperior + 12);
+    pdf.text(`Funcionário: ${funcionario.name}`, margemEsquerda, margemSuperior + 10);
+    pdf.text(`Setor: ${employeeDetails.setor}`, margemEsquerda + 80, margemSuperior + 10);
+    pdf.text(`Função: ${employeeDetails.funcao}`, margemEsquerda + 140, margemSuperior + 10);
     
-    // Adicionar setor e função se disponíveis
-    if (employeeDetails) {
-      pdf.text(`Setor: ${employeeDetails.setor}`, margemEsquerda, margemSuperior + 16);
-      pdf.text(`Função: ${employeeDetails.funcao}`, margemEsquerda, margemSuperior + 20);
-      pdf.line(margemEsquerda, margemSuperior + 22, margemEsquerda + larguraUtil, margemSuperior + 22);
-    }
+    // Linha divisória
+    pdf.line(margemEsquerda, margemSuperior + 12, margemEsquerda + larguraUtil, margemSuperior + 12);
     
-    // Tabela de horários
-    const linhaInicial = margemSuperior + 25;
-    const alturaLinha = 7; // Reduzido para caber mais linhas em uma página
-    const larguraColunaDia = 10;
-    const larguraColunaDiaSemana = 10;
+    // Tabela de horários - reduzida para caber em uma página
+    const linhaInicial = margemSuperior + 15;
+    const alturaLinha = 6; // Reduzido para caber mais linhas em uma página
+    const larguraColunaDia = 8;
+    const larguraColunaDiaSemana = 8;
     const larguraColunaHorario = (larguraUtil - larguraColunaDia - larguraColunaDiaSemana) / 4;
     
     // Cabeçalho da tabela
     pdf.setFillColor(220, 220, 220);
     pdf.rect(margemEsquerda, linhaInicial, larguraUtil, alturaLinha, 'F');
     
-    pdf.setFontSize(8);
+    pdf.setFontSize(7);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Dia', margemEsquerda + 2, linhaInicial + 5);
-    pdf.text('DS', margemEsquerda + larguraColunaDia + 2, linhaInicial + 5);
+    pdf.text('Dia', margemEsquerda + 2, linhaInicial + 4);
+    pdf.text('DS', margemEsquerda + larguraColunaDia + 2, linhaInicial + 4);
     
-    pdf.text('Entrada', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + 15, linhaInicial + 5);
-    pdf.text('Almoço', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + larguraColunaHorario + 15, linhaInicial + 5);
-    pdf.text('Retorno', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + (larguraColunaHorario * 2) + 15, linhaInicial + 5);
-    pdf.text('Saída', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + (larguraColunaHorario * 3) + 15, linhaInicial + 5);
+    pdf.text('Entrada', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + 15, linhaInicial + 4);
+    pdf.text('Almoço', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + larguraColunaHorario + 15, linhaInicial + 4);
+    pdf.text('Retorno', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + (larguraColunaHorario * 2) + 15, linhaInicial + 4);
+    pdf.text('Saída', margemEsquerda + larguraColunaDia + larguraColunaDiaSemana + (larguraColunaHorario * 3) + 15, linhaInicial + 4);
     
     // Linhas da tabela
     pdf.setFont('helvetica', 'normal');
@@ -168,9 +166,9 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
       }
       
       // Dia e dia da semana
-      pdf.setFontSize(8);
-      pdf.text(dia.dia.toString().padStart(2, '0'), margemEsquerda + 2, posicaoY + 5);
-      pdf.text(diasSemana[dia.diaSemana], margemEsquerda + larguraColunaDia + 2, posicaoY + 5);
+      pdf.setFontSize(7);
+      pdf.text(dia.dia.toString().padStart(2, '0'), margemEsquerda + 2, posicaoY + 4);
+      pdf.text(diasSemana[dia.diaSemana], margemEsquerda + larguraColunaDia + 2, posicaoY + 4);
       
       // Bordas das células para campos de preenchimento manual
       const posX1 = margemEsquerda + larguraColunaDia + larguraColunaDiaSemana;
@@ -178,6 +176,7 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
       const posX3 = posX2 + larguraColunaHorario;
       const posX4 = posX3 + larguraColunaHorario;
       
+      // Linhas verticais das células
       pdf.line(posX1, posicaoY, posX1, posicaoY + alturaLinha);
       pdf.line(posX2, posicaoY, posX2, posicaoY + alturaLinha);
       pdf.line(posX3, posicaoY, posX3, posicaoY + alturaLinha);
@@ -190,29 +189,18 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
       posicaoY += alturaLinha;
     });
     
-    // Assinaturas
-    posicaoY += 5;
-    pdf.setFontSize(8);
-    pdf.text("Data: _____/_____/_____", margemEsquerda, posicaoY);
+    // Assinaturas - posicionadas mais próximas ao final da tabela
+    const alturaFinal = posicaoY + 5;
+    pdf.setFontSize(7);
+    pdf.text("Data: _____/_____/_____", margemEsquerda, alturaFinal);
     
-    posicaoY += 10;
+    const alturaAssinaturas = alturaFinal + 8;
     const larguraAssinatura = 80;
-    pdf.line(margemEsquerda, posicaoY, margemEsquerda + larguraAssinatura, posicaoY);
-    pdf.text("Assinatura do Funcionário", margemEsquerda + 15, posicaoY + 4);
+    pdf.line(margemEsquerda, alturaAssinaturas, margemEsquerda + larguraAssinatura, alturaAssinaturas);
+    pdf.text("Assinatura do Funcionário", margemEsquerda + 15, alturaAssinaturas + 3);
     
-    pdf.line(margemEsquerda + larguraUtil - larguraAssinatura, posicaoY, margemEsquerda + larguraUtil, posicaoY);
-    pdf.text("Assinatura do Responsável", margemEsquerda + larguraUtil - larguraAssinatura + 10, posicaoY + 4);
-    
-    // Observações
-    posicaoY += 10;
-    pdf.setFontSize(8);
-    pdf.text("Observações:", margemEsquerda, posicaoY);
-    
-    posicaoY += 4;
-    pdf.line(margemEsquerda, posicaoY, margemEsquerda + larguraUtil, posicaoY);
-    
-    posicaoY += 4;
-    pdf.line(margemEsquerda, posicaoY, margemEsquerda + larguraUtil, posicaoY);
+    pdf.line(margemEsquerda + larguraUtil - larguraAssinatura, alturaAssinaturas, margemEsquerda + larguraUtil, alturaAssinaturas);
+    pdf.text("Assinatura do Responsável", margemEsquerda + larguraUtil - larguraAssinatura + 10, alturaAssinaturas + 3);
     
     // Rodapé
     pdf.setFontSize(6);
@@ -348,12 +336,32 @@ const CartaoPontoImpressao: React.FC<CartaoPontoImpressaoProps> = ({
         <div className="bg-muted/30 p-4 rounded-md mb-4">
           <h3 className="font-medium mb-2">Pré-visualização</h3>
           {employeeDetails && funcionarios.find(f => f.id === selectedFuncionarioId) ? (
-            <>
-              <p className="text-sm mb-1"><strong>Funcionário:</strong> {funcionarios.find(f => f.id === selectedFuncionarioId)?.name}</p>
-              <p className="text-sm mb-1"><strong>Setor:</strong> {employeeDetails.setor}</p>
-              <p className="text-sm mb-1"><strong>Função:</strong> {employeeDetails.funcao}</p>
-              <p className="text-sm mb-1"><strong>Período:</strong> {getNomeMes(mes)} de {ano}</p>
-            </>
+            <div className="space-y-2">
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center">
+                <div>
+                  <p className="text-sm font-bold">Funcionário:</p>
+                  <p className="text-lg">{funcionarios.find(f => f.id === selectedFuncionarioId)?.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-bold">Período:</p>
+                  <p className="text-lg">{getNomeMes(mes)} de {ano}</p>
+                </div>
+              </div>
+              <div className="flex flex-col md:flex-row md:gap-8 pt-2">
+                <div>
+                  <p className="text-sm font-bold">Setor:</p>
+                  <p>{employeeDetails.setor}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-bold">Função:</p>
+                  <p>{employeeDetails.funcao}</p>
+                </div>
+              </div>
+              <p className="text-sm italic text-muted-foreground mt-4">
+                O cartão ponto será gerado em formato PDF para uma folha A4, contendo todos os dados acima
+                e uma tabela com os dias do mês para preenchimento.
+              </p>
+            </div>
           ) : (
             <p className="text-sm text-muted-foreground">
               Selecione um funcionário para visualizar os detalhes do cartão ponto.

@@ -38,7 +38,7 @@ const mockCartaoPontoData: CartaoPonto[] = [
   }
 ];
 
-// Mock data for employee details
+// Enhanced mock data for employee details including sector and function
 const mockFuncionariosDetails = [
   {
     id: '1',
@@ -94,6 +94,31 @@ export const getFuncionarioDetails = (funcionarioId: string) => {
   };
 };
 
+// Function to get default times based on day of week
+export const getDefaultTimes = (data: string) => {
+  const dayOfWeek = new Date(data).getDay(); // 0 = Sunday, ..., 6 = Saturday
+  
+  // Default times for all weekdays
+  const times = {
+    horaEntradaManha: '07:00',
+    horaSaidaAlmoco: '12:00',
+    horaRetornoAlmoco: '13:00',
+    horaSaidaTarde: '17:00' // Default for Mon-Thu
+  };
+  
+  // Friday has early departure
+  if (dayOfWeek === 5) { // Friday
+    times.horaSaidaTarde = '16:00';
+  }
+  
+  // Weekend or holiday would be handled differently
+  if (dayOfWeek === 0 || dayOfWeek === 6) { // Weekend
+    return null; // No default times for weekends
+  }
+  
+  return times;
+};
+
 // Function to create an empty CartaoPonto with initialized days
 export const createEmptyCartaoPonto = (funcionarioId: string, mes: number, ano: number): CartaoPonto => {
   const daysInMonth = new Date(ano, mes, 0).getDate();
@@ -120,7 +145,8 @@ export const createEmptyCartaoPonto = (funcionarioId: string, mes: number, ano: 
     //   statusDia = 'feriado';
     // }
     
-    registros.push({
+    // Create registro with appropriate defaults based on day of week
+    const registro: RegistroPonto = {
       funcionarioId,
       data,
       statusDia,
@@ -128,7 +154,20 @@ export const createEmptyCartaoPonto = (funcionarioId: string, mes: number, ano: 
       registradoPor: 'system',
       dataRegistro: new Date().toISOString(),
       bloqueado: false
-    });
+    };
+    
+    // Add default times for normal weekdays
+    if (statusDia === 'normal') {
+      const defaultTimes = getDefaultTimes(data);
+      if (defaultTimes) {
+        registro.horaEntradaManha = defaultTimes.horaEntradaManha;
+        registro.horaSaidaAlmoco = defaultTimes.horaSaidaAlmoco;
+        registro.horaRetornoAlmoco = defaultTimes.horaRetornoAlmoco;
+        registro.horaSaidaTarde = defaultTimes.horaSaidaTarde;
+      }
+    }
+    
+    registros.push(registro);
   }
   
   return {

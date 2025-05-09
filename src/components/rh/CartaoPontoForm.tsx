@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -16,16 +16,19 @@ import {
   RegistroPonto, 
   StatusDia,
   formatarMinutosParaHora,
-  calcularResumoHoras
+  calcularResumoHoras,
+  diaDaSemana
 } from '@/types/cartaoPonto';
-import { salvarRegistroPonto } from '@/services/cartaoPontoService';
+import { salvarRegistroPonto, getFuncionarioDetails } from '@/services/cartaoPontoService';
 import { User } from '@/types/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle, Info } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight, Info } from "lucide-react";
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface CartaoPontoFormProps {
   funcionarios: User[];
@@ -56,8 +59,9 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [editandoRegistroId, setEditandoRegistroId] = useState<string | null>(null);
   const [registroTemp, setRegistroTemp] = useState<Partial<RegistroPonto>>({});
+  const [currentDayIndex, setCurrentDayIndex] = useState<number>(0);
+  const [funcionarioDetalhes, setFuncionarioDetalhes] = useState<{ name: string; setor: string; funcao: string } | null>(null);
   
   const funcionarioSelecionado = funcionarios.find(f => f.id === funcionarioSelecionadoId);
   
@@ -91,7 +95,96 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
     { valor: 'feriado', nome: 'Feriado' },
     { valor: 'folga', nome: 'Folga' }
   ];
+
+  // Fetch employee details when funcionarioId changes
+  useEffect(() => {
+    if (funcionarioSelecionadoId) {
+      const detalhes = getFuncionarioDetails(funcionarioSelecionadoId);
+      setFuncionarioDetalhes(detalhes);
+    }
+  }, [funcionarioSelecionadoId]);
   
+  // Reset the day index when cartaoPonto changes
+  useEffect(() => {
+    setCurrentDayIndex(0);
+  }, [cartaoPonto]);
+
+  // Get sorted registers
+  const getSortedRegistros = (): RegistroPonto[] => {
+    if (!cartaoPonto || !cartaoPonto.registros) return [];
+    return [...cartaoPonto.registros].sort((a, b) => 
+      new Date(a.data).getTime() - new Date(b.data).getTime()
+    );
+  };
+  
+  // Get current registro
+  const getCurrentRegistro = (): RegistroPonto | undefined => {
+    const sortedRegistros = getSortedRegistros();
+    return sortedRegistros[currentDayIndex];
+  };
+  
+  // Navigate to previous day
+  const goToPreviousDay = () => {
+    if (currentDayIndex > 0) {
+      setCurrentDayIndex(currentDayIndex - 1);
+    }
+  };
+  
+  // Navigate to next day
+  const goToNextDay = () => {
+    const sortedRegistros = getSortedRegistros();
+    if (currentDayIndex < sortedRegistros.length - 1) {
+      setCurrentDayIndex(currentDayIndex + 1);
+    }
+  };
+  
+  // Get day of week name
+  const getDayOfWeekName = (date: string): string => {
+    const weekDays = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    const dayOfWeek = new Date(date).getDay();
+    return weekDays[dayOfWeek];
+  };
+  
+  // Get short day of week
+  const getShortDayOfWeek = (date: string): string => {
+    const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    const dayOfWeek = new Date(date).getDay();
+    return weekDays[dayOfWeek];
+  };
+  
+  // Pre-fill time based on day of week when status changes to normal
+  const handleStatusChange = (value: StatusDia, registro: RegistroPonto) => {
+    // Create a new temporary registro
+    const novoRegistro = { ...registroTemp, statusDia: value };
+    
+    // If status changed to normal, pre-fill times based on day of week
+    if (value === 'normal') {
+      const dayOfWeek = new Date(registro.data).getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+      
+      // Standard times
+      novoRegistro.horaEntradaManha = '07:00';
+      novoRegistro.horaSaidaAlmoco = '12:00';
+      novoRegistro.horaRetornoAlmoco = '13:00';
+      
+      // Different end time for Friday
+      if (dayOfWeek === 5) { // Friday
+        novoRegistro.horaSaidaTarde = '16:00';
+      } else {
+        novoRegistro.horaSaidaTarde = '17:00';
+      }
+    } else {
+      // Clear times for non-normal days
+      novoRegistro.horaEntradaManha = '';
+      novoRegistro.horaSaidaAlmoco = '';
+      novoRegistro.horaRetornoAlmoco = '';
+      novoRegistro.horaSaidaTarde = '';
+      novoRegistro.entradaExtra = '';
+      novoRegistro.horaSaidaExtra = '';
+    }
+    
+    setRegistroTemp(novoRegistro);
+  };
+
   const iniciarEdicao = (registro: RegistroPonto) => {
     // Verificar se o registro está bloqueado
     if (registro.bloqueado) {
@@ -103,7 +196,6 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
       return;
     }
     
-    setEditandoRegistroId(registro.id);
     setRegistroTemp({
       horaEntradaManha: registro.horaEntradaManha || '',
       entradaExtra: registro.entradaExtra || '',
@@ -115,9 +207,8 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
       observacoes: registro.observacoes || ''
     });
   };
-  
+
   const cancelarEdicao = () => {
-    setEditandoRegistroId(null);
     setRegistroTemp({});
   };
   
@@ -179,14 +270,7 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
   // Função para formatar a data
   const formatarData = (dataString: string) => {
     const data = new Date(dataString);
-    return data.getDate().toString().padStart(2, '0');
-  };
-  
-  // Função para determinar o dia da semana
-  const diaDaSemana = (dataString: string) => {
-    const data = new Date(dataString);
-    const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-    return dias[data.getDay()];
+    return format(data, 'dd/MM/yyyy');
   };
   
   // Status colorido
@@ -216,6 +300,10 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
     
     return <Badge variant={variant}>{label}</Badge>;
   };
+
+  // Get current registro for display
+  const currentRegistro = getCurrentRegistro();
+  const sortedRegistros = getSortedRegistros();
   
   return (
     <div className="space-y-4">
@@ -275,15 +363,25 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
         </div>
       </div>
       
-      {funcionarioSelecionado && (
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold">
-            Cartão Ponto: {funcionarioSelecionado.name}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {meses.find(m => m.valor === mes)?.nome} / {ano}
-          </p>
-        </div>
+      {funcionarioSelecionado && funcionarioDetalhes && (
+        <Card className="mb-4">
+          <CardContent className="py-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div>
+                <h3 className="text-sm font-semibold text-muted-foreground">Funcionário</h3>
+                <p className="text-lg font-medium">{funcionarioDetalhes.name}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-muted-foreground">Setor</h3>
+                <p className="text-lg font-medium">{funcionarioDetalhes.setor}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-muted-foreground">Função</h3>
+                <p className="text-lg font-medium">{funcionarioDetalhes.funcao}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
       
       {!podeEditar && (
@@ -317,164 +415,185 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
         </Alert>
       )}
       
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[60px]">Dia</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-center">Entrada Extra</TableHead>
-              <TableHead className="text-center">Entrada</TableHead>
-              <TableHead className="text-center">Saída Almoço</TableHead>
-              <TableHead className="text-center">Retorno Almoço</TableHead>
-              <TableHead className="text-center">Saída</TableHead>
-              <TableHead className="text-center">Saída Extra</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {cartaoPonto?.registros
-              .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
-              .map((registro) => (
-                <TableRow 
-                  key={registro.id}
-                  className={
-                    registro.bloqueado 
-                      ? 'bg-muted/40'
-                      : registro.statusDia === 'folga' || registro.statusDia === 'feriado'
-                      ? 'bg-muted/20'
-                      : ''
-                  }
-                >
-                  {editandoRegistroId === registro.id ? (
-                    // Modo de edição
-                    <>
-                      <TableCell className="font-medium">
-                        {formatarData(registro.data)}<br/>
-                        <span className="text-xs text-muted-foreground">
-                          {diaDaSemana(registro.data)}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Select 
-                          value={registroTemp.statusDia || registro.statusDia} 
-                          onValueChange={(value: StatusDia) => setRegistroTemp({...registroTemp, statusDia: value})}
-                          disabled={!podeEditar || cartaoPonto?.fechado}
-                        >
-                          <SelectTrigger className="w-[120px]">
-                            <SelectValue placeholder="Status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {statusOptions.map((status) => (
-                              <SelectItem key={status.valor} value={status.valor}>
-                                {status.nome}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Input 
-                          type="time"
-                          value={registroTemp.entradaExtra || ''}
-                          onChange={(e) => setRegistroTemp({...registroTemp, entradaExtra: e.target.value})}
-                          disabled={!podeEditar || registroTemp.statusDia !== 'normal' || cartaoPonto?.fechado}
-                          className="text-center"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input 
-                          type="time"
-                          value={registroTemp.horaEntradaManha || ''}
-                          onChange={(e) => setRegistroTemp({...registroTemp, horaEntradaManha: e.target.value})}
-                          disabled={!podeEditar || registroTemp.statusDia !== 'normal' || cartaoPonto?.fechado}
-                          className="text-center"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input 
-                          type="time"
-                          value={registroTemp.horaSaidaAlmoco || ''}
-                          onChange={(e) => setRegistroTemp({...registroTemp, horaSaidaAlmoco: e.target.value})}
-                          disabled={!podeEditar || registroTemp.statusDia !== 'normal' || cartaoPonto?.fechado}
-                          className="text-center"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input 
-                          type="time"
-                          value={registroTemp.horaRetornoAlmoco || ''}
-                          onChange={(e) => setRegistroTemp({...registroTemp, horaRetornoAlmoco: e.target.value})}
-                          disabled={!podeEditar || registroTemp.statusDia !== 'normal' || cartaoPonto?.fechado}
-                          className="text-center"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input 
-                          type="time"
-                          value={registroTemp.horaSaidaTarde || ''}
-                          onChange={(e) => setRegistroTemp({...registroTemp, horaSaidaTarde: e.target.value})}
-                          disabled={!podeEditar || registroTemp.statusDia !== 'normal' || cartaoPonto?.fechado}
-                          className="text-center"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input 
-                          type="time"
-                          value={registroTemp.horaSaidaExtra || ''}
-                          onChange={(e) => setRegistroTemp({...registroTemp, horaSaidaExtra: e.target.value})}
-                          disabled={!podeEditar || registroTemp.statusDia !== 'normal' || cartaoPonto?.fechado}
-                          className="text-center"
-                        />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button size="sm" variant="outline" onClick={cancelarEdicao}>
-                            Cancelar
-                          </Button>
-                          <Button size="sm" onClick={() => salvarEdicao(registro)}>
-                            Salvar
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </>
-                  ) : (
-                    // Modo de visualização
-                    <>
-                      <TableCell className="font-medium">
-                        {formatarData(registro.data)}<br/>
-                        <span className="text-xs text-muted-foreground">
-                          {diaDaSemana(registro.data)}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {renderStatusBadge(registro.statusDia)}
-                      </TableCell>
-                      <TableCell className="text-center">{registro.entradaExtra || '-'}</TableCell>
-                      <TableCell className="text-center">{registro.horaEntradaManha || '-'}</TableCell>
-                      <TableCell className="text-center">{registro.horaSaidaAlmoco || '-'}</TableCell>
-                      <TableCell className="text-center">{registro.horaRetornoAlmoco || '-'}</TableCell>
-                      <TableCell className="text-center">{registro.horaSaidaTarde || '-'}</TableCell>
-                      <TableCell className="text-center">{registro.horaSaidaExtra || '-'}</TableCell>
-                      <TableCell className="text-right">
-                        {podeEditar && !cartaoPonto?.fechado && (
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => iniciarEdicao(registro)}
-                            disabled={registro.bloqueado}
-                          >
-                            Editar
-                          </Button>
-                        )}
-                      </TableCell>
-                    </>
-                  )}
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      </div>
+      {/* Day navigation */}
+      {sortedRegistros.length > 0 && currentRegistro && (
+        <div className="flex flex-col space-y-4">
+          <div className="flex items-center justify-between mb-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={goToPreviousDay} 
+              disabled={currentDayIndex === 0}
+            >
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              Anterior
+            </Button>
+            <div className="text-center">
+              <div className="text-xl font-semibold">
+                {formatarData(currentRegistro.data)}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {getDayOfWeekName(currentRegistro.data)} - Dia {currentDayIndex + 1} de {sortedRegistros.length}
+              </div>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={goToNextDay} 
+              disabled={currentDayIndex === sortedRegistros.length - 1}
+            >
+              Próximo
+              <ChevronRight className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex justify-between items-center">
+                <span>
+                  Registro do dia {new Date(currentRegistro.data).getDate()}
+                  <span className="ml-2 text-muted-foreground font-normal text-sm">
+                    {getShortDayOfWeek(currentRegistro.data)}
+                  </span>
+                </span>
+                {renderStatusBadge(currentRegistro.statusDia)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Status do dia</label>
+                  <Select 
+                    value={registroTemp.statusDia || currentRegistro.statusDia} 
+                    onValueChange={(value: StatusDia) => handleStatusChange(value, currentRegistro)}
+                    disabled={!podeEditar || cartaoPonto?.fechado || currentRegistro.bloqueado}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map((status) => (
+                        <SelectItem key={status.valor} value={status.valor}>
+                          {status.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Observações</label>
+                  <Input 
+                    value={registroTemp.observacoes !== undefined ? registroTemp.observacoes : currentRegistro.observacoes || ''}
+                    onChange={(e) => setRegistroTemp({...registroTemp, observacoes: e.target.value})}
+                    disabled={!podeEditar || cartaoPonto?.fechado || currentRegistro.bloqueado}
+                  />
+                </div>
+              </div>
+
+              {/* Time input fields */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                <div>
+                  <label className="text-sm font-medium">Entrada Extra</label>
+                  <Input 
+                    type="time"
+                    value={registroTemp.entradaExtra !== undefined ? registroTemp.entradaExtra : currentRegistro.entradaExtra || ''}
+                    onChange={(e) => setRegistroTemp({...registroTemp, entradaExtra: e.target.value})}
+                    disabled={!podeEditar || (registroTemp.statusDia || currentRegistro.statusDia) !== 'normal' || cartaoPonto?.fechado || currentRegistro.bloqueado}
+                    className="text-center"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Entrada</label>
+                  <Input 
+                    type="time"
+                    value={registroTemp.horaEntradaManha !== undefined ? registroTemp.horaEntradaManha : currentRegistro.horaEntradaManha || ''}
+                    onChange={(e) => setRegistroTemp({...registroTemp, horaEntradaManha: e.target.value})}
+                    disabled={!podeEditar || (registroTemp.statusDia || currentRegistro.statusDia) !== 'normal' || cartaoPonto?.fechado || currentRegistro.bloqueado}
+                    className="text-center"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Saída Almoço</label>
+                  <Input 
+                    type="time"
+                    value={registroTemp.horaSaidaAlmoco !== undefined ? registroTemp.horaSaidaAlmoco : currentRegistro.horaSaidaAlmoco || ''}
+                    onChange={(e) => setRegistroTemp({...registroTemp, horaSaidaAlmoco: e.target.value})}
+                    disabled={!podeEditar || (registroTemp.statusDia || currentRegistro.statusDia) !== 'normal' || cartaoPonto?.fechado || currentRegistro.bloqueado}
+                    className="text-center"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Retorno Almoço</label>
+                  <Input 
+                    type="time"
+                    value={registroTemp.horaRetornoAlmoco !== undefined ? registroTemp.horaRetornoAlmoco : currentRegistro.horaRetornoAlmoco || ''}
+                    onChange={(e) => setRegistroTemp({...registroTemp, horaRetornoAlmoco: e.target.value})}
+                    disabled={!podeEditar || (registroTemp.statusDia || currentRegistro.statusDia) !== 'normal' || cartaoPonto?.fechado || currentRegistro.bloqueado}
+                    className="text-center"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Saída</label>
+                  <Input 
+                    type="time"
+                    value={registroTemp.horaSaidaTarde !== undefined ? registroTemp.horaSaidaTarde : currentRegistro.horaSaidaTarde || ''}
+                    onChange={(e) => setRegistroTemp({...registroTemp, horaSaidaTarde: e.target.value})}
+                    disabled={!podeEditar || (registroTemp.statusDia || currentRegistro.statusDia) !== 'normal' || cartaoPonto?.fechado || currentRegistro.bloqueado}
+                    className="text-center"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Saída Extra</label>
+                  <Input 
+                    type="time"
+                    value={registroTemp.horaSaidaExtra !== undefined ? registroTemp.horaSaidaExtra : currentRegistro.horaSaidaExtra || ''}
+                    onChange={(e) => setRegistroTemp({...registroTemp, horaSaidaExtra: e.target.value})}
+                    disabled={!podeEditar || (registroTemp.statusDia || currentRegistro.statusDia) !== 'normal' || cartaoPonto?.fechado || currentRegistro.bloqueado}
+                    className="text-center"
+                  />
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              {podeEditar && !cartaoPonto?.fechado && !currentRegistro.bloqueado && (
+                <div className="flex justify-end gap-2 mt-6">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={cancelarEdicao}
+                    disabled={Object.keys(registroTemp).length === 0}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    onClick={() => salvarEdicao(currentRegistro)}
+                    disabled={Object.keys(registroTemp).length === 0}
+                  >
+                    Salvar
+                  </Button>
+                </div>
+              )}
+              
+              {currentRegistro.bloqueado && (
+                <Alert className="mt-4" variant="warning">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Registro bloqueado</AlertTitle>
+                  <AlertDescription>
+                    Este registro não pode ser editado por ter sido criado há mais de 24 horas.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
       
       {podeVerResumo && cartaoPonto && (
         <Card className="mt-8">
