@@ -8,6 +8,7 @@ interface AuthContextType extends AuthState {
   logout: () => void;
   hasPermission: (requiredRole: UserRole) => boolean;
   hasSpecificPermission: (area: PermissionArea, level?: PermissionLevel) => boolean;
+  getHighestPermissionForArea: (user: User, area: PermissionArea) => PermissionLevel | null;
   users: User[];
   createUser: (user: Omit<User, 'id' | 'createdAt'>) => void;
   updateUser: (id: string, userData: Partial<User>) => void;
@@ -80,6 +81,24 @@ const mockUsers: User[] = [
     ]
   },
 ];
+
+// Helper function to get the highest permission level for an area from a user
+export const getHighestPermissionForArea = (user: User, area: PermissionArea): PermissionLevel | null => {
+  if (!user.permissions) return null;
+  
+  // First, check if user has admin role (has all permissions)
+  if (user.role === 'admin') return 'manage';
+  
+  const areaPermissions = user.permissions.filter(p => p.area === area);
+  if (areaPermissions.length === 0) return null;
+  
+  if (areaPermissions.some(p => p.level === 'manage')) return 'manage';
+  if (areaPermissions.some(p => p.level === 'delete')) return 'delete';
+  if (areaPermissions.some(p => p.level === 'write')) return 'write';
+  if (areaPermissions.some(p => p.level === 'read')) return 'read';
+  
+  return null;
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AuthState>(initialState);
@@ -319,6 +338,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     hasPermission,
     hasSpecificPermission,
+    getHighestPermissionForArea: (user: User, area: PermissionArea) => getHighestPermissionForArea(user, area),
     users,
     createUser,
     updateUser,

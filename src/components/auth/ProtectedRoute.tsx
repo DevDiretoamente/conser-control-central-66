@@ -35,6 +35,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Check if the user is active
+  if (user && !user.isActive) {
+    return <Navigate to="/conta-inativa" replace />;
+  }
+
   // If a specific role is required, check if the user has permission
   if (requiredRole && user && !hasPermission(requiredRole)) {
     return <Navigate to="/acesso-negado" replace />;

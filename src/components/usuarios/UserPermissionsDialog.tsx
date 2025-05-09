@@ -12,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Shield, ShieldCheck, ShieldX } from 'lucide-react';
+import { Shield, ShieldCheck, ShieldX, Info, Search } from 'lucide-react';
 import { 
   User, 
   PermissionArea, 
@@ -21,6 +21,7 @@ import {
 } from '@/types/auth';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 
 interface UserPermissionsDialogProps {
   user: User;
@@ -55,11 +56,11 @@ const permissionGroups = [
   }
 ];
 
-const permissionLevels: { id: PermissionLevel, label: string }[] = [
-  { id: 'read', label: 'Visualizar' },
-  { id: 'write', label: 'Editar' },
-  { id: 'delete', label: 'Excluir' },
-  { id: 'manage', label: 'Gerenciar' }
+const permissionLevels: { id: PermissionLevel, label: string, description: string }[] = [
+  { id: 'read', label: 'Visualizar', description: 'Permite visualizar informações' },
+  { id: 'write', label: 'Editar', description: 'Permite criar e editar informações' },
+  { id: 'delete', label: 'Excluir', description: 'Permite remover informações' },
+  { id: 'manage', label: 'Gerenciar', description: 'Controle completo sobre esta área' }
 ];
 
 const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({ 
@@ -70,6 +71,8 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
   const { updateUserPermissions } = useAuth();
   const [permissions, setPermissions] = useState<Permission[]>(user.permissions || []);
   const [savedPermissions, setSavedPermissions] = useState<Permission[]>(user.permissions || []);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedAreaTooltip, setSelectedAreaTooltip] = useState<string | null>(null);
   
   // Reset permissions when user changes
   useEffect(() => {
@@ -151,8 +154,34 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
     });
   };
   
+  // Filter areas based on search term
+  const getFilteredAreas = (group: typeof permissionGroups[0]) => {
+    if (!searchTerm) return group.areas;
+    
+    return group.areas.filter(area => 
+      area.label.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
+  const handleMouseEnterArea = (areaId: string) => {
+    setSelectedAreaTooltip(areaId);
+  };
+
+  const handleMouseLeaveArea = () => {
+    setSelectedAreaTooltip(null);
+  };
+  
   const totalPermissionCount = permissions.length;
   const hasChanges = JSON.stringify(permissions) !== JSON.stringify(savedPermissions);
+
+  // Get the description for an area based on its highest permission level
+  const getAreaPermissionDescription = (area: PermissionArea) => {
+    const highestLevel = getHighestPermissionLevel(area);
+    if (!highestLevel) return 'Sem acesso';
+    
+    const levelInfo = permissionLevels.find(l => l.id === highestLevel);
+    return levelInfo ? levelInfo.description : 'Permissão desconhecida';
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -174,11 +203,23 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
               <TabsTrigger value="summary">Resumo</TabsTrigger>
             </TabsList>
             
+            <div className="mb-4">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar área..."
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+            
             <ScrollArea className="flex-1">
               <TabsContent value="modules" className="mt-0 h-full">
                 <div className="space-y-6">
                   {permissionGroups.map((group) => (
-                    <Card key={group.name}>
+                    <Card key={group.name} className={getFilteredAreas(group).length === 0 ? 'hidden' : ''}>
                       <CardHeader className="pb-2">
                         <div className="flex justify-between items-center">
                           <CardTitle className="text-lg">{group.name}</CardTitle>
@@ -204,9 +245,29 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
                       </CardHeader>
                       <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {group.areas.map((area) => (
-                            <div key={area.id} className="border rounded-lg p-4">
-                              <div className="font-medium mb-2">{area.label}</div>
+                          {getFilteredAreas(group).map((area) => (
+                            <div 
+                              key={area.id} 
+                              className="border rounded-lg p-4 transition-all hover:shadow-md"
+                              onMouseEnter={() => handleMouseEnterArea(area.id)}
+                              onMouseLeave={handleMouseLeaveArea}
+                            >
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="font-medium">{area.label}</div>
+                                {getHighestPermissionLevel(area.id as PermissionArea) && (
+                                  <Badge variant={
+                                    getHighestPermissionLevel(area.id as PermissionArea) === 'manage' ? 'default' :
+                                    getHighestPermissionLevel(area.id as PermissionArea) === 'delete' ? 'destructive' :
+                                    getHighestPermissionLevel(area.id as PermissionArea) === 'write' ? 'secondary' :
+                                    'outline'
+                                  }>
+                                    {permissionLevels.find(l => l.id === getHighestPermissionLevel(area.id as PermissionArea))?.label || 'Desconhecido'}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-xs text-muted-foreground mb-3">
+                                {getAreaPermissionDescription(area.id as PermissionArea)}
+                              </div>
                               <div className="grid grid-cols-2 gap-4">
                                 {permissionLevels.map((level) => (
                                   <div key={`${area.id}-${level.id}`} className="flex items-center space-x-2">
@@ -250,7 +311,7 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
                         </thead>
                         <tbody>
                           {permissionGroups.flatMap(group => 
-                            group.areas.map(area => (
+                            getFilteredAreas(group).map(area => (
                               <tr key={area.id}>
                                 <td className="py-2 px-4 border">{area.label}</td>
                                 {permissionLevels.map(level => (
@@ -285,31 +346,41 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
                       </div>
                       
                       <div className="border rounded-lg p-4">
-                        <h4 className="font-medium mb-2">Permissões por Área:</h4>
-                        <ul className="space-y-2">
-                          {permissionGroups.flatMap(group => 
-                            group.areas.map(area => {
-                              const level = getHighestPermissionLevel(area.id as PermissionArea);
-                              if (!level) return null;
-                              
-                              const levelDisplay = permissionLevels.find(l => l.id === level)?.label || level;
-                              
-                              return (
-                                <li key={area.id} className="flex justify-between">
-                                  <span>{area.label}</span>
-                                  <Badge variant={
-                                    level === 'manage' ? 'default' :
-                                    level === 'delete' ? 'destructive' :
-                                    level === 'write' ? 'secondary' :
-                                    'outline'
-                                  }>
-                                    {levelDisplay}
-                                  </Badge>
-                                </li>
-                              );
-                            })
-                          ).filter(Boolean)}
-                        </ul>
+                        <h4 className="font-medium mb-4">Permissões por Área:</h4>
+                        <div className="space-y-2">
+                          {permissionGroups.map(group => (
+                            <div key={group.name} className="mb-4">
+                              <h5 className="text-sm font-medium text-muted-foreground mb-2">{group.name}</h5>
+                              <ul className="space-y-2">
+                                {group.areas.map(area => {
+                                  const level = getHighestPermissionLevel(area.id as PermissionArea);
+                                  if (!level && !searchTerm) return null;
+                                  if (searchTerm && !area.label.toLowerCase().includes(searchTerm.toLowerCase())) return null;
+                                  
+                                  const levelDisplay = permissionLevels.find(l => l.id === level)?.label || 'Sem acesso';
+                                  
+                                  return (
+                                    <li key={area.id} className="flex justify-between items-center py-1 border-b last:border-0">
+                                      <span>{area.label}</span>
+                                      {level ? (
+                                        <Badge variant={
+                                          level === 'manage' ? 'default' :
+                                          level === 'delete' ? 'destructive' :
+                                          level === 'write' ? 'secondary' :
+                                          'outline'
+                                        }>
+                                          {levelDisplay}
+                                        </Badge>
+                                      ) : (
+                                        <span className="text-xs text-muted-foreground">Sem acesso</span>
+                                      )}
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -320,16 +391,27 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
         </div>
         
         <DialogFooter>
-          <div className="flex gap-2 w-full justify-end">
-            <Button variant="outline" onClick={handleCancel}>
-              Cancelar
-            </Button>
-            <Button 
-              disabled={!hasChanges} 
-              onClick={handleSave}
-            >
-              Salvar Permissões
-            </Button>
+          <div className="flex items-center justify-between w-full">
+            <div className="text-sm text-muted-foreground">
+              {hasChanges ? 
+                <span className="flex items-center text-amber-500">
+                  <Info className="h-4 w-4 mr-1" />
+                  Há mudanças não salvas
+                </span> : 
+                <span>Nenhuma alteração pendente</span>
+              }
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleCancel}>
+                Cancelar
+              </Button>
+              <Button 
+                disabled={!hasChanges} 
+                onClick={handleSave}
+              >
+                Salvar Permissões
+              </Button>
+            </div>
           </div>
         </DialogFooter>
       </DialogContent>
