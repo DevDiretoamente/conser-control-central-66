@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -154,6 +155,33 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
           <div className="space-y-1">
             <SidebarItem to="/" icon={LayoutDashboard} label="Dashboard" isCollapsed={isCollapsed} />
             <SidebarItem to="/funcionarios" icon={Users} label="Recursos Humanos" isCollapsed={isCollapsed} requiredRole="operator" />
+            
+            {/* RH Sub-menu - Only render if not collapsed */}
+            {!isCollapsed && hasSpecificPermission('rh' as PermissionArea, 'read') && (
+              <div className="ml-6 mt-1 space-y-1">
+                {rhItems.map((item, index) => (
+                  hasSpecificPermission(item.permission.area, item.permission.level) && (
+                    <NavLink
+                      key={index}
+                      to={item.link}
+                      className={({ isActive }) =>
+                        cn(
+                          "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors",
+                          "hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                          isActive 
+                            ? "bg-sidebar-accent text-sidebar-foreground font-medium" 
+                            : "text-sidebar-foreground hover:bg-sidebar-accent/70"
+                        )
+                      }
+                    >
+                      {item.icon}
+                      <span>{item.title}</span>
+                    </NavLink>
+                  )
+                ))}
+              </div>
+            )}
+
             <SidebarItem to="/obras" icon={Building} label="Obras" isCollapsed={isCollapsed} requiredRole="operator" />
             <SidebarItem to="/frota" icon={Truck} label="Frota" isCollapsed={isCollapsed} requiredRole="operator" />
             <SidebarItem to="/patrimonio" icon={Briefcase} label="Patrimônio" isCollapsed={isCollapsed} requiredRole="operator" />

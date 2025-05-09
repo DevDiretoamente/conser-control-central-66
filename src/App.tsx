@@ -28,7 +28,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredPermi
   const { isAuthenticated, hasSpecificPermission, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div>Carregando...</div>; // You can replace this with a loading spinner
+    return <div>Carregando...</div>; 
   }
 
   if (!isAuthenticated) {
@@ -40,7 +40,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredPermi
   );
 
   if (!hasRequiredPermissions) {
-    return <div>Acesso negado.</div>; // Or redirect to a "Not Authorized" page
+    return <div>Acesso negado.</div>;
   }
 
   return <>{children}</>;
