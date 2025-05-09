@@ -38,6 +38,7 @@ export interface User {
   isActive: boolean;
   createdAt: string;
   lastLogin?: string;
+  password?: string; // Adding password as optional field for auth purposes
 }
 
 export interface AuthState {

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -96,7 +95,10 @@ const Usuarios: React.FC = () => {
 
   const handleCreateSubmit = (data: UserFormValues) => {
     createUser({
-      ...data,
+      name: data.name,        // Ensuring name is provided (not optional)
+      email: data.email,      // Ensuring email is provided
+      password: data.password,
+      role: data.role,
       avatar: '',
       isActive: true,
     });
@@ -106,7 +108,10 @@ const Usuarios: React.FC = () => {
 
   const handleEditSubmit = (data: Partial<UserFormValues>) => {
     if (selectedUser) {
-      const updatedData: Partial<User> = { ...data };
+      const updatedData: Partial<User> = { 
+        ...data,
+      };
+      
       // Only include password if it was changed
       if (!data.password) {
         delete updatedData.password;
