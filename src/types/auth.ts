@@ -3,7 +3,7 @@ export type UserRole = 'admin' | 'manager' | 'operator';
 
 // Defining specific permission areas
 export type PermissionArea = 
-  // Modules
+  // Módulos
   | 'rh' 
   | 'obras' 
   | 'frota' 
@@ -20,7 +20,7 @@ export type PermissionArea =
   | 'clinicas';
 
 // Define permission levels
-export type PermissionLevel = 'read' | 'write' | 'delete' | 'manage';
+export type PermissionLevel = 'read' | 'create' | 'write' | 'delete' | 'manage';
 
 // Permission definition
 export interface Permission {
@@ -58,8 +58,8 @@ export interface UserFilterOptions {
   role?: UserRole;
   isActive?: boolean;
   searchTerm?: string;
-  sortField?: 'name' | 'email' | 'role' | 'createdAt' | 'lastLogin' | 'isActive'; // Added sortField
-  sortDirection?: 'asc' | 'desc'; // Added sortDirection
+  sortField?: 'name' | 'email' | 'role' | 'createdAt' | 'lastLogin' | 'isActive';
+  sortDirection?: 'asc' | 'desc';
 }
 
 export interface UserActivationHistoryEntry {

@@ -58,7 +58,8 @@ const permissionGroups = [
 
 const permissionLevels: { id: PermissionLevel, label: string, description: string }[] = [
   { id: 'read', label: 'Visualizar', description: 'Permite visualizar informações' },
-  { id: 'write', label: 'Editar', description: 'Permite criar e editar informações' },
+  { id: 'create', label: 'Incluir', description: 'Permite adicionar novas informações' },
+  { id: 'write', label: 'Editar', description: 'Permite editar informações existentes' },
   { id: 'delete', label: 'Excluir', description: 'Permite remover informações' },
   { id: 'manage', label: 'Gerenciar', description: 'Controle completo sobre esta área' }
 ];
@@ -91,6 +92,7 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
     if (areaPermissions.some(p => p.level === 'manage')) return 'manage';
     if (areaPermissions.some(p => p.level === 'delete')) return 'delete';
     if (areaPermissions.some(p => p.level === 'write')) return 'write';
+    if (areaPermissions.some(p => p.level === 'create')) return 'create';
     if (areaPermissions.some(p => p.level === 'read')) return 'read';
     
     return null;
@@ -104,16 +106,18 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
         // Remove this permission and any higher permissions
         return prevPermissions.filter(p => !(p.area === area && (
           p.level === level || 
-          (level === 'read' && ['write', 'delete', 'manage'].includes(p.level)) ||
+          (level === 'read' && ['create', 'write', 'delete', 'manage'].includes(p.level)) ||
+          (level === 'create' && ['write', 'delete', 'manage'].includes(p.level)) ||
           (level === 'write' && ['delete', 'manage'].includes(p.level)) ||
           (level === 'delete' && p.level === 'manage')
         )));
       } else {
         // Add this permission and remove any lower permissions to avoid redundancy
         const newPermissions = prevPermissions.filter(p => !(p.area === area && (
-          (level === 'write' && p.level === 'read') ||
-          (level === 'delete' && ['read', 'write'].includes(p.level)) ||
-          (level === 'manage' && ['read', 'write', 'delete'].includes(p.level))
+          (level === 'create' && p.level === 'read') ||
+          (level === 'write' && ['read', 'create'].includes(p.level)) ||
+          (level === 'delete' && ['read', 'create', 'write'].includes(p.level)) ||
+          (level === 'manage' && ['read', 'create', 'write', 'delete'].includes(p.level))
         )));
         
         return [...newPermissions, { area, level }];
@@ -259,6 +263,7 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
                                     getHighestPermissionLevel(area.id as PermissionArea) === 'manage' ? 'default' :
                                     getHighestPermissionLevel(area.id as PermissionArea) === 'delete' ? 'destructive' :
                                     getHighestPermissionLevel(area.id as PermissionArea) === 'write' ? 'secondary' :
+                                    getHighestPermissionLevel(area.id as PermissionArea) === 'create' ? 'outline' :
                                     'outline'
                                   }>
                                     {permissionLevels.find(l => l.id === getHighestPermissionLevel(area.id as PermissionArea))?.label || 'Desconhecido'}
@@ -367,6 +372,7 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
                                           level === 'manage' ? 'default' :
                                           level === 'delete' ? 'destructive' :
                                           level === 'write' ? 'secondary' :
+                                          level === 'create' ? 'outline' :
                                           'outline'
                                         }>
                                           {levelDisplay}

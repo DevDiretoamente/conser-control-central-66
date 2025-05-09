@@ -112,6 +112,7 @@ export const getHighestPermissionForArea = (user: User, area: PermissionArea): P
   if (areaPermissions.some(p => p.level === 'manage')) return 'manage';
   if (areaPermissions.some(p => p.level === 'delete')) return 'delete';
   if (areaPermissions.some(p => p.level === 'write')) return 'write';
+  if (areaPermissions.some(p => p.level === 'create')) return 'create';
   if (areaPermissions.some(p => p.level === 'read')) return 'read';
   
   return null;
@@ -247,9 +248,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (level) {
         const levelHierarchy: Record<PermissionLevel, number> = {
           'read': 1,
-          'write': 2,
-          'delete': 3,
-          'manage': 4
+          'create': 2,
+          'write': 3,
+          'delete': 4,
+          'manage': 5
         };
 
         const permission = state.user.permissions.find(p => p.area === area);
