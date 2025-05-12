@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,7 +18,6 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { createExamesPorTipoFromSelected } from '@/services/funcionesService';
 
 // Schema for function form validation
 export const funcaoSchema = z.object({
@@ -45,6 +43,28 @@ export interface FuncaoFormData {
   selectedUniformes: string[];
   atribuicoesText: string;
 }
+
+// Helper function to initialize selected exams from existing function
+const initializeSelectedExamsFromFuncao = (funcao: Funcao | null): Record<string, string[]> => {
+  const examesByType: Record<string, string[]> = {
+    admissional: [],
+    periodico: [],
+    mudancaFuncao: [],
+    retornoTrabalho: [],
+    demissional: []
+  };
+  
+  if (funcao?.examesNecessarios) {
+    // Get exam IDs for each type
+    examesByType.admissional = funcao.examesNecessarios.admissional.map(exame => exame.id);
+    examesByType.periodico = funcao.examesNecessarios.periodico.map(exame => exame.id);
+    examesByType.mudancaFuncao = funcao.examesNecessarios.mudancaFuncao.map(exame => exame.id);
+    examesByType.retornoTrabalho = funcao.examesNecessarios.retornoTrabalho.map(exame => exame.id);
+    examesByType.demissional = funcao.examesNecessarios.demissional.map(exame => exame.id);
+  }
+  
+  return examesByType;
+};
 
 export const FuncaoForm: React.FC<FuncaoFormProps> = ({ editingFuncao, onSubmit, isLoading }) => {
   const [activeExamTypeTab, setActiveExamTypeTab] = useState<string>('admissional');
@@ -80,28 +100,6 @@ export const FuncaoForm: React.FC<FuncaoFormProps> = ({ editingFuncao, onSubmit,
       selectedUniformes,
       atribuicoesText
     });
-  };
-
-  // Helper function to initialize selected exams from existing function
-  const initializeSelectedExamsFromFuncao = (funcao: Funcao | null): Record<string, string[]> => {
-    const examesByType: Record<string, string[]> = {
-      admissional: [],
-      periodico: [],
-      mudancaFuncao: [],
-      retornoTrabalho: [],
-      demissional: []
-    };
-    
-    if (funcao?.examesNecessarios) {
-      // Get exam IDs for each type
-      examesByType.admissional = funcao.examesNecessarios.admissional.map(exame => exame.id);
-      examesByType.periodico = funcao.examesNecessarios.periodico.map(exame => exame.id);
-      examesByType.mudancaFuncao = funcao.examesNecessarios.mudancaFuncao.map(exame => exame.id);
-      examesByType.retornoTrabalho = funcao.examesNecessarios.retornoTrabalho.map(exame => exame.id);
-      examesByType.demissional = funcao.examesNecessarios.demissional.map(exame => exame.id);
-    }
-    
-    return examesByType;
   };
 
   // Handle checkbox change for EPIs and uniformes

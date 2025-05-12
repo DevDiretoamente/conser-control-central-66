@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -89,6 +88,7 @@ const FuncoesTab: React.FC = () => {
       const selectedUniformeObjects = funcionesService.getUniformesByIds(formData.selectedUniformes);
       
       // Create the examesNecessarios object from selected exam IDs
+      // Import the createExamesPorTipoFromSelected function from the service file
       const examesNecessarios = funcionesService.createExamesPorTipoFromSelected(formData.selectedExamesByType);
 
       const funcaoData = {
