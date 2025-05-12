@@ -10,18 +10,24 @@ interface FuncionarioHeaderProps {
 }
 
 const FuncionarioHeader: React.FC<FuncionarioHeaderProps> = ({ funcionarioDetalhes }) => {
-  if (!funcionarioDetalhes) return null;
+  if (!funcionarioDetalhes) {
+    return (
+      <div className="rounded-lg bg-muted/30 p-4 mb-4 text-center">
+        <p className="text-muted-foreground">Selecione um funcionário para visualizar os detalhes</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 items-center rounded-lg overflow-visible bg-gradient-to-r from-primary/5 to-primary/10 p-4 mb-4">
+    <div className="flex flex-col md:flex-row gap-4 items-center rounded-lg bg-gradient-to-r from-primary/5 to-primary/10 p-4 mb-4">
       <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center">
         <span className="text-2xl font-bold text-primary">
           {funcionarioDetalhes.name.charAt(0).toUpperCase()}
         </span>
       </div>
-      <div className="md:flex-1">
+      <div className="md:flex-1 text-center md:text-left">
         <h3 className="text-xl font-medium">{funcionarioDetalhes.name}</h3>
-        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+        <div className="flex flex-col md:flex-row md:gap-4 text-sm text-muted-foreground">
           <div>
             <span className="font-medium">Setor:</span> {funcionarioDetalhes.setor}
           </div>

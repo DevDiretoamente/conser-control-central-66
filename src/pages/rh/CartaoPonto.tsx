@@ -14,7 +14,7 @@ import { CartaoPontoForm } from '@/components/rh/CartaoPontoForm';
 import { CartaoPontoRelatorio } from '@/components/rh/CartaoPontoRelatorio';
 import CartaoPontoImpressao from '@/components/rh/CartaoPontoImpressao';
 import { Button } from '@/components/ui/button';
-import { getCartaoPonto, getFuncionarioDetails } from '@/services/cartaoPontoService';
+import { getCartaoPonto } from '@/services/cartaoPontoService';
 import { CartaoPonto as CartaoPontoType } from '@/types/cartaoPonto';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -55,8 +55,8 @@ const CartaoPontoPage: React.FC = () => {
   
   const podeVerRelatorios = temPermissaoGerenciar || temPermissaoVisualizar;
   
-  // Filtrar APENAS funcionários ativos
-  const funcionariosAtivos = users.filter(u => u.isActive);
+  // Filtrar APENAS funcionários ativos (não admin ou outros usuários de sistema)
+  const funcionariosAtivos = users.filter(u => u.isActive && u.role !== 'admin');
 
   // Carregar cartão ponto quando mudar funcionário, mês ou ano
   useEffect(() => {
@@ -76,17 +76,10 @@ const CartaoPontoPage: React.FC = () => {
   
   // Definir funcionário padrão (próprio usuário ou primeiro da lista)
   useEffect(() => {
-    if (user && !funcionarioId) {
-      // Se o usuário atual for funcionário, selecionar ele mesmo
-      if (funcionariosAtivos.find(f => f.id === user.id)) {
-        setFuncionarioId(user.id);
-      } 
-      // Senão, selecionar o primeiro funcionário da lista
-      else if (funcionariosAtivos.length > 0) {
-        setFuncionarioId(funcionariosAtivos[0].id);
-      }
+    if (funcionariosAtivos.length > 0 && !funcionarioId) {
+      setFuncionarioId(funcionariosAtivos[0].id);
     }
-  }, [user, funcionariosAtivos, funcionarioId]);
+  }, [funcionariosAtivos, funcionarioId]);
   
   // Nomes dos meses para navegação
   const mesesNomes = [
@@ -146,7 +139,7 @@ const CartaoPontoPage: React.FC = () => {
       </div>
       
       {/* Seleção de funcionário */}
-      <Card className="border-b-4 border-b-primary/50 overflow-visible">
+      <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle>Selecione um Funcionário</CardTitle>
@@ -176,19 +169,25 @@ const CartaoPontoPage: React.FC = () => {
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecione um funcionário" />
             </SelectTrigger>
-            <SelectContent>
-              {funcionariosAtivos.map((funcionario) => (
-                <SelectItem key={funcionario.id} value={funcionario.id}>
-                  {funcionario.name}
+            <SelectContent className="bg-background z-50">
+              {funcionariosAtivos.length > 0 ? (
+                funcionariosAtivos.map((funcionario) => (
+                  <SelectItem key={funcionario.id} value={funcionario.id}>
+                    {funcionario.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="" disabled>
+                  Nenhum funcionário disponível
                 </SelectItem>
-              ))}
+              )}
             </SelectContent>
           </Select>
         </CardContent>
       </Card>
       
       {/* Conteúdo principal */}
-      <Card className="border-t-4 border-t-primary/50 overflow-visible">
+      <Card>
         <CardHeader>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid grid-cols-3 mb-4">

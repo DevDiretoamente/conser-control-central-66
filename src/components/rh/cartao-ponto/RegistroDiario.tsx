@@ -63,7 +63,7 @@ const RegistroDiario: React.FC<RegistroDiarioProps> = ({
   return (
     <Card className="border-l-4 border-l-primary mb-4">
       <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-wrap justify-between items-center gap-2">
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-primary" />
             Registro do dia {new Date(registro.data).getDate()}
@@ -101,7 +101,7 @@ const RegistroDiario: React.FC<RegistroDiarioProps> = ({
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-50 bg-background">
                 {statusOptions.map((status) => (
                   <SelectItem key={status.valor} value={status.valor}>
                     {status.nome}
@@ -119,7 +119,7 @@ const RegistroDiario: React.FC<RegistroDiarioProps> = ({
               disabled={!podeEditar || cartaoFechado || registro.bloqueado}
               placeholder="Observações adicionais"
               rows={2}
-              className="min-h-[80px]"
+              className="min-h-[80px] resize-none"
             />
           </div>
         </div>
@@ -133,7 +133,7 @@ const RegistroDiario: React.FC<RegistroDiarioProps> = ({
               <div className="h-px flex-1 bg-border"></div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center gap-1">
                   <Clock className="h-4 w-4" /> Entrada Extra
