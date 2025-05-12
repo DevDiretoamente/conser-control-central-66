@@ -16,7 +16,7 @@ const AppLayout: React.FC = () => {
       <AppSidebar isCollapsed={isSidebarCollapsed} />
       <div className={`flex-1 ${isSidebarCollapsed ? 'ml-16' : 'ml-64'} transition-all duration-300`}>
         <Header toggleSidebar={toggleSidebar} />
-        <main className="container mx-auto p-4 md:p-6 max-w-7xl">
+        <main className="container mx-auto p-6 max-w-7xl">
           <Outlet />
         </main>
       </div>
