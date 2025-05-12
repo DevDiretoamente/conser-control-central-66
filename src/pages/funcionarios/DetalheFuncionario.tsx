@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -113,7 +112,7 @@ const DetalheFuncionario = () => {
             Documentos
           </Button>
           <Button asChild>
-            <Link to={`/funcionarios/${id}/editar`}>
+            <Link to={`/funcionarios/${id}/edit`}>
               <Pencil className="mr-2 h-4 w-4" />
               Editar
             </Link>

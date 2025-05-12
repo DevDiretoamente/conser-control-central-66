@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
@@ -75,23 +74,34 @@ const App: React.FC = () => {
               <FuncionariosPage />
             </ProtectedRoute>
           } />
+          
+          {/* IMPORTANT: Add the /exames route BEFORE any other funcionarios/* routes */}
+          <Route path="/funcionarios/exames" element={
+            <ProtectedRoute requiredPermissions={[{ area: 'exames', level: 'read' }]}>
+              <ExamesMedicosPage />
+            </ProtectedRoute>
+          } />
+          
           {/* IMPORTANT: Add the novo route BEFORE the parameterized route */}
           <Route path="/funcionarios/novo" element={
             <ProtectedRoute requiredPermissions={[{ area: 'funcionarios', level: 'write' }]}>
               <NovoFuncionario />
             </ProtectedRoute>
           } />
+          
           <Route path="/funcionarios/:id" element={
             <ProtectedRoute requiredPermissions={[{ area: 'funcionarios', level: 'read' }]}>
               <DetalheFuncionario />
             </ProtectedRoute>
           } />
+          
           <Route path="/funcionarios/:id/edit" element={
             <ProtectedRoute requiredPermissions={[{ area: 'funcionarios', level: 'write' }]}>
               <EditarFuncionario />
             </ProtectedRoute>
           } />
-          <Route path="/funcionarios/exames" element={
+          
+          <Route path="/funcionarios/:id/exames-medicos" element={
             <ProtectedRoute requiredPermissions={[{ area: 'exames', level: 'read' }]}>
               <ExamesMedicosPage />
             </ProtectedRoute>
