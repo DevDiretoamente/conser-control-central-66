@@ -29,7 +29,7 @@ const saveFuncoesToStorage = (funcoes: Funcao[]): void => {
 };
 
 // Create an ExamesPorTipo object from selected exam IDs
-export const createExamesPorTipoFromSelected = (selectedByType: Record<string, string[]>): ExamesPorTipo => {
+const createExamesPorTipoFromSelected = (selectedByType: Record<string, string[]>): ExamesPorTipo => {
   const result: ExamesPorTipo = {
     admissional: [],
     periodico: [],
@@ -196,6 +196,9 @@ export const funcionesService = {
   getUniformesByIds: (uniformeIds: string[]): Uniforme[] => {
     return mockUniformes.filter(uniforme => uniformeIds.includes(uniforme.id));
   },
+
+  // Add createExamesPorTipoFromSelected to the funcionesService object
+  createExamesPorTipoFromSelected,
   
   // Search functions by name, description, or sector
   search: async (searchTerm: string): Promise<Funcao[]> => {
