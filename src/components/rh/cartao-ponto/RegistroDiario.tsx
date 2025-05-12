@@ -49,7 +49,7 @@ const RegistroDiario: React.FC<RegistroDiarioProps> = ({
   cancelarEdicao,
   salvarEdicao
 }) => {
-  // Status options
+  // Status options - ensure each one has a non-empty value
   const statusOptions: { valor: StatusDia, nome: string }[] = [
     { valor: 'normal', nome: 'Normal' },
     { valor: 'falta_injustificada', nome: 'Falta Injustificada' },

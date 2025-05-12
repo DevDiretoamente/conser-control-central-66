@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { User } from 'lucide-react';
 
 interface FuncionarioHeaderProps {
   funcionarioDetalhes: {
@@ -19,20 +20,20 @@ const FuncionarioHeader: React.FC<FuncionarioHeaderProps> = ({ funcionarioDetalh
   }
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 items-center rounded-lg bg-gradient-to-r from-primary/5 to-primary/10 p-4 mb-4">
+    <div className="flex flex-col md:flex-row gap-4 items-center rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 p-6 mb-4">
       <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center">
-        <span className="text-2xl font-bold text-primary">
-          {funcionarioDetalhes.name.charAt(0).toUpperCase()}
-        </span>
+        <User className="h-8 w-8 text-primary" />
       </div>
       <div className="md:flex-1 text-center md:text-left">
-        <h3 className="text-xl font-medium">{funcionarioDetalhes.name}</h3>
-        <div className="flex flex-col md:flex-row md:gap-4 text-sm text-muted-foreground">
-          <div>
-            <span className="font-medium">Setor:</span> {funcionarioDetalhes.setor || 'Não informado'}
+        <h3 className="text-xl font-bold text-primary">{funcionarioDetalhes.name}</h3>
+        <div className="flex flex-col md:flex-row md:gap-6 mt-2">
+          <div className="flex items-center">
+            <span className="font-medium text-muted-foreground mr-2">Setor:</span> 
+            <span className="font-semibold">{funcionarioDetalhes.setor || 'Não informado'}</span>
           </div>
-          <div>
-            <span className="font-medium">Função:</span> {funcionarioDetalhes.funcao || 'Não informada'}
+          <div className="flex items-center">
+            <span className="font-medium text-muted-foreground mr-2">Função:</span> 
+            <span className="font-semibold">{funcionarioDetalhes.funcao || 'Não informada'}</span>
           </div>
         </div>
       </div>

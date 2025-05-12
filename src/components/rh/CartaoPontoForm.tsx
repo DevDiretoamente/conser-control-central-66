@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -11,8 +10,10 @@ import {
 } from '@/types/cartaoPonto';
 import { salvarRegistroPonto, getFuncionarioDetails } from '@/services/cartaoPontoService';
 import { User } from '@/types/auth';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { FuncionarioCartaoPonto } from '@/types/funcionario';
+import { mapUsersToFuncionarios } from '@/services/funcionarioService';
 
 // Importing refactored components
 import FuncionarioHeader from './cartao-ponto/FuncionarioHeader';
@@ -24,7 +25,7 @@ import RegistroDiario from './cartao-ponto/RegistroDiario';
 import HorasResumo from './cartao-ponto/HorasResumo';
 
 interface CartaoPontoFormProps {
-  funcionarios: User[];
+  funcionarios: User[] | FuncionarioCartaoPonto[];
   funcionarioSelecionadoId: string;
   onChangeFuncionario: (id: string) => void;
   cartaoPonto: CartaoPonto | null;
@@ -57,11 +58,39 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
   const [funcionarioDetalhes, setFuncionarioDetalhes] = useState<{ name: string; setor: string; funcao: string } | null>(null);
   const [visualizacao, setVisualizacao] = useState<'calendario' | 'individual'>('individual');
   
+  // Convert users to funcionarios if needed
+  const getFuncionariosList = (): FuncionarioCartaoPonto[] => {
+    if (funcionarios.length === 0) return [];
+    
+    // Check if we're already using FuncionarioCartaoPonto objects
+    if ('cargo' in funcionarios[0]) {
+      return funcionarios as FuncionarioCartaoPonto[];
+    }
+    
+    // Otherwise convert User objects to FuncionarioCartaoPonto
+    return mapUsersToFuncionarios(funcionarios as User[]);
+  };
+  
   // Fetch employee details when funcionarioId changes
   useEffect(() => {
     if (funcionarioSelecionadoId) {
-      const detalhes = getFuncionarioDetails(funcionarioSelecionadoId);
-      setFuncionarioDetalhes(detalhes);
+      // Get employee list
+      const funcionariosList = getFuncionariosList();
+      const funcionario = funcionariosList.find(f => 
+        f.id === funcionarioSelecionadoId || f.userId === funcionarioSelecionadoId
+      );
+      
+      if (funcionario) {
+        setFuncionarioDetalhes({
+          name: funcionario.nome,
+          setor: funcionario.setor,
+          funcao: funcionario.cargo
+        });
+      } else {
+        // Fallback to old method if employee not found
+        const detalhes = getFuncionarioDetails(funcionarioSelecionadoId);
+        setFuncionarioDetalhes(detalhes);
+      }
     }
   }, [funcionarioSelecionadoId]);
   
@@ -122,16 +151,33 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
     if (value === 'normal') {
       const dayOfWeek = new Date(registro.data).getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
       
-      // Standard times
-      novoRegistro.horaEntradaManha = '07:00';
-      novoRegistro.horaSaidaAlmoco = '12:00';
-      novoRegistro.horaRetornoAlmoco = '13:00';
+      // Get employee default times if available
+      const funcionariosList = getFuncionariosList();
+      const funcionario = funcionariosList.find(f => 
+        f.id === funcionarioSelecionadoId || f.userId === funcionarioSelecionadoId
+      );
       
-      // Different end time for Friday
-      if (dayOfWeek === 5) { // Friday
-        novoRegistro.horaSaidaTarde = '16:00';
+      if (funcionario) {
+        // Use employee's specific schedule
+        novoRegistro.horaEntradaManha = funcionario.horarioEntrada || '07:00';
+        novoRegistro.horaSaidaTarde = funcionario.horarioSaida || '17:00';
+        
+        if (funcionario.temIntervalo) {
+          novoRegistro.horaSaidaAlmoco = funcionario.horarioInicioIntervalo || '12:00';
+          novoRegistro.horaRetornoAlmoco = funcionario.horarioFimIntervalo || '13:00';
+        }
       } else {
-        novoRegistro.horaSaidaTarde = '17:00';
+        // Standard times
+        novoRegistro.horaEntradaManha = '07:00';
+        novoRegistro.horaSaidaAlmoco = '12:00';
+        novoRegistro.horaRetornoAlmoco = '13:00';
+        
+        // Different end time for Friday
+        if (dayOfWeek === 5) { // Friday
+          novoRegistro.horaSaidaTarde = '16:00';
+        } else {
+          novoRegistro.horaSaidaTarde = '17:00';
+        }
       }
     } else {
       // Clear times for non-normal days

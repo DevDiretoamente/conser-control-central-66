@@ -1,83 +1,154 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import { Users, Clock, FileText, ClipboardList } from 'lucide-react';
+import { Clock, Users, Stethoscope, FileText, BadgeCheck } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const RHPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { hasSpecificPermission } = useAuth();
+
+  const mostraTelas = {
+    funcionarios: hasSpecificPermission('funcionarios', 'read'),
+    exames: hasSpecificPermission('exames', 'read'),
+    cartaoPonto: hasSpecificPermission('cartaoponto', 'read'),
+    documentos: hasSpecificPermission('documentos', 'read'),
+    certificacoes: hasSpecificPermission('certificacoes', 'read'),
+  };
+
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Recursos Humanos</h1>
-      
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold tracking-tight">Recursos Humanos</h2>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center">
-              <Users className="mr-2 h-5 w-5" />
-              Funcionários
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4 text-sm text-muted-foreground">
-              Gerencie o cadastro de funcionários, dependentes e documentos.
-            </p>
-            <Button asChild variant="outline" className="w-full">
-              <Link to="/funcionarios">Acessar</Link>
-            </Button>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center">
-              <Clock className="mr-2 h-5 w-5" />
-              Cartão Ponto
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4 text-sm text-muted-foreground">
-              Registre e acompanhe o registro de horas trabalhadas.
-            </p>
-            <Button asChild variant="outline" className="w-full">
-              <Link to="/rh/cartao-ponto">Acessar</Link>
-            </Button>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center">
-              <FileText className="mr-2 h-5 w-5" />
-              Exames Médicos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4 text-sm text-muted-foreground">
-              Gerencie exames médicos ocupacionais dos funcionários.
-            </p>
-            <Button asChild variant="outline" className="w-full">
-              <Link to="/funcionarios/exames">Acessar</Link>
-            </Button>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center">
-              <ClipboardList className="mr-2 h-5 w-5" />
-              Funções
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4 text-sm text-muted-foreground">
-              Gerencie funções, cargos e departamentos da empresa.
-            </p>
-            <Button asChild variant="outline" className="w-full">
-              <Link to="/funcoes">Acessar</Link>
-            </Button>
-          </CardContent>
-        </Card>
+        {/* Cartão de Funcionários */}
+        {mostraTelas.funcionarios && (
+          <Card className="overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 pb-4">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                Funcionários
+              </CardTitle>
+              <CardDescription>
+                Gerenciamento de funcionários e dependentes
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <p className="mb-2 text-sm text-muted-foreground">
+                Cadastro completo, documentos, dependentes e histórico profissional.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button className="w-full" onClick={() => navigate('/funcionarios')}>
+                Acessar Funcionários
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
+
+        {/* Cartão de Exames */}
+        {mostraTelas.exames && (
+          <Card className="overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 pb-4">
+              <CardTitle className="flex items-center gap-2">
+                <Stethoscope className="h-6 w-6 text-green-600 dark:text-green-400" />
+                Exames Médicos
+              </CardTitle>
+              <CardDescription>
+                Controle de exames médicos ocupacionais
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <p className="mb-2 text-sm text-muted-foreground">
+                Agende, acompanhe e visualize os exames de todos os funcionários.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button className="w-full" onClick={() => navigate('/funcionarios/exames')}>
+                Acessar Exames
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
+
+        {/* Cartão de Ponto */}
+        {mostraTelas.cartaoPonto && (
+          <Card className="overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 pb-4">
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                Cartão Ponto
+              </CardTitle>
+              <CardDescription>
+                Registro e controle de horas trabalhadas
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <p className="mb-2 text-sm text-muted-foreground">
+                Registre entradas, saídas e horas extras de forma simples e organizada.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button className="w-full" onClick={() => navigate('/rh/cartao-ponto')}>
+                Acessar Cartão Ponto
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
+
+        {/* Cartão de Documentos */}
+        {mostraTelas.documentos && (
+          <Card className="overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 pb-4">
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                Documentos
+              </CardTitle>
+              <CardDescription>
+                Gestão de documentos e contratos
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <p className="mb-2 text-sm text-muted-foreground">
+                Centralize contratos, termos e documentos importantes dos funcionários.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button className="w-full" variant="outline" onClick={() => navigate('/rh/documentos')}>
+                Em breve
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
+
+        {/* Cartão de Certificações */}
+        {mostraTelas.certificacoes && (
+          <Card className="overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 pb-4">
+              <CardTitle className="flex items-center gap-2">
+                <BadgeCheck className="h-6 w-6 text-red-600 dark:text-red-400" />
+                Certificações
+              </CardTitle>
+              <CardDescription>
+                Controle de treinamentos e certificações
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <p className="mb-2 text-sm text-muted-foreground">
+                Acompanhe certificações, treinamentos e qualificações dos funcionários.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button className="w-full" variant="outline" onClick={() => navigate('/rh/certificacoes')}>
+                Em breve
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
       </div>
     </div>
   );

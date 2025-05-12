@@ -55,8 +55,7 @@ const CartaoPontoPage: React.FC = () => {
   
   const podeVerRelatorios = temPermissaoGerenciar || temPermissaoVisualizar;
   
-  // Fix: Filter ONLY active users (assuming operator role is used for employees)
-  // Changed from `u.role === 'employee'` to `u.role === 'operator'` since 'operator' is a valid UserRole
+  // Filter ONLY active users with operator role (employees)
   const funcionariosAtivos = users.filter(u => u.isActive && u.role === 'operator');
 
   // Carregar cartão ponto quando mudar funcionário, mês ou ano
@@ -82,7 +81,7 @@ const CartaoPontoPage: React.FC = () => {
       const currentUser = funcionariosAtivos.find(f => f.id === user?.id);
       if (currentUser) {
         setFuncionarioId(currentUser.id);
-      } else {
+      } else if (funcionariosAtivos.length > 0) {
         setFuncionarioId(funcionariosAtivos[0].id);
       }
     }
