@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -136,7 +135,7 @@ const ListaFuncionarios: React.FC = () => {
   };
   
   const handleEdit = (id: string) => {
-    navigate(`/funcionarios/${id}/editar`);
+    navigate(`/funcionarios/${id}/edit`);
   };
   
   const handleViewDetails = (id: string) => {

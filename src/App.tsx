@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import FuncionariosPage from './pages/funcionarios/ListaFuncionarios';
 import DetalheFuncionario from './pages/funcionarios/DetalheFuncionario';
 import EditarFuncionario from './pages/funcionarios/EditarFuncionario';
+import NovoFuncionario from './pages/funcionarios/NovoFuncionario';
 import FuncoesPage from './pages/configuracoes/Funcoes';
 import DetalheFuncao from './pages/configuracoes/DetalheFuncao';
 import EditarFuncao from './pages/configuracoes/EditarFuncao';
@@ -74,12 +75,18 @@ const App: React.FC = () => {
               <FuncionariosPage />
             </ProtectedRoute>
           } />
-          <Route path="/funcionarios/:funcionarioId" element={
+          {/* IMPORTANT: Add the novo route BEFORE the parameterized route */}
+          <Route path="/funcionarios/novo" element={
+            <ProtectedRoute requiredPermissions={[{ area: 'funcionarios', level: 'write' }]}>
+              <NovoFuncionario />
+            </ProtectedRoute>
+          } />
+          <Route path="/funcionarios/:id" element={
             <ProtectedRoute requiredPermissions={[{ area: 'funcionarios', level: 'read' }]}>
               <DetalheFuncionario />
             </ProtectedRoute>
           } />
-          <Route path="/funcionarios/:funcionarioId/edit" element={
+          <Route path="/funcionarios/:id/edit" element={
             <ProtectedRoute requiredPermissions={[{ area: 'funcionarios', level: 'write' }]}>
               <EditarFuncionario />
             </ProtectedRoute>
