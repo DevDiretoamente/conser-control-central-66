@@ -1,4 +1,3 @@
-
 import { Funcao, EPI, ExameMedico, Uniforme, ExamesPorTipo } from '@/types/funcionario';
 import { mockFuncoes, mockEPIs, mockExamesMedicos, mockUniformes } from '@/data/funcionarioMockData';
 import { toast } from 'sonner';
@@ -29,7 +28,8 @@ const saveFuncoesToStorage = (funcoes: Funcao[]): void => {
 };
 
 // Create an ExamesPorTipo object from selected exam IDs
-const createExamesPorTipoFromSelected = (selectedByType: Record<string, string[]>): ExamesPorTipo => {
+// Export this function so it can be used directly from EditarFuncao.tsx
+export const createExamesPorTipoFromSelected = (selectedByType: Record<string, string[]>): ExamesPorTipo => {
   const result: ExamesPorTipo = {
     admissional: [],
     periodico: [],
