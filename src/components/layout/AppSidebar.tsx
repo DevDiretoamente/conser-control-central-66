@@ -69,6 +69,7 @@ interface AppSidebarProps {
 const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
   const { user, logout, hasSpecificPermission } = useAuth();
 
+  // Sempre visível, independente do hover
   const rhItems = [
     {
       title: "Funcionários",
@@ -145,6 +146,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
           <Logo />
         )}
       </div>
+      
+      {/* Navegação principal - sempre visível */}
       <nav className="flex-1 space-y-1 px-2 py-3 overflow-y-auto">
         <div className="mb-4">
           {!isCollapsed && (
@@ -152,11 +155,14 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
               MÓDULOS
             </h2>
           )}
+          
           <div className="space-y-1">
             <SidebarItem to="/" icon={LayoutDashboard} label="Dashboard" isCollapsed={isCollapsed} />
+            
+            {/* RH - Link principal */}
             <SidebarItem to="/funcionarios" icon={Users} label="Recursos Humanos" isCollapsed={isCollapsed} requiredRole="operator" />
             
-            {/* RH Sub-menu - Always visible when parent is visible */}
+            {/* Sub-itens do RH - Sempre visível */}
             {!isCollapsed && hasSpecificPermission('rh' as PermissionArea, 'read') && (
               <div className="ml-6 mt-1 space-y-1">
                 {rhItems.map((item, index) => (
@@ -166,7 +172,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
                       to={item.link}
                       className={({ isActive }) =>
                         cn(
-                          "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors",
+                          "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm",
                           "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
                           isActive 
                             ? "bg-sidebar-accent text-sidebar-foreground font-medium" 
@@ -182,6 +188,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
               </div>
             )}
 
+            {/* Outros links principais */}
             <SidebarItem to="/obras" icon={Building} label="Obras" isCollapsed={isCollapsed} requiredRole="operator" />
             <SidebarItem to="/frota" icon={Truck} label="Frota" isCollapsed={isCollapsed} requiredRole="operator" />
             <SidebarItem to="/patrimonio" icon={Briefcase} label="Patrimônio" isCollapsed={isCollapsed} requiredRole="operator" />
@@ -189,17 +196,19 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
           </div>
         </div>
 
-        {/* Configuration Section */}
+        {/* Seção de Configurações - Sempre visível */}
         <div className="pt-2">
           {!isCollapsed && (
             <h2 className="mb-2 px-2 text-xs font-semibold text-sidebar-foreground">
               CONFIGURAÇÕES
             </h2>
           )}
+          
           <div className="space-y-1">
+            {/* Link principal de configurações */}
             <SidebarItem to="/configuracoes" icon={Settings} label="Configurações" isCollapsed={isCollapsed} requiredRole="admin" />
             
-            {/* Always visible when parent is visible */}
+            {/* Sub-itens de configurações - Sempre visíveis */}
             {!isCollapsed && hasSpecificPermission('configuracoes' as PermissionArea, 'read') && (
               <div className="ml-6 mt-1 space-y-1">
                 {configItems.map((item, index) => (
@@ -209,7 +218,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
                       to={item.link}
                       className={({ isActive }) =>
                         cn(
-                          "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors",
+                          "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm",
                           "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
                           isActive 
                             ? "bg-sidebar-accent text-sidebar-foreground font-medium" 
@@ -230,6 +239,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
         </div>
       </nav>
 
+      {/* Informação do usuário - Sempre visível */}
       <div className="mt-auto border-t border-sidebar-border p-4">
         {user && !isCollapsed && (
           <div className="flex items-center gap-3">
@@ -238,7 +248,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
             </div>
             <div>
               <p className="text-sm font-medium text-sidebar-foreground">{user.name}</p>
-              <p className="text-xs text-sidebar-foreground/60">{user.email}</p>
+              <p className="text-xs text-sidebar-foreground/90">{user.email}</p>
             </div>
           </div>
         )}

@@ -83,7 +83,7 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
   const anoAtual = new Date().getFullYear();
   const anos = [anoAtual - 2, anoAtual - 1, anoAtual, anoAtual + 1];
   
-  // Updated status options - removed "falta_justificada" and "folga", added "a_disposicao"
+  // Status options
   const statusOptions: { valor: StatusDia, nome: string }[] = [
     { valor: 'normal', nome: 'Normal' },
     { valor: 'falta_injustificada', nome: 'Falta Injustificada' },
@@ -304,6 +304,7 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
   
   return (
     <div className="space-y-4">
+      {/* Seleção de mês e ano */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="w-full md:w-1/2">
           <Select 
@@ -342,6 +343,7 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
         </div>
       </div>
       
+      {/* Informações do funcionário */}
       {funcionarioSelecionado && funcionarioDetalhes && (
         <Card className="mb-4">
           <CardContent className="py-4">
@@ -363,6 +365,7 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
         </Card>
       )}
       
+      {/* Alertas */}
       {!podeEditar && (
         <Alert className="mb-4">
           <Info className="h-4 w-4" />
@@ -394,9 +397,10 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
         </Alert>
       )}
       
-      {/* Day navigation */}
+      {/* Navegação de dias e registro atual */}
       {sortedRegistros.length > 0 && currentRegistro && (
         <div className="flex flex-col space-y-4">
+          {/* Navegação entre dias */}
           <div className="flex items-center justify-between mb-2">
             <Button 
               variant="outline" 
@@ -426,6 +430,7 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
             </Button>
           </div>
 
+          {/* Card de registro do dia atual */}
           <Card>
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
@@ -439,6 +444,7 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {/* Formulário de edição */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium">Status do dia</label>
@@ -470,7 +476,7 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
                 </div>
               </div>
 
-              {/* Time input fields */}
+              {/* Campos de horários */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
                 <div>
                   <label className="text-sm font-medium">Entrada Extra</label>
@@ -539,7 +545,7 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
                 </div>
               </div>
 
-              {/* Action buttons */}
+              {/* Botões de ação */}
               {podeEditar && !cartaoPonto?.fechado && !currentRegistro.bloqueado && (
                 <div className="flex justify-end gap-2 mt-6">
                   <Button 
@@ -560,6 +566,7 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
                 </div>
               )}
               
+              {/* Alerta de registro bloqueado */}
               {currentRegistro.bloqueado && (
                 <Alert className="mt-4" variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
@@ -574,6 +581,7 @@ export const CartaoPontoForm: React.FC<CartaoPontoFormProps> = ({
         </div>
       )}
       
+      {/* Resumo de horas */}
       {podeVerResumo && cartaoPonto && (
         <Card className="mt-8">
           <CardHeader>

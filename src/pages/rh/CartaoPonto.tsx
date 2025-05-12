@@ -35,7 +35,7 @@ const CartaoPontoPage: React.FC = () => {
   
   const podeVerRelatorios = temPermissaoGerenciar || temPermissaoVisualizar;
   
-  // Carregar funcionários ativos
+  // Filtrar APENAS funcionários ativos - sem filtragem por cargo
   const funcionarios = users.filter(u => u.isActive);
 
   // Carregar cartão ponto quando mudar funcionário, mês ou ano
@@ -68,7 +68,7 @@ const CartaoPontoPage: React.FC = () => {
     }
   }, [user, funcionarios, funcionarioId]);
   
-  // Componente de seleção de funcionário
+  // Componente de seleção de funcionário - Mostrando diretamente o nome
   const FuncionarioSelector = () => (
     <div className="mb-4">
       <Select 
