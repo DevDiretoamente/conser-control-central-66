@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -55,8 +54,9 @@ const CartaoPontoPage: React.FC = () => {
   
   const podeVerRelatorios = temPermissaoGerenciar || temPermissaoVisualizar;
   
-  // Filtrar APENAS funcionários ativos (não admin ou outros usuários de sistema)
-  const funcionariosAtivos = users.filter(u => u.isActive && u.role === 'employee');
+  // Fix: Filter ONLY active users (assuming operator role is used for employees)
+  // Changed from `u.role === 'employee'` to `u.role === 'operator'` since 'operator' is a valid UserRole
+  const funcionariosAtivos = users.filter(u => u.isActive && u.role === 'operator');
 
   // Carregar cartão ponto quando mudar funcionário, mês ou ano
   useEffect(() => {
