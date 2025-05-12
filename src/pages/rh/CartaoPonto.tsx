@@ -16,7 +16,7 @@ import CartaoPontoImpressao from '@/components/rh/CartaoPontoImpressao';
 import { Button } from '@/components/ui/button';
 import { getCartaoPonto, getFuncionarioDetails } from '@/services/cartaoPontoService';
 import { CartaoPonto as CartaoPontoType } from '@/types/cartaoPonto';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { 
   HelpCircle, 
   Calendar,
@@ -72,7 +72,7 @@ const CartaoPontoPage: React.FC = () => {
         });
       }
     }
-  }, [funcionarioId, mes, ano, toast]);
+  }, [funcionarioId, mes, ano]);
   
   // Definir funcionário padrão (próprio usuário ou primeiro da lista)
   useEffect(() => {
@@ -114,7 +114,7 @@ const CartaoPontoPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mb-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Cartão Ponto</h1>
         
@@ -146,7 +146,7 @@ const CartaoPontoPage: React.FC = () => {
       </div>
       
       {/* Seleção de funcionário */}
-      <Card className="border-b-4 border-b-primary/50">
+      <Card className="border-b-4 border-b-primary/50 overflow-visible">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle>Selecione um Funcionário</CardTitle>
@@ -188,7 +188,7 @@ const CartaoPontoPage: React.FC = () => {
       </Card>
       
       {/* Conteúdo principal */}
-      <Card className="border-t-4 border-t-primary/50">
+      <Card className="border-t-4 border-t-primary/50 overflow-visible">
         <CardHeader>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid grid-cols-3 mb-4">
@@ -197,7 +197,7 @@ const CartaoPontoPage: React.FC = () => {
               <TabsTrigger value="impressao">Impressão</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="lancamento" className="mt-6">
+            <TabsContent value="lancamento">
               <CartaoPontoForm
                 funcionarios={funcionariosAtivos}
                 funcionarioSelecionadoId={funcionarioId}
@@ -214,7 +214,7 @@ const CartaoPontoPage: React.FC = () => {
             </TabsContent>
             
             {podeVerRelatorios && (
-              <TabsContent value="relatorio" className="mt-6">
+              <TabsContent value="relatorio">
                 <CartaoPontoRelatorio
                   funcionarios={funcionariosAtivos}
                   funcionarioSelecionadoId={funcionarioId}
@@ -228,7 +228,7 @@ const CartaoPontoPage: React.FC = () => {
               </TabsContent>
             )}
             
-            <TabsContent value="impressao" className="mt-6">
+            <TabsContent value="impressao">
               <CartaoPontoImpressao
                 funcionarios={funcionariosAtivos}
                 funcionarioSelecionadoId={funcionarioId}
@@ -265,7 +265,7 @@ const CartaoPontoPage: React.FC = () => {
                       <HelpCircle className="ml-1 h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="max-w-sm p-4">
+                  <TooltipContent className="max-w-sm p-4 bg-white">
                     <p><strong>Fechar Período</strong>: Ao fechar o período, o cartão de ponto não poderá mais ser editado. Esta ação indica que todos os registros foram conferidos e estão corretos para o mês atual.</p>
                   </TooltipContent>
                 </Tooltip>
@@ -284,7 +284,7 @@ const CartaoPontoPage: React.FC = () => {
                       <HelpCircle className="ml-1 h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="max-w-sm p-4">
+                  <TooltipContent className="max-w-sm p-4 bg-white">
                     <p><strong>Validar</strong>: A validação é a etapa final do processo, realizada pelo RH ou gestor, confirmando que os dados foram revisados e aprovados. Somente cartões com período fechado podem ser validados.</p>
                   </TooltipContent>
                 </Tooltip>

@@ -53,7 +53,7 @@ const AppSidebar = ({ isCollapsed = false }) => {
     )
   );
 
-  // HR section with a visible user
+  // HR section
   const rhSection = (
     <div className="mt-2">
       <SectionHeading>Recursos Humanos</SectionHeading>
@@ -66,7 +66,7 @@ const AppSidebar = ({ isCollapsed = false }) => {
         />
         <NavItem 
           to="/funcionarios/exames" 
-          icon={FileText} 
+          icon={Stethoscope} 
           label="Exames Médicos" 
           hasPermission={hasSpecificPermission('exames', 'read')}
         />
@@ -119,7 +119,7 @@ const AppSidebar = ({ isCollapsed = false }) => {
           to="/configuracoes/emails" 
           icon={Mail} 
           label="E-mails" 
-          hasPermission={hasSpecificPermission('configuracoes', 'read')}
+          hasPermission={hasSpecificPermission('emails', 'read')}
         />
       </div>
     </div>
@@ -154,12 +154,6 @@ const AppSidebar = ({ isCollapsed = false }) => {
           label="Financeiro" 
           hasPermission={hasSpecificPermission('financeiro', 'read')}
         />
-        <NavItem 
-          to="/exames" 
-          icon={Stethoscope} 
-          label="Exames" 
-          hasPermission={hasSpecificPermission('exames', 'read')}
-        />
       </div>
     </div>
   );
@@ -167,7 +161,7 @@ const AppSidebar = ({ isCollapsed = false }) => {
   return (
     <div 
       className={cn(
-        "bg-gradient-to-b from-[#051630] to-[#02080f] fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-800/50",
+        "bg-gradient-to-b from-[#051630] to-[#02080f] fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-800/50 overflow-hidden",
         isCollapsed ? "w-16" : "w-64"
       )}
     >

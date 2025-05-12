@@ -66,9 +66,26 @@ const App: React.FC = () => {
               <RHPage />
             </ProtectedRoute>
           } />
+          
+          {/* Funcionários Routes */}
           <Route path="/funcionarios" element={
             <ProtectedRoute requiredPermissions={[{ area: 'funcionarios', level: 'read' }]}>
               <FuncionariosPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/funcionarios/:funcionarioId" element={
+            <ProtectedRoute requiredPermissions={[{ area: 'funcionarios', level: 'read' }]}>
+              <DetalheFuncionario />
+            </ProtectedRoute>
+          } />
+          <Route path="/funcionarios/:funcionarioId/edit" element={
+            <ProtectedRoute requiredPermissions={[{ area: 'funcionarios', level: 'write' }]}>
+              <EditarFuncionario />
+            </ProtectedRoute>
+          } />
+          <Route path="/funcionarios/exames" element={
+            <ProtectedRoute requiredPermissions={[{ area: 'exames', level: 'read' }]}>
+              <ExamesMedicosPage />
             </ProtectedRoute>
           } />
           
@@ -98,23 +115,8 @@ const App: React.FC = () => {
               <ExamesPage />
             </ProtectedRoute>
           } />
-          <Route path="/funcionarios/exames" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'exames', level: 'read' }]}>
-              <ExamesMedicosPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/funcionarios/:funcionarioId" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'funcionarios', level: 'read' }]}>
-              <DetalheFuncionario />
-            </ProtectedRoute>
-          } />
-          <Route path="/funcionarios/:funcionarioId/edit" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'funcionarios', level: 'write' }]}>
-              <EditarFuncionario />
-            </ProtectedRoute>
-          } />
           
-          {/* Add route for cartão ponto */}
+          {/* Cartão Ponto Route */}
           <Route path="/rh/cartao-ponto" element={
             <ProtectedRoute requiredPermissions={[{ area: 'cartaoponto', level: 'read' }]}>
               <CartaoPontoPage />
@@ -125,6 +127,27 @@ const App: React.FC = () => {
           <Route path="/obras" element={
             <ProtectedRoute requiredPermissions={[{ area: 'obras', level: 'read' }]}>
               <Obras />
+            </ProtectedRoute>
+          } />
+          
+          {/* Frota Routes */}
+          <Route path="/frota" element={
+            <ProtectedRoute requiredPermissions={[{ area: 'frota', level: 'read' }]}>
+              <div>Página de Frota</div>
+            </ProtectedRoute>
+          } />
+          
+          {/* Patrimônio Routes */}
+          <Route path="/patrimonio" element={
+            <ProtectedRoute requiredPermissions={[{ area: 'patrimonio', level: 'read' }]}>
+              <div>Página de Patrimônio</div>
+            </ProtectedRoute>
+          } />
+          
+          {/* Financeiro Routes */}
+          <Route path="/financeiro" element={
+            <ProtectedRoute requiredPermissions={[{ area: 'financeiro', level: 'read' }]}>
+              <div>Página de Financeiro</div>
             </ProtectedRoute>
           } />
 
