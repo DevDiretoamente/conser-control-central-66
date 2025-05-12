@@ -29,10 +29,10 @@ const FuncionarioHeader: React.FC<FuncionarioHeaderProps> = ({ funcionarioDetalh
         <h3 className="text-xl font-medium">{funcionarioDetalhes.name}</h3>
         <div className="flex flex-col md:flex-row md:gap-4 text-sm text-muted-foreground">
           <div>
-            <span className="font-medium">Setor:</span> {funcionarioDetalhes.setor}
+            <span className="font-medium">Setor:</span> {funcionarioDetalhes.setor || 'Não informado'}
           </div>
           <div>
-            <span className="font-medium">Função:</span> {funcionarioDetalhes.funcao}
+            <span className="font-medium">Função:</span> {funcionarioDetalhes.funcao || 'Não informada'}
           </div>
         </div>
       </div>

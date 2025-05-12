@@ -61,7 +61,7 @@ const RegistroDiario: React.FC<RegistroDiarioProps> = ({
   ];
 
   return (
-    <Card className="border-l-4 border-l-primary mb-4">
+    <Card className="mb-4 border-l-4 border-l-primary">
       <CardHeader className="pb-2">
         <div className="flex flex-wrap justify-between items-center gap-2">
           <CardTitle className="flex items-center gap-2">
@@ -101,7 +101,7 @@ const RegistroDiario: React.FC<RegistroDiarioProps> = ({
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent className="z-50 bg-background">
+              <SelectContent>
                 {statusOptions.map((status) => (
                   <SelectItem key={status.valor} value={status.valor}>
                     {status.nome}
@@ -118,7 +118,6 @@ const RegistroDiario: React.FC<RegistroDiarioProps> = ({
               onChange={(e) => setRegistroTemp({...registroTemp, observacoes: e.target.value})}
               disabled={!podeEditar || cartaoFechado || registro.bloqueado}
               placeholder="Observações adicionais"
-              rows={2}
               className="min-h-[80px] resize-none"
             />
           </div>

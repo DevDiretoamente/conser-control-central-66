@@ -56,7 +56,7 @@ const CartaoPontoPage: React.FC = () => {
   const podeVerRelatorios = temPermissaoGerenciar || temPermissaoVisualizar;
   
   // Filtrar APENAS funcionários ativos (não admin ou outros usuários de sistema)
-  const funcionariosAtivos = users.filter(u => u.isActive && u.role !== 'admin');
+  const funcionariosAtivos = users.filter(u => u.isActive && u.role === 'employee');
 
   // Carregar cartão ponto quando mudar funcionário, mês ou ano
   useEffect(() => {
@@ -77,9 +77,15 @@ const CartaoPontoPage: React.FC = () => {
   // Definir funcionário padrão (próprio usuário ou primeiro da lista)
   useEffect(() => {
     if (funcionariosAtivos.length > 0 && !funcionarioId) {
-      setFuncionarioId(funcionariosAtivos[0].id);
+      // Se o usuário atual é um funcionário, selecione-o
+      const currentUser = funcionariosAtivos.find(f => f.id === user?.id);
+      if (currentUser) {
+        setFuncionarioId(currentUser.id);
+      } else {
+        setFuncionarioId(funcionariosAtivos[0].id);
+      }
     }
-  }, [funcionariosAtivos, funcionarioId]);
+  }, [funcionariosAtivos, funcionarioId, user]);
   
   // Nomes dos meses para navegação
   const mesesNomes = [
@@ -160,6 +166,9 @@ const CartaoPontoPage: React.FC = () => {
               </div>
             )}
           </div>
+          <CardDescription>
+            Escolha um funcionário para visualizar ou registrar o cartão ponto
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Select 
@@ -169,7 +178,7 @@ const CartaoPontoPage: React.FC = () => {
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecione um funcionário" />
             </SelectTrigger>
-            <SelectContent className="bg-background z-50">
+            <SelectContent>
               {funcionariosAtivos.length > 0 ? (
                 funcionariosAtivos.map((funcionario) => (
                   <SelectItem key={funcionario.id} value={funcionario.id}>
@@ -264,7 +273,7 @@ const CartaoPontoPage: React.FC = () => {
                       <HelpCircle className="ml-1 h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="max-w-sm p-4 bg-white">
+                  <TooltipContent className="max-w-sm p-4">
                     <p><strong>Fechar Período</strong>: Ao fechar o período, o cartão de ponto não poderá mais ser editado. Esta ação indica que todos os registros foram conferidos e estão corretos para o mês atual.</p>
                   </TooltipContent>
                 </Tooltip>
@@ -283,7 +292,7 @@ const CartaoPontoPage: React.FC = () => {
                       <HelpCircle className="ml-1 h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="max-w-sm p-4 bg-white">
+                  <TooltipContent className="max-w-sm p-4">
                     <p><strong>Validar</strong>: A validação é a etapa final do processo, realizada pelo RH ou gestor, confirmando que os dados foram revisados e aprovados. Somente cartões com período fechado podem ser validados.</p>
                   </TooltipContent>
                 </Tooltip>
