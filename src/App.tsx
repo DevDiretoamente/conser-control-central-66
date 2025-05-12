@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
@@ -14,7 +13,6 @@ import Obras from './pages/obras/Obras';
 import { Permission } from './types/auth';
 import ClinicasPage from './pages/configuracoes/Clinicas';
 import RHPage from './pages/rh/RHPage';
-import CartaoPontoPage from "./pages/rh/CartaoPonto";
 import AppLayout from './components/layout/AppLayout';
 import ExamesPage from './pages/configuracoes/Exames';
 import ConfiguracoesPage from './pages/configuracoes/Configuracoes';
@@ -113,13 +111,6 @@ const App: React.FC = () => {
           <Route path="/exames" element={
             <ProtectedRoute requiredPermissions={[{ area: 'exames', level: 'read' }]}>
               <ExamesPage />
-            </ProtectedRoute>
-          } />
-          
-          {/* Cartão Ponto Route */}
-          <Route path="/rh/cartao-ponto" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'cartaoponto', level: 'read' }]}>
-              <CartaoPontoPage />
             </ProtectedRoute>
           } />
           
