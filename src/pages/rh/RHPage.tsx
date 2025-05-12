@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +14,7 @@ const RHPage: React.FC = () => {
     exames: hasSpecificPermission('exames', 'read'),
     cartaoPonto: hasSpecificPermission('cartaoponto', 'read'),
     documentos: hasSpecificPermission('documentos', 'read'),
-    certificacoes: hasSpecificPermission('certificacoes', 'read'),
+    certificacoes: hasSpecificPermission('documentos', 'read'),
   };
 
   return (
