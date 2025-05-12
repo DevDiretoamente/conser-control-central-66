@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import FuncionarioListItem, { Funcionario } from '@/components/funcionarios/FuncionarioListItem';
+import FuncionarioListItem, { Funcionario as FuncionarioListItemType } from '@/components/funcionarios/FuncionarioListItem';
 import FuncionarioFilter, { FuncionarioFilterValues } from '@/components/funcionarios/FuncionarioFilter';
 import { Users, PlusCircle, FileOutput, FileText, UserPlus, Edit, Trash } from 'lucide-react';
 import {
@@ -16,65 +16,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-
-const mockFuncionarios: Funcionario[] = [
-  {
-    id: '1',
-    nome: 'João da Silva',
-    cargo: 'Motorista',
-    cpf: '123.456.789-00',
-    telefone: '(11) 99999-8888',
-    email: 'joao.silva@conservias.com',
-    dataAdmissao: '10/01/2022',
-    statusAso: 'valido',
-    departamento: 'Operacional',
-    dependentes: 2
-  },
-  {
-    id: '2',
-    nome: 'Maria Oliveira',
-    cargo: 'Engenheira Civil',
-    cpf: '987.654.321-00',
-    telefone: '(11) 98888-7777',
-    email: 'maria.oliveira@conservias.com',
-    dataAdmissao: '15/03/2021',
-    statusAso: 'vence-em-breve',
-    departamento: 'Engenharia'
-  },
-  {
-    id: '3',
-    nome: 'Pedro Santos',
-    cargo: 'Operador de Máquinas',
-    cpf: '456.789.123-00',
-    telefone: '(11) 97777-6666',
-    dataAdmissao: '05/06/2022',
-    statusAso: 'vencido',
-    departamento: 'Operacional',
-    dependentes: 1
-  },
-  {
-    id: '4',
-    nome: 'Ana Carolina Ferreira',
-    cargo: 'Auxiliar Administrativo',
-    cpf: '789.123.456-00',
-    telefone: '(11) 96666-5555',
-    email: 'ana.ferreira@conservias.com',
-    dataAdmissao: '20/04/2023',
-    statusAso: 'valido',
-    departamento: 'Administrativo'
-  },
-  {
-    id: '5',
-    nome: 'Carlos Eduardo Mendes',
-    cargo: 'Motorista',
-    cpf: '321.654.987-00',
-    telefone: '(11) 95555-4444',
-    dataAdmissao: '12/08/2022',
-    statusAso: 'valido',
-    departamento: 'Operacional',
-    dependentes: 3
-  }
-];
+import { Funcionario } from '@/types/funcionario';
+import { funcionariosService } from '@/services/funcionariosService';
 
 const availableCargos = [
   { id: 'motorista', nome: 'Motorista' },
@@ -89,9 +32,28 @@ const availableDepartamentos = [
   { id: 'administrativo', nome: 'Administrativo' }
 ];
 
+// Função para converter um Funcionario para o formato usado pelo FuncionarioListItem
+const mapFuncionarioToListItem = (funcionario: Funcionario): FuncionarioListItemType => {
+  return {
+    id: funcionario.id || '',
+    nome: funcionario.dadosPessoais.nome,
+    cargo: funcionario.dadosProfissionais.cargo,
+    cpf: funcionario.dadosPessoais.cpf,
+    telefone: funcionario.contato.telefone,
+    email: funcionario.contato.email || '',
+    dataAdmissao: funcionario.dadosProfissionais.dataAdmissao ? 
+      new Date(funcionario.dadosProfissionais.dataAdmissao).toLocaleDateString('pt-BR') :
+      '',
+    statusAso: 'valido', // Temporário, deveria vir dos exames
+    departamento: 'Operacional', // Temporário, deveria vir do cargo/função
+    dependentes: funcionario.dependentes?.length || 0
+  };
+};
+
 const ListaFuncionarios: React.FC = () => {
-  const [funcionarios, setFuncionarios] = useState<Funcionario[]>(mockFuncionarios);
-  const [filteredFuncionarios, setFilteredFuncionarios] = useState<Funcionario[]>(mockFuncionarios);
+  const [funcionarios, setFuncionarios] = useState<FuncionarioListItemType[]>([]);
+  const [filteredFuncionarios, setFilteredFuncionarios] = useState<FuncionarioListItemType[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   
   const [filterValues, setFilterValues] = useState<FuncionarioFilterValues>({
@@ -102,6 +64,25 @@ const ListaFuncionarios: React.FC = () => {
   });
   
   const [funcionarioToDelete, setFuncionarioToDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadFuncionarios();
+  }, []);
+  
+  const loadFuncionarios = async () => {
+    try {
+      setLoading(true);
+      const data = await funcionariosService.getAll();
+      const mappedFuncionarios = data.map(mapFuncionarioToListItem);
+      setFuncionarios(mappedFuncionarios);
+      setFilteredFuncionarios(mappedFuncionarios);
+    } catch (error) {
+      console.error('Erro ao carregar funcionários:', error);
+      toast.error('Erro ao carregar lista de funcionários');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const handleFilterChange = (values: FuncionarioFilterValues) => {
     setFilterValues(values);
@@ -139,14 +120,18 @@ const ListaFuncionarios: React.FC = () => {
     setFuncionarioToDelete(id);
   };
   
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (funcionarioToDelete) {
-      // Filter out the deleted funcionario
-      const updatedFuncionarios = funcionarios.filter(f => f.id !== funcionarioToDelete);
-      setFuncionarios(updatedFuncionarios);
-      setFilteredFuncionarios(updatedFuncionarios);
-      toast.success('Funcionário excluído com sucesso');
-      setFuncionarioToDelete(null);
+      try {
+        await funcionariosService.delete(funcionarioToDelete);
+        toast.success('Funcionário excluído com sucesso');
+        loadFuncionarios();
+      } catch (error) {
+        console.error('Erro ao excluir funcionário:', error);
+        toast.error('Erro ao excluir funcionário');
+      } finally {
+        setFuncionarioToDelete(null);
+      }
     }
   };
   
@@ -198,7 +183,11 @@ const ListaFuncionarios: React.FC = () => {
         availableDepartamentos={availableDepartamentos}
       />
 
-      {filteredFuncionarios.length > 0 ? (
+      {loading ? (
+        <div className="flex justify-center items-center py-12">
+          <p className="text-muted-foreground">Carregando funcionários...</p>
+        </div>
+      ) : filteredFuncionarios.length > 0 ? (
         <div className="space-y-4">
           {filteredFuncionarios.map((funcionario) => (
             <FuncionarioListItem

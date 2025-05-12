@@ -7,29 +7,40 @@ import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { Funcionario } from '@/types/funcionario';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { funcionariosService } from '@/services/funcionariosService';
 
 const NovoFuncionario: React.FC = () => {
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSuccess = (data: Funcionario) => {
-    console.log('Funcionário cadastrado:', data);
-    
-    const dependentesCount = data.dependentes?.length || 0;
-    const documentosCount = Object.values(data.documentos).filter(Boolean).length;
-    
-    let successMessage = 'Funcionário cadastrado com sucesso!';
-    if (dependentesCount > 0) {
-      successMessage += ` ${dependentesCount} dependente${dependentesCount > 1 ? 's' : ''} adicionado${dependentesCount > 1 ? 's' : ''}.`;
+  const handleSuccess = async (data: Funcionario) => {
+    setIsSaving(true);
+    try {
+      // Salvar funcionário usando o serviço
+      const savedFuncionario = await funcionariosService.create(data as Omit<Funcionario, 'id'>);
+      console.log('Funcionário cadastrado:', savedFuncionario);
+      
+      const dependentesCount = data.dependentes?.length || 0;
+      const documentosCount = Object.values(data.documentos).filter(Boolean).length;
+      
+      let successMessage = 'Funcionário cadastrado com sucesso!';
+      if (dependentesCount > 0) {
+        successMessage += ` ${dependentesCount} dependente${dependentesCount > 1 ? 's' : ''} adicionado${dependentesCount > 1 ? 's' : ''}.`;
+      }
+      if (documentosCount > 0) {
+        successMessage += ` ${documentosCount} documento${documentosCount > 1 ? 's' : ''} anexado${documentosCount > 1 ? 's' : ''}.`;
+      }
+      
+      toast.success(successMessage);
+      
+      // Navigate back to funcionarios list
+      navigate('/funcionarios');
+    } catch (error) {
+      console.error('Erro ao salvar funcionário:', error);
+      toast.error('Erro ao cadastrar funcionário. Tente novamente.');
+    } finally {
+      setIsSaving(false);
     }
-    if (documentosCount > 0) {
-      successMessage += ` ${documentosCount} documento${documentosCount > 1 ? 's' : ''} anexado${documentosCount > 1 ? 's' : ''}.`;
-    }
-    
-    toast.success(successMessage);
-    
-    // Navigate back to funcionarios list
-    navigate('/funcionarios');
   };
 
   return (
@@ -57,7 +68,7 @@ const NovoFuncionario: React.FC = () => {
         </p>
       </div>
 
-      <FuncionarioForm onSuccess={handleSuccess} />
+      <FuncionarioForm onSuccess={handleSuccess} isSubmitting={isSaving} />
     </div>
   );
 };

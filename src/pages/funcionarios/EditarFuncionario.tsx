@@ -9,142 +9,65 @@ import FuncionarioForm from '@/components/funcionarios/FuncionarioForm';
 import { Funcionario } from '@/types/funcionario';
 import DocumentosImpressaoTab from '@/components/funcionarios/DocumentosImpressaoTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-// This would be replaced with an API call in a real application
-const getMockFuncionarioById = (id: string): Funcionario | undefined => {
-  // Simplified mock - in a real app, this would fetch from an API
-  return {
-    id,
-    dadosPessoais: {
-      nome: id === '1' ? 'João da Silva' : 'Funcionário ' + id,
-      cpf: '123.456.789-00',
-      rg: '12.345.678-9',
-      dataNascimento: new Date('1985-05-15'),
-      escolaridade: 'Ensino Médio Completo',
-      estadoCivil: 'Casado',
-      nomeConjuge: 'Maria Silva',
-      telefoneConjuge: '(11) 99999-8877',
-      contatoEmergenciaNome: 'José Silva',
-      contatoEmergenciaTelefone: '(11) 99999-7766'
-    },
-    endereco: {
-      cep: '01234-567',
-      rua: 'Rua das Flores',
-      numero: '123',
-      complemento: 'Apto 45',
-      bairro: 'Centro',
-      cidade: 'São Paulo',
-      uf: 'SP'
-    },
-    contato: {
-      telefone: '(11) 99999-8888',
-      email: 'joao.silva@conservias.com'
-    },
-    dadosProfissionais: {
-      funcaoId: '1',
-      cargo: 'Motorista',
-      salario: 5000,
-      dataAdmissao: new Date('2022-01-10'),
-      ctpsNumero: '12345',
-      ctpsSerie: '123',
-      pis: '12345678901',
-      tituloEleitor: '123456789012',
-      certificadoReservista: '12345'
-    },
-    cnh: {
-      numero: '12345678901',
-      categoria: 'D',
-      validade: new Date('2026-12-31')
-    },
-    dadosBancarios: {
-      banco: 'Banco do Brasil',
-      agencia: '1234',
-      conta: '12345-6',
-      tipoConta: 'corrente'
-    },
-    documentos: {
-      rgFile: null,
-      cpfFile: null,
-      comprovanteResidencia: null,
-      fotoFile: null,
-      cnhFile: null,
-      ctpsFile: null,
-      exameMedicoFile: null,
-      outrosDocumentos: null
-    },
-    dependentes: [
-      {
-        id: '1',
-        nome: 'Pedro Silva',
-        dataNascimento: new Date('2015-03-20'),
-        parentesco: 'Filho',
-        cpf: '987.654.321-00',
-        documentos: {
-          certidaoNascimento: null
-        }
-      },
-      {
-        id: '2',
-        nome: 'Ana Silva',
-        dataNascimento: new Date('2018-07-10'),
-        parentesco: 'Filha',
-        cpf: '876.543.210-00',
-        documentos: {
-          certidaoNascimento: null
-        }
-      }
-    ],
-    tamanhoUniforme: {
-      camisa: 'M',
-      calca: 'M',
-      calcado: 42
-    },
-    episEntregues: [],
-    uniformesEntregues: [],
-    examesRealizados: [],
-    documentosGerados: []
-  };
-};
+import { funcionariosService } from '@/services/funcionariosService';
 
 const EditarFuncionario: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [funcionario, setFuncionario] = useState<Funcionario | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [formLoading, setFormLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('formulario');
 
   useEffect(() => {
     if (id) {
-      // In a real app, this would be an API call
-      const func = getMockFuncionarioById(id);
-      if (func) {
-        setFuncionario(func);
-      } else {
-        toast.error('Funcionário não encontrado');
-        navigate('/funcionarios');
-      }
+      loadFuncionario(id);
+    }
+  }, [id]);
+
+  const loadFuncionario = async (funcionarioId: string) => {
+    setLoading(true);
+    try {
+      const data = await funcionariosService.getById(funcionarioId);
+      setFuncionario(data);
+    } catch (error) {
+      console.error('Error loading funcionário:', error);
+      toast.error('Erro ao carregar dados do funcionário');
+      navigate('/funcionarios');
+    } finally {
       setLoading(false);
     }
-  }, [id, navigate]);
+  };
 
-  const handleSuccess = (data: Funcionario) => {
-    console.log('Funcionário atualizado:', data);
+  const handleSuccess = async (data: Funcionario) => {
+    if (!id) return;
     
-    const dependentesCount = data.dependentes?.length || 0;
-    const documentosCount = Object.values(data.documentos).filter(Boolean).length;
-    
-    let successMessage = 'Funcionário atualizado com sucesso!';
-    if (dependentesCount > 0) {
-      successMessage += ` ${dependentesCount} dependente${dependentesCount > 1 ? 's' : ''} atualizado${dependentesCount > 1 ? 's' : ''}.`;
+    setFormLoading(true);
+    try {
+      const updatedFuncionario = await funcionariosService.update(id, data);
+      setFuncionario(updatedFuncionario);
+      
+      const dependentesCount = data.dependentes?.length || 0;
+      const documentosCount = Object.values(data.documentos).filter(Boolean).length;
+      
+      let successMessage = 'Funcionário atualizado com sucesso!';
+      if (dependentesCount > 0) {
+        successMessage += ` ${dependentesCount} dependente${dependentesCount > 1 ? 's' : ''} atualizado${dependentesCount > 1 ? 's' : ''}.`;
+      }
+      if (documentosCount > 0) {
+        successMessage += ` ${documentosCount} documento${documentosCount > 1 ? 's' : ''} anexado${documentosCount > 1 ? 's' : ''}.`;
+      }
+      
+      toast.success(successMessage);
+      
+      // Navigate to employee details
+      navigate(`/funcionarios/${id}`);
+    } catch (error) {
+      console.error('Error updating funcionário:', error);
+      toast.error('Erro ao atualizar funcionário');
+    } finally {
+      setFormLoading(false);
     }
-    if (documentosCount > 0) {
-      successMessage += ` ${documentosCount} documento${documentosCount > 1 ? 's' : ''} anexado${documentosCount > 1 ? 's' : ''}.`;
-    }
-    
-    toast.success(successMessage);
-    
-    // Navigate to employee details
-    navigate(`/funcionarios/${id}`);
   };
 
   if (loading) {
@@ -207,15 +130,24 @@ const EditarFuncionario: React.FC = () => {
             defaultValues={funcionario} 
             onSuccess={handleSuccess} 
             funcionarioId={id}
+            isSubmitting={formLoading}
           />
         </TabsContent>
         
         <TabsContent value="documentos">
           <DocumentosImpressaoTab 
             funcionario={funcionario}
-            onUpdate={(updatedFuncionario) => {
-              setFuncionario(updatedFuncionario);
-              toast.success("Documentos atualizados com sucesso!");
+            onUpdate={async (updatedFuncionario) => {
+              if (id) {
+                try {
+                  await funcionariosService.update(id, updatedFuncionario);
+                  setFuncionario(updatedFuncionario);
+                  toast.success("Documentos atualizados com sucesso!");
+                } catch (error) {
+                  console.error('Error updating funcionário documents:', error);
+                  toast.error('Erro ao atualizar documentos');
+                }
+              }
             }}
           />
         </TabsContent>

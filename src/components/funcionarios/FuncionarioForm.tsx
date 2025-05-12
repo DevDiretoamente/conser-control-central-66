@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -144,12 +143,14 @@ interface FuncionarioFormProps {
   funcionarioId?: string;
   defaultValues?: Partial<Funcionario>;
   onSuccess?: (data: any) => void;
+  isSubmitting?: boolean; // Nova propriedade
 }
 
 const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
   funcionarioId,
   defaultValues,
   onSuccess,
+  isSubmitting = false, // Valor padrão
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("dados-pessoais");
@@ -321,15 +322,6 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
       // Add document files to data
       data.documentos = documentFiles as any;
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      toast.success(
-        isEditMode 
-          ? 'Funcionário atualizado com sucesso!' 
-          : 'Funcionário cadastrado com sucesso!'
-      );
-      
       if (onSuccess) {
         onSuccess(data);
       }
@@ -341,6 +333,7 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
     }
   };
 
+  // Atualizando o botão de submit para usar a propriedade isSubmitting
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -924,8 +917,8 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
               
               <div className="space-x-2">
                 {activeTab === "dependentes" ? (
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? (
+                  <Button type="submit" disabled={isLoading || isSubmitting}>
+                    {(isLoading || isSubmitting) ? (
                       <div className="flex items-center">
                         <span className="animate-spin mr-2">⌛</span>
                         Salvando...
