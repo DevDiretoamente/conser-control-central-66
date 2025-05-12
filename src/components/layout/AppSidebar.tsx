@@ -167,12 +167,12 @@ const AppSidebar = ({ isCollapsed = false }) => {
   return (
     <div 
       className={cn(
-        "bg-gradient-to-b from-sidebar-primary to-sidebar-background fixed inset-y-0 left-0 z-50 flex flex-col border-r border-sidebar-border",
+        "bg-gradient-to-b from-[#1a3a6d] to-[#0c1e38] fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-800/50",
         isCollapsed ? "w-16" : "w-64"
       )}
     >
       {/* Logo section */}
-      <div className="flex h-16 items-center border-b border-sidebar-border px-4">
+      <div className="flex h-16 items-center border-b border-slate-700/50 px-4">
         <Logo />
       </div>
       
@@ -184,10 +184,10 @@ const AppSidebar = ({ isCollapsed = false }) => {
       </nav>
 
       {/* User info - always visible */}
-      <div className="mt-auto border-t border-sidebar-border p-4 bg-sidebar-accent/30">
+      <div className="mt-auto border-t border-slate-700/50 p-4 bg-slate-800/30">
         {user && (
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-sidebar-accent flex items-center justify-center font-medium text-white">
+            <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center font-medium text-white">
               {user.name.charAt(0).toUpperCase()}
             </div>
             {!isCollapsed && (

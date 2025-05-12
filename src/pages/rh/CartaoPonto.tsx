@@ -113,6 +113,64 @@ const CartaoPontoPage: React.FC = () => {
     }
   };
 
+  // Render tab content wrapper that provides the Tabs context
+  const renderTabContent = () => {
+    return (
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-3">
+          <TabsTrigger value="lancamento">Lançamento de Horas</TabsTrigger>
+          {podeVerRelatorios && <TabsTrigger value="relatorio">Relatório</TabsTrigger>}
+          <TabsTrigger value="impressao">Impressão</TabsTrigger>
+        </TabsList>
+
+        <div className="pt-6">
+          <TabsContent value="lancamento" className="mt-0">
+            <CartaoPontoForm
+              funcionarios={funcionariosAtivos}
+              funcionarioSelecionadoId={funcionarioId}
+              onChangeFuncionario={setFuncionarioId}
+              cartaoPonto={cartaoPonto}
+              onChangeCartaoPonto={setCartaoPonto}
+              mes={mes}
+              ano={ano}
+              onChangeMes={setMes}
+              onChangeAno={setAno}
+              podeEditar={temPermissaoEditar || temPermissaoCriar}
+              podeVerResumo={temPermissaoGerenciar}
+            />
+          </TabsContent>
+          
+          {podeVerRelatorios && (
+            <TabsContent value="relatorio" className="mt-0">
+              <CartaoPontoRelatorio
+                funcionarios={funcionariosAtivos}
+                funcionarioSelecionadoId={funcionarioId}
+                onChangeFuncionario={setFuncionarioId}
+                cartaoPonto={cartaoPonto}
+                mes={mes}
+                ano={ano}
+                onChangeMes={setMes}
+                onChangeAno={setAno}
+              />
+            </TabsContent>
+          )}
+          
+          <TabsContent value="impressao" className="mt-0">
+            <CartaoPontoImpressao
+              funcionarios={funcionariosAtivos}
+              funcionarioSelecionadoId={funcionarioId}
+              onChangeFuncionario={setFuncionarioId}
+              mes={mes}
+              ano={ano}
+              onChangeMes={setMes}
+              onChangeAno={setAno}
+            />
+          </TabsContent>
+        </div>
+      </Tabs>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -190,59 +248,8 @@ const CartaoPontoPage: React.FC = () => {
       {/* Conteúdo principal */}
       <Card className="border-t-4 border-t-primary/50">
         <CardHeader>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-3">
-              <TabsTrigger value="lancamento">Lançamento de Horas</TabsTrigger>
-              {podeVerRelatorios && <TabsTrigger value="relatorio">Relatório</TabsTrigger>}
-              <TabsTrigger value="impressao">Impressão</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {renderTabContent()}
         </CardHeader>
-        
-        <CardContent className="pt-6">
-          <TabsContent value="lancamento" className="mt-0">
-            <CartaoPontoForm
-              funcionarios={funcionariosAtivos}
-              funcionarioSelecionadoId={funcionarioId}
-              onChangeFuncionario={setFuncionarioId}
-              cartaoPonto={cartaoPonto}
-              onChangeCartaoPonto={setCartaoPonto}
-              mes={mes}
-              ano={ano}
-              onChangeMes={setMes}
-              onChangeAno={setAno}
-              podeEditar={temPermissaoEditar || temPermissaoCriar}
-              podeVerResumo={temPermissaoGerenciar}
-            />
-          </TabsContent>
-          
-          {podeVerRelatorios && (
-            <TabsContent value="relatorio" className="mt-0">
-              <CartaoPontoRelatorio
-                funcionarios={funcionariosAtivos}
-                funcionarioSelecionadoId={funcionarioId}
-                onChangeFuncionario={setFuncionarioId}
-                cartaoPonto={cartaoPonto}
-                mes={mes}
-                ano={ano}
-                onChangeMes={setMes}
-                onChangeAno={setAno}
-              />
-            </TabsContent>
-          )}
-          
-          <TabsContent value="impressao" className="mt-0">
-            <CartaoPontoImpressao
-              funcionarios={funcionariosAtivos}
-              funcionarioSelecionadoId={funcionarioId}
-              onChangeFuncionario={setFuncionarioId}
-              mes={mes}
-              ano={ano}
-              onChangeMes={setMes}
-              onChangeAno={setAno}
-            />
-          </TabsContent>
-        </CardContent>
         
         <CardFooter className="flex justify-between border-t pt-6">
           <Button 
