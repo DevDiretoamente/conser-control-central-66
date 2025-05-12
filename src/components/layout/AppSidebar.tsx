@@ -119,7 +119,7 @@ const AppSidebar = ({ isCollapsed = false }) => {
           to="/configuracoes/emails" 
           icon={Mail} 
           label="E-mails" 
-          hasPermission={hasSpecificPermission('emails', 'read')}
+          hasPermission={hasSpecificPermission('configuracoes', 'read')}
         />
       </div>
     </div>
