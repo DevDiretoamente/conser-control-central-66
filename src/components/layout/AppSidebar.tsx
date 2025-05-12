@@ -167,7 +167,7 @@ const AppSidebar = ({ isCollapsed = false }) => {
   return (
     <div 
       className={cn(
-        "bg-gradient-to-b from-[#1a3a6d] to-[#0c1e38] fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-800/50",
+        "bg-gradient-to-b from-[#0a2550] to-[#061530] fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-800/50",
         isCollapsed ? "w-16" : "w-64"
       )}
     >

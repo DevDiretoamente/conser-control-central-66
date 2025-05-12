@@ -48,10 +48,10 @@ const CartaoPontoPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('lancamento');
   const { toast } = useToast();
   
-  const temPermissaoGerenciar = hasSpecificPermission('rh', 'manage');
-  const temPermissaoEditar = hasSpecificPermission('rh', 'write');
-  const temPermissaoCriar = hasSpecificPermission('rh', 'create');
-  const temPermissaoVisualizar = hasSpecificPermission('rh', 'read');
+  const temPermissaoGerenciar = hasSpecificPermission('cartaoponto', 'manage');
+  const temPermissaoEditar = hasSpecificPermission('cartaoponto', 'write');
+  const temPermissaoCriar = hasSpecificPermission('cartaoponto', 'create');
+  const temPermissaoVisualizar = hasSpecificPermission('cartaoponto', 'read');
   
   const podeVerRelatorios = temPermissaoGerenciar || temPermissaoVisualizar;
   
@@ -111,64 +111,6 @@ const CartaoPontoPage: React.FC = () => {
     } else {
       setMes(mes + 1);
     }
-  };
-
-  // Render tab content wrapper that provides the Tabs context
-  const renderTabContent = () => {
-    return (
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3">
-          <TabsTrigger value="lancamento">Lançamento de Horas</TabsTrigger>
-          {podeVerRelatorios && <TabsTrigger value="relatorio">Relatório</TabsTrigger>}
-          <TabsTrigger value="impressao">Impressão</TabsTrigger>
-        </TabsList>
-
-        <div className="pt-6">
-          <TabsContent value="lancamento" className="mt-0">
-            <CartaoPontoForm
-              funcionarios={funcionariosAtivos}
-              funcionarioSelecionadoId={funcionarioId}
-              onChangeFuncionario={setFuncionarioId}
-              cartaoPonto={cartaoPonto}
-              onChangeCartaoPonto={setCartaoPonto}
-              mes={mes}
-              ano={ano}
-              onChangeMes={setMes}
-              onChangeAno={setAno}
-              podeEditar={temPermissaoEditar || temPermissaoCriar}
-              podeVerResumo={temPermissaoGerenciar}
-            />
-          </TabsContent>
-          
-          {podeVerRelatorios && (
-            <TabsContent value="relatorio" className="mt-0">
-              <CartaoPontoRelatorio
-                funcionarios={funcionariosAtivos}
-                funcionarioSelecionadoId={funcionarioId}
-                onChangeFuncionario={setFuncionarioId}
-                cartaoPonto={cartaoPonto}
-                mes={mes}
-                ano={ano}
-                onChangeMes={setMes}
-                onChangeAno={setAno}
-              />
-            </TabsContent>
-          )}
-          
-          <TabsContent value="impressao" className="mt-0">
-            <CartaoPontoImpressao
-              funcionarios={funcionariosAtivos}
-              funcionarioSelecionadoId={funcionarioId}
-              onChangeFuncionario={setFuncionarioId}
-              mes={mes}
-              ano={ano}
-              onChangeMes={setMes}
-              onChangeAno={setAno}
-            />
-          </TabsContent>
-        </div>
-      </Tabs>
-    );
   };
 
   return (
@@ -248,7 +190,57 @@ const CartaoPontoPage: React.FC = () => {
       {/* Conteúdo principal */}
       <Card className="border-t-4 border-t-primary/50">
         <CardHeader>
-          {renderTabContent()}
+          {/* Aqui está a correção: Tornando o componente Tabs como pai direto do TabsList, TabsTrigger e TabsContent */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid grid-cols-3">
+              <TabsTrigger value="lancamento">Lançamento de Horas</TabsTrigger>
+              {podeVerRelatorios && <TabsTrigger value="relatorio">Relatório</TabsTrigger>}
+              <TabsTrigger value="impressao">Impressão</TabsTrigger>
+            </TabsList>
+        
+            <TabsContent value="lancamento" className="mt-6">
+              <CartaoPontoForm
+                funcionarios={funcionariosAtivos}
+                funcionarioSelecionadoId={funcionarioId}
+                onChangeFuncionario={setFuncionarioId}
+                cartaoPonto={cartaoPonto}
+                onChangeCartaoPonto={setCartaoPonto}
+                mes={mes}
+                ano={ano}
+                onChangeMes={setMes}
+                onChangeAno={setAno}
+                podeEditar={temPermissaoEditar || temPermissaoCriar}
+                podeVerResumo={temPermissaoGerenciar}
+              />
+            </TabsContent>
+            
+            {podeVerRelatorios && (
+              <TabsContent value="relatorio" className="mt-6">
+                <CartaoPontoRelatorio
+                  funcionarios={funcionariosAtivos}
+                  funcionarioSelecionadoId={funcionarioId}
+                  onChangeFuncionario={setFuncionarioId}
+                  cartaoPonto={cartaoPonto}
+                  mes={mes}
+                  ano={ano}
+                  onChangeMes={setMes}
+                  onChangeAno={setAno}
+                />
+              </TabsContent>
+            )}
+            
+            <TabsContent value="impressao" className="mt-6">
+              <CartaoPontoImpressao
+                funcionarios={funcionariosAtivos}
+                funcionarioSelecionadoId={funcionarioId}
+                onChangeFuncionario={setFuncionarioId}
+                mes={mes}
+                ano={ano}
+                onChangeMes={setMes}
+                onChangeAno={setAno}
+              />
+            </TabsContent>
+          </Tabs>
         </CardHeader>
         
         <CardFooter className="flex justify-between border-t pt-6">
