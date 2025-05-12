@@ -49,7 +49,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       className={({ isActive }) =>
         cn(
           "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-          "hover:bg-sidebar-accent hover:text-sidebar-foreground",
+          "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
           isActive 
             ? "bg-sidebar-accent text-sidebar-foreground font-medium" 
             : "text-sidebar-foreground hover:bg-sidebar-accent/70"
@@ -148,7 +148,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
       <nav className="flex-1 space-y-1 px-2 py-3 overflow-y-auto">
         <div className="mb-4">
           {!isCollapsed && (
-            <h2 className="mb-2 px-2 text-xs font-semibold text-sidebar-foreground/60">
+            <h2 className="mb-2 px-2 text-xs font-semibold text-sidebar-foreground">
               MÓDULOS
             </h2>
           )}
@@ -156,7 +156,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
             <SidebarItem to="/" icon={LayoutDashboard} label="Dashboard" isCollapsed={isCollapsed} />
             <SidebarItem to="/funcionarios" icon={Users} label="Recursos Humanos" isCollapsed={isCollapsed} requiredRole="operator" />
             
-            {/* RH Sub-menu - Only render if not collapsed */}
+            {/* RH Sub-menu - Always visible when parent is visible */}
             {!isCollapsed && hasSpecificPermission('rh' as PermissionArea, 'read') && (
               <div className="ml-6 mt-1 space-y-1">
                 {rhItems.map((item, index) => (
@@ -167,10 +167,10 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
                       className={({ isActive }) =>
                         cn(
                           "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors",
-                          "hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                          "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
                           isActive 
                             ? "bg-sidebar-accent text-sidebar-foreground font-medium" 
-                            : "text-sidebar-foreground hover:bg-sidebar-accent/70"
+                            : "hover:bg-sidebar-accent/70"
                         )
                       }
                     >
@@ -192,14 +192,14 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
         {/* Configuration Section */}
         <div className="pt-2">
           {!isCollapsed && (
-            <h2 className="mb-2 px-2 text-xs font-semibold text-sidebar-foreground/60">
+            <h2 className="mb-2 px-2 text-xs font-semibold text-sidebar-foreground">
               CONFIGURAÇÕES
             </h2>
           )}
           <div className="space-y-1">
             <SidebarItem to="/configuracoes" icon={Settings} label="Configurações" isCollapsed={isCollapsed} requiredRole="admin" />
             
-            {/* Only render if not collapsed */}
+            {/* Always visible when parent is visible */}
             {!isCollapsed && hasSpecificPermission('configuracoes' as PermissionArea, 'read') && (
               <div className="ml-6 mt-1 space-y-1">
                 {configItems.map((item, index) => (
@@ -210,10 +210,10 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed = false }) => {
                       className={({ isActive }) =>
                         cn(
                           "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors",
-                          "hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                          "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
                           isActive 
                             ? "bg-sidebar-accent text-sidebar-foreground font-medium" 
-                            : "text-sidebar-foreground hover:bg-sidebar-accent/70"
+                            : "hover:bg-sidebar-accent/70"
                         )
                       }
                     >

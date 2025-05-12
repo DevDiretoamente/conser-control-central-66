@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -16,6 +17,7 @@ import {
   TooltipProvider, 
   TooltipTrigger 
 } from '@/components/ui/tooltip';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const CartaoPontoPage: React.FC = () => {
   const { users, user, hasSpecificPermission } = useAuth();
@@ -65,6 +67,27 @@ const CartaoPontoPage: React.FC = () => {
       }
     }
   }, [user, funcionarios, funcionarioId]);
+  
+  // Componente de seleção de funcionário
+  const FuncionarioSelector = () => (
+    <div className="mb-4">
+      <Select 
+        value={funcionarioId} 
+        onValueChange={setFuncionarioId}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Selecione um funcionário" />
+        </SelectTrigger>
+        <SelectContent>
+          {funcionarios.map((funcionario) => (
+            <SelectItem key={funcionario.id} value={funcionario.id}>
+              {funcionario.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
 
   return (
     <div className="container mx-auto p-4">
@@ -87,6 +110,7 @@ const CartaoPontoPage: React.FC = () => {
             </TabsList>
             
             <TabsContent value="lancamento">
+              <FuncionarioSelector />
               <CartaoPontoForm
                 funcionarios={funcionarios}
                 funcionarioSelecionadoId={funcionarioId}
@@ -104,6 +128,7 @@ const CartaoPontoPage: React.FC = () => {
             
             {podeVerRelatorios && (
               <TabsContent value="relatorio">
+                <FuncionarioSelector />
                 <CartaoPontoRelatorio
                   funcionarios={funcionarios}
                   funcionarioSelecionadoId={funcionarioId}
@@ -118,6 +143,7 @@ const CartaoPontoPage: React.FC = () => {
             )}
             
             <TabsContent value="impressao">
+              <FuncionarioSelector />
               <CartaoPontoImpressao
                 funcionarios={funcionarios}
                 funcionarioSelecionadoId={funcionarioId}
