@@ -1,3 +1,4 @@
+
 export interface Dependente {
   id?: string;
   nome: string;
@@ -189,26 +190,4 @@ export interface Funcionario {
   examesRealizados: ExameRealizado[];
   // New property to store generated documents
   documentosGerados: DocumentoGerado[];
-}
-
-// The FuncionarioCartaoPonto definition is in the .d.ts file but is missing in the .ts file
-// Let's add it to the main funcionario.ts file
-
-// New interface specifically for employee data in the time card system
-export interface FuncionarioCartaoPonto {
-  id: string;  // Can be the same as user id for linked accounts
-  nome: string;
-  cargo: string;
-  setor: string;
-  matricula?: string;
-  dataAdmissao: Date | string;
-  horarioEntrada: string; // Default entry time
-  horarioSaida: string;   // Default exit time
-  temIntervalo: boolean;  // Whether employee has break time
-  horarioInicioIntervalo?: string;
-  horarioFimIntervalo?: string;
-  cargaHorariaSemanal: number; // Weekly hours
-  diasTrabalho: number[];  // 0 = Sunday, 6 = Saturday
-  ativo: boolean;
-  userId?: string;  // Optional reference to user account
 }
