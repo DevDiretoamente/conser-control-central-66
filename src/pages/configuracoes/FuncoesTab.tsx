@@ -1,11 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableCell, TableBody } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { 
+  Pencil, Plus, Trash2, HardHat, 
+  FileText, Shirt, Loader2, Search,
+  AlertCircle, Eye
+} from 'lucide-react';
 import { 
   Dialog,
   DialogContent,
@@ -13,8 +17,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,13 +36,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from 'sonner';
-import { Funcao, EPI, ExameMedico, Uniforme, Setor, ExamesPorTipo } from '@/types/funcionario';
-import { mockFuncoes, mockSetores, mockEPIs, mockExamesMedicos, mockUniformes } from '@/data/funcionarioMockData';
+import { Funcao, ExamesPorTipo } from '@/types/funcionario';
+import { mockSetores, mockEPIs, mockExamesMedicos, mockUniformes } from '@/data/funcionarioMockData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { HardHat, FileText, Shirt } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { funcionesService, createExamesPorTipoFromSelected } from '@/services/funcionesService';
 
 const funcaoSchema = z.object({
   id: z.string().optional(),
@@ -43,9 +56,14 @@ const funcaoSchema = z.object({
 type FuncaoFormValues = z.infer<typeof funcaoSchema>;
 
 const FuncoesTab: React.FC = () => {
-  const [funcoes, setFuncoes] = useState<Funcao[]>(mockFuncoes);
+  const [funcoes, setFuncoes] = useState<Funcao[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [formLoading, setFormLoading] = useState<boolean>(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingFuncao, setEditingFuncao] = useState<Funcao | null>(null);
+  const [funcaoParaExcluir, setFuncaoParaExcluir] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filteredFuncoes, setFilteredFuncoes] = useState<Funcao[]>([]);
   
   // State for multi-select items
   const [selectedEPIs, setSelectedEPIs] = useState<string[]>([]);
@@ -71,6 +89,40 @@ const FuncoesTab: React.FC = () => {
     },
   });
 
+  // Load functions on component mount
+  useEffect(() => {
+    loadFuncoes();
+  }, []);
+
+  // Filter functions when search term or functions list changes
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredFuncoes(funcoes);
+    } else {
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      const filtered = funcoes.filter(funcao => 
+        funcao.nome.toLowerCase().includes(lowerSearchTerm) ||
+        funcao.descricao.toLowerCase().includes(lowerSearchTerm) ||
+        getSetorNome(funcao.setorId).toLowerCase().includes(lowerSearchTerm)
+      );
+      setFilteredFuncoes(filtered);
+    }
+  }, [searchTerm, funcoes]);
+
+  const loadFuncoes = async () => {
+    setLoading(true);
+    try {
+      const data = await funcionesService.getAll();
+      setFuncoes(data);
+      setFilteredFuncoes(data);
+    } catch (error) {
+      console.error('Error loading funções:', error);
+      toast.error('Erro ao carregar funções. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Helper function to initialize selected exams from existing function
   const initializeSelectedExamsFromFuncao = (funcao: Funcao) => {
     const examesByType: Record<string, string[]> = {
@@ -93,45 +145,31 @@ const FuncoesTab: React.FC = () => {
     return examesByType;
   };
 
-  // Helper function to create an ExamesPorTipo object from selected exam IDs
-  const createExamesPorTipoFromSelected = (selectedByType: Record<string, string[]>): ExamesPorTipo => {
-    const result: ExamesPorTipo = {
-      admissional: [],
-      periodico: [],
-      mudancaFuncao: [],
-      retornoTrabalho: [],
-      demissional: []
-    };
-    
-    // For each type, get the full exam objects
-    Object.keys(selectedByType).forEach(type => {
-      const tipoKey = type as keyof ExamesPorTipo;
-      result[tipoKey] = mockExamesMedicos.filter(exame => 
-        selectedByType[type].includes(exame.id) && exame.ativo
-      );
-    });
-    
-    return result;
-  };
-
-  const onOpenDialog = (funcao?: Funcao) => {
+  const onOpenDialog = async (funcao?: Funcao) => {
     if (funcao) {
-      setEditingFuncao(funcao);
-      
-      // Set selected items
-      setSelectedEPIs(funcao.epis.map(epi => epi.id));
-      setSelectedExamesByType(initializeSelectedExamsFromFuncao(funcao));
-      setSelectedUniformes(funcao.uniformes.map(uniforme => uniforme.id));
-      setAtribuicoesText(funcao.atribuicoes.join('\n'));
-      
-      form.reset({
-        id: funcao.id,
-        nome: funcao.nome,
-        descricao: funcao.descricao,
-        setorId: funcao.setorId,
-        atribuicoes: funcao.atribuicoes,
-        ativo: funcao.ativo,
-      });
+      try {
+        const funcaoData = await funcionesService.getById(funcao.id);
+        setEditingFuncao(funcaoData || null);
+        
+        // Set selected items
+        setSelectedEPIs(funcaoData?.epis.map(epi => epi.id) || []);
+        setSelectedExamesByType(initializeSelectedExamsFromFuncao(funcaoData || funcao));
+        setSelectedUniformes(funcaoData?.uniformes.map(uniforme => uniforme.id) || []);
+        setAtribuicoesText(funcaoData?.atribuicoes.join('\n') || '');
+        
+        form.reset({
+          id: funcaoData?.id,
+          nome: funcaoData?.nome || '',
+          descricao: funcaoData?.descricao || '',
+          setorId: funcaoData?.setorId || '',
+          atribuicoes: funcaoData?.atribuicoes || [],
+          ativo: funcaoData?.ativo ?? true,
+        });
+      } catch (error) {
+        console.error('Error getting função details:', error);
+        toast.error('Erro ao carregar detalhes da função');
+        return;
+      }
     } else {
       setEditingFuncao(null);
       setSelectedEPIs([]);
@@ -156,38 +194,24 @@ const FuncoesTab: React.FC = () => {
     setDialogOpen(true);
   };
 
-  const onSubmit = (values: FuncaoFormValues) => {
-    // Process atribuições from textarea
-    const atribuicoesList = atribuicoesText
-      .split('\n')
-      .filter(line => line.trim() !== '')
-      .map(line => line.trim());
+  const onSubmit = async (values: FuncaoFormValues) => {
+    setFormLoading(true);
     
-    // Get full objects for EPIs and uniformes
-    const selectedEPIObjects = mockEPIs.filter(epi => selectedEPIs.includes(epi.id));
-    const selectedUniformeObjects = mockUniformes.filter(uniforme => selectedUniformes.includes(uniforme.id));
-    
-    // Create the examesNecessarios object from selected exam IDs
-    const examesNecessarios = createExamesPorTipoFromSelected(selectedExamesByType);
+    try {
+      // Process atribuições from textarea
+      const atribuicoesList = atribuicoesText
+        .split('\n')
+        .filter(line => line.trim() !== '')
+        .map(line => line.trim());
+      
+      // Get full objects for EPIs and uniformes
+      const selectedEPIObjects = mockEPIs.filter(epi => selectedEPIs.includes(epi.id));
+      const selectedUniformeObjects = mockUniformes.filter(uniforme => selectedUniformes.includes(uniforme.id));
+      
+      // Create the examesNecessarios object from selected exam IDs
+      const examesNecessarios = createExamesPorTipoFromSelected(selectedExamesByType);
 
-    if (editingFuncao) {
-      // Update existing funcao
-      const updatedFuncoes = funcoes.map(f => 
-        f.id === editingFuncao.id ? { 
-          ...values, 
-          id: editingFuncao.id,
-          atribuicoes: atribuicoesList,
-          epis: selectedEPIObjects,
-          examesNecessarios: examesNecessarios,
-          uniformes: selectedUniformeObjects
-        } as Funcao : f
-      );
-      setFuncoes(updatedFuncoes);
-      toast.success(`Função "${values.nome}" atualizada com sucesso!`);
-    } else {
-      // Create new funcao
-      const newFuncao: Funcao = {
-        id: `funcao-${Date.now()}`,
+      const funcaoData = {
         nome: values.nome,
         descricao: values.descricao,
         setorId: values.setorId,
@@ -197,31 +221,58 @@ const FuncoesTab: React.FC = () => {
         uniformes: selectedUniformeObjects,
         ativo: values.ativo
       };
-      setFuncoes(prev => [...prev, newFuncao]);
-      toast.success(`Função "${values.nome}" criada com sucesso!`);
+
+      if (editingFuncao) {
+        // Update existing funcao
+        await funcionesService.update(editingFuncao.id, funcaoData);
+        toast.success(`Função "${values.nome}" atualizada com sucesso!`);
+      } else {
+        // Create new funcao
+        await funcionesService.create(funcaoData as Omit<Funcao, 'id'>);
+        toast.success(`Função "${values.nome}" criada com sucesso!`);
+      }
+      
+      // Reload functions after operation
+      await loadFuncoes();
+      setDialogOpen(false);
+    } catch (error) {
+      console.error('Error saving function:', error);
+      toast.error(`Erro ao ${editingFuncao ? 'atualizar' : 'criar'} função. Tente novamente.`);
+    } finally {
+      setFormLoading(false);
     }
-    setDialogOpen(false);
   };
 
-  const toggleAtivo = (id: string) => {
-    const updatedFuncoes = funcoes.map(funcao => 
-      funcao.id === id ? { ...funcao, ativo: !funcao.ativo } : funcao
-    );
-    setFuncoes(updatedFuncoes);
-    
-    const funcao = updatedFuncoes.find(f => f.id === id);
-    if (funcao) {
-      toast.success(`Função "${funcao.nome}" ${funcao.ativo ? 'ativada' : 'desativada'} com sucesso!`);
+  const toggleAtivo = async (id: string) => {
+    try {
+      const updatedFuncao = await funcionesService.toggleActive(id);
+      await loadFuncoes();
+      
+      toast.success(`Função "${updatedFuncao.nome}" ${updatedFuncao.ativo ? 'ativada' : 'desativada'} com sucesso!`);
+    } catch (error) {
+      console.error('Error toggling function status:', error);
+      toast.error('Erro ao alterar status da função. Tente novamente.');
     }
   };
 
-  const deleteFuncao = (id: string) => {
-    // In a real application, you would check if the funcao is being used by any employee
-    const funcaoToDelete = funcoes.find(f => f.id === id);
-    setFuncoes(prev => prev.filter(funcao => funcao.id !== id));
+  const confirmDeleteFuncao = (id: string) => {
+    setFuncaoParaExcluir(id);
+  };
+
+  const deleteFuncao = async () => {
+    if (!funcaoParaExcluir) return;
     
-    if (funcaoToDelete) {
-      toast.success(`Função "${funcaoToDelete.nome}" excluída com sucesso!`);
+    try {
+      const funcaoName = funcoes.find(f => f.id === funcaoParaExcluir)?.nome || 'função';
+      await funcionesService.delete(funcaoParaExcluir);
+      await loadFuncoes();
+      
+      toast.success(`Função "${funcaoName}" excluída com sucesso!`);
+    } catch (error) {
+      console.error('Error deleting function:', error);
+      toast.error('Erro ao excluir função. Tente novamente.');
+    } finally {
+      setFuncaoParaExcluir(null);
     }
   };
 
@@ -290,15 +341,21 @@ const FuncoesTab: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-medium">Gerenciamento de Funções</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar funções..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8"
+          />
+        </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => onOpenDialog()}>
-              <Plus className="mr-2 h-4 w-4" />
-              Nova Função
-            </Button>
-          </DialogTrigger>
+          <Button onClick={() => onOpenDialog()}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nova Função
+          </Button>
           <DialogContent className="max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader className="flex-shrink-0">
               <DialogTitle>{editingFuncao ? 'Editar' : 'Nova'} Função</DialogTitle>
@@ -543,7 +600,11 @@ const FuncoesTab: React.FC = () => {
               </div>
             </ScrollArea>
             <DialogFooter className="flex-shrink-0 pt-2">
-              <Button onClick={form.handleSubmit(onSubmit)}>
+              <Button 
+                onClick={form.handleSubmit(onSubmit)} 
+                disabled={formLoading}
+              >
+                {formLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {editingFuncao ? 'Salvar Alterações' : 'Cadastrar Função'}
               </Button>
             </DialogFooter>
@@ -553,27 +614,42 @@ const FuncoesTab: React.FC = () => {
       
       <Card>
         <CardContent className="pt-4">
-          <ScrollArea className="h-[calc(100vh-250px)]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Setor</TableHead>
-                  <TableHead className="hidden md:table-cell">Descrição</TableHead>
-                  <TableHead>Requisitos</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {funcoes.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center p-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="mt-2 text-sm text-muted-foreground">Carregando funções...</p>
+            </div>
+          ) : filteredFuncoes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8">
+              {searchTerm ? (
+                <>
+                  <Search className="h-8 w-8 text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground">Nenhuma função encontrada com o termo "{searchTerm}"</p>
+                  <Button variant="link" onClick={() => setSearchTerm('')}>Limpar busca</Button>
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="h-8 w-8 text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground">Nenhuma função cadastrada</p>
+                  <Button variant="link" onClick={() => onOpenDialog()}>Cadastrar primeira função</Button>
+                </>
+              )}
+            </div>
+          ) : (
+            <ScrollArea className="h-[calc(100vh-250px)]">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center">
-                      Nenhuma função cadastrada
-                    </TableCell>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Setor</TableHead>
+                    <TableHead className="hidden md:table-cell">Descrição</TableHead>
+                    <TableHead>Requisitos</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Ações</TableHead>
                   </TableRow>
-                ) : (
-                  funcoes.map((funcao) => (
+                </TableHeader>
+                <TableBody>
+                  {filteredFuncoes.map((funcao) => (
                     <TableRow key={funcao.id}>
                       <TableCell className="font-medium">{funcao.nome}</TableCell>
                       <TableCell>{getSetorNome(funcao.setorId)}</TableCell>
@@ -608,24 +684,54 @@ const FuncoesTab: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="outline" onClick={() => onOpenDialog(funcao)}>
+                          <Button size="sm" variant="outline" title="Ver detalhes" onClick={() => onOpenDialog(funcao)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" title="Editar" onClick={() => onOpenDialog(funcao)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => deleteFuncao(funcao.id)}>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            title="Excluir"
+                            onClick={() => confirmDeleteFuncao(funcao.id)}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </ScrollArea>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          )}
         </CardContent>
       </Card>
+      
+      {/* Confirmation Dialog */}
+      <AlertDialog 
+        open={funcaoParaExcluir !== null} 
+        onOpenChange={(open) => !open && setFuncaoParaExcluir(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Isso excluirá permanentemente a função selecionada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteFuncao} className="bg-destructive text-destructive-foreground">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
 
 export default FuncoesTab;
+

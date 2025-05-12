@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
@@ -7,6 +8,8 @@ import FuncionariosPage from './pages/funcionarios/ListaFuncionarios';
 import DetalheFuncionario from './pages/funcionarios/DetalheFuncionario';
 import EditarFuncionario from './pages/funcionarios/EditarFuncionario';
 import FuncoesPage from './pages/configuracoes/Funcoes';
+import DetalheFuncao from './pages/configuracoes/DetalheFuncao';
+import EditarFuncao from './pages/configuracoes/EditarFuncao';
 import SetoresPage from './pages/configuracoes/Setores';
 import ExamesMedicosPage from './pages/funcionarios/ExamesMedicosPage';
 import Obras from './pages/obras/Obras';
@@ -96,6 +99,16 @@ const App: React.FC = () => {
           <Route path="/funcoes" element={
             <ProtectedRoute requiredPermissions={[{ area: 'funcoes', level: 'read' }]}>
               <FuncoesPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/funcoes/:id" element={
+            <ProtectedRoute requiredPermissions={[{ area: 'funcoes', level: 'read' }]}>
+              <DetalheFuncao />
+            </ProtectedRoute>
+          } />
+          <Route path="/funcoes/:id/edit" element={
+            <ProtectedRoute requiredPermissions={[{ area: 'funcoes', level: 'write' }]}>
+              <EditarFuncao />
             </ProtectedRoute>
           } />
           <Route path="/setores" element={
