@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -186,7 +187,7 @@ const CartaoPontoPage: React.FC = () => {
                   </SelectItem>
                 ))
               ) : (
-                <SelectItem value="" disabled>
+                <SelectItem value="no_employees" disabled>
                   Nenhum funcionário disponível
                 </SelectItem>
               )}
