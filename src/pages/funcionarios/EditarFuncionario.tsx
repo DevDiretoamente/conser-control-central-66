@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
@@ -102,7 +102,7 @@ const getMockFuncionarioById = (id: string): Funcionario | undefined => {
     episEntregues: [],
     uniformesEntregues: [],
     examesRealizados: [],
-    documentosGerados: [] // Added this line to include the required property
+    documentosGerados: []
   };
 };
 
@@ -168,11 +168,15 @@ const EditarFuncionario: React.FC = () => {
       <Breadcrumb className="mb-6">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/funcionarios">Funcionários</BreadcrumbLink>
+            <BreadcrumbLink href="/funcionarios" asChild>
+              <Link to="/funcionarios">Funcionários</Link>
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href={`/funcionarios/${id}`}>{funcionario.dadosPessoais.nome}</BreadcrumbLink>
+            <BreadcrumbLink href={`/funcionarios/${id}`} asChild>
+              <Link to={`/funcionarios/${id}`}>{funcionario.dadosPessoais.nome}</Link>
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>

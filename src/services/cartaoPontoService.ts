@@ -1,3 +1,4 @@
+
 import { CartaoPonto, RegistroPonto, StatusDia } from "@/types/cartaoPonto";
 import { User } from "@/types/auth";
 import { Funcionario, Funcao, Setor } from "@/types/funcionario";
@@ -56,6 +57,18 @@ const mockFuncionariosDetails = [
     name: 'Pedro Santos',
     setor: 'Engenharia',
     funcao: 'Engenheiro Civil'
+  },
+  {
+    id: '4',
+    name: 'Ana Carolina',
+    setor: 'Recursos Humanos',
+    funcao: 'Analista de RH'
+  },
+  {
+    id: '5',
+    name: 'Roberto Almeida',
+    setor: 'Operacional',
+    funcao: 'Motorista'
   }
 ];
 
@@ -138,11 +151,6 @@ export const createEmptyCartaoPonto = (funcionarioId: string, mes: number, ano: 
     if (dataObj.getDay() === 0 || dataObj.getDay() === 6) {
       statusDia = 'feriado';
     }
-    
-    // Fixed public holidays could be added here
-    // if (isPublicHoliday(data)) {
-    //   statusDia = 'feriado';
-    // }
     
     // Create registro with appropriate defaults based on day of week
     const registro: RegistroPonto = {

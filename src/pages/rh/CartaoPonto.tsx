@@ -14,7 +14,7 @@ import { CartaoPontoForm } from '@/components/rh/CartaoPontoForm';
 import { CartaoPontoRelatorio } from '@/components/rh/CartaoPontoRelatorio';
 import CartaoPontoImpressao from '@/components/rh/CartaoPontoImpressao';
 import { Button } from '@/components/ui/button';
-import { getCartaoPonto } from '@/services/cartaoPontoService';
+import { getCartaoPonto, getFuncionarioDetails } from '@/services/cartaoPontoService';
 import { CartaoPonto as CartaoPontoType } from '@/types/cartaoPonto';
 import { useToast } from '@/components/ui/use-toast';
 import { 
@@ -190,14 +190,13 @@ const CartaoPontoPage: React.FC = () => {
       {/* Conteúdo principal */}
       <Card className="border-t-4 border-t-primary/50">
         <CardHeader>
-          {/* Aqui está a correção: Tornando o componente Tabs como pai direto do TabsList, TabsTrigger e TabsContent */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-3">
+            <TabsList className="grid grid-cols-3 mb-4">
               <TabsTrigger value="lancamento">Lançamento de Horas</TabsTrigger>
               {podeVerRelatorios && <TabsTrigger value="relatorio">Relatório</TabsTrigger>}
               <TabsTrigger value="impressao">Impressão</TabsTrigger>
             </TabsList>
-        
+            
             <TabsContent value="lancamento" className="mt-6">
               <CartaoPontoForm
                 funcionarios={funcionariosAtivos}
