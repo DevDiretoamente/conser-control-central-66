@@ -21,8 +21,10 @@ const getFuncoesFromStorage = (): Funcao[] => {
 const saveFuncoesToStorage = (funcoes: Funcao[]): void => {
   try {
     localStorage.setItem(FUNCOES_STORAGE_KEY, JSON.stringify(funcoes));
+    console.log('Funções saved to storage successfully');
   } catch (error) {
     console.error('Error saving funções to storage:', error);
+    toast.error('Erro ao salvar dados. Verifique seu armazenamento local.');
   }
 };
 
@@ -55,6 +57,7 @@ export const funcionesService = {
     return new Promise((resolve) => {
       setTimeout(() => {
         const funcoes = getFuncoesFromStorage();
+        console.log(`Retrieved ${funcoes.length} funções from storage`);
         resolve(funcoes);
       }, 300);
     });
@@ -68,8 +71,10 @@ export const funcionesService = {
         const funcao = funcoes.find(f => f.id === id);
         
         if (funcao) {
+          console.log(`Retrieved função: ${funcao.nome}`);
           resolve(funcao);
         } else {
+          console.error(`Função with id ${id} not found`);
           reject(new Error('Função não encontrada'));
         }
       }, 300);
@@ -87,6 +92,7 @@ export const funcionesService = {
           id: `funcao-${Date.now()}`
         };
         
+        console.log(`Creating new função: ${newFuncao.nome}`);
         const updatedFuncoes = [...funcoes, newFuncao];
         saveFuncoesToStorage(updatedFuncoes);
         
@@ -108,6 +114,7 @@ export const funcionesService = {
             ...funcaoData
           };
           
+          console.log(`Updating função: ${updatedFuncao.nome}`);
           const updatedFuncoes = [
             ...funcoes.slice(0, funcaoIndex),
             updatedFuncao,
@@ -117,6 +124,7 @@ export const funcionesService = {
           saveFuncoesToStorage(updatedFuncoes);
           resolve(updatedFuncao);
         } else {
+          console.error(`Failed to update: Função with id ${id} not found`);
           reject(new Error('Função não encontrada para atualização'));
         }
       }, 500);
@@ -137,6 +145,7 @@ export const funcionesService = {
             ativo: !funcao.ativo
           };
           
+          console.log(`Toggling status for função: ${updatedFuncao.nome} to ${updatedFuncao.ativo ? 'active' : 'inactive'}`);
           const updatedFuncoes = [
             ...funcoes.slice(0, funcaoIndex),
             updatedFuncao,
@@ -146,6 +155,7 @@ export const funcionesService = {
           saveFuncoesToStorage(updatedFuncoes);
           resolve(updatedFuncao);
         } else {
+          console.error(`Failed to toggle: Função with id ${id} not found`);
           reject(new Error('Função não encontrada para alteração de status'));
         }
       }, 300);
@@ -160,6 +170,9 @@ export const funcionesService = {
         const funcaoIndex = funcoes.findIndex(f => f.id === id);
         
         if (funcaoIndex !== -1) {
+          const funcaoToDelete = funcoes[funcaoIndex];
+          console.log(`Deleting função: ${funcaoToDelete.nome}`);
+          
           const updatedFuncoes = [
             ...funcoes.slice(0, funcaoIndex),
             ...funcoes.slice(funcaoIndex + 1)
@@ -168,6 +181,7 @@ export const funcionesService = {
           saveFuncoesToStorage(updatedFuncoes);
           resolve(true);
         } else {
+          console.error(`Failed to delete: Função with id ${id} not found`);
           reject(new Error('Função não encontrada para exclusão'));
         }
       }, 500);
@@ -181,5 +195,28 @@ export const funcionesService = {
   
   getUniformesByIds: (uniformeIds: string[]): Uniforme[] => {
     return mockUniformes.filter(uniforme => uniformeIds.includes(uniforme.id));
+  },
+  
+  // Search functions by name, description, or sector
+  search: async (searchTerm: string): Promise<Funcao[]> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const funcoes = getFuncoesFromStorage();
+        
+        if (!searchTerm.trim()) {
+          resolve(funcoes);
+          return;
+        }
+        
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        const filteredFuncoes = funcoes.filter(funcao => 
+          funcao.nome.toLowerCase().includes(lowerSearchTerm) ||
+          funcao.descricao.toLowerCase().includes(lowerSearchTerm)
+        );
+        
+        console.log(`Search found ${filteredFuncoes.length} funções for term: "${searchTerm}"`);
+        resolve(filteredFuncoes);
+      }, 300);
+    });
   }
 };
