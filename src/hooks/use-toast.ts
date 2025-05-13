@@ -101,8 +101,7 @@ export const reducer = (state: State, action: Action): State => {
         toasts: state.toasts.map((t) =>
           t.id === toastId || toastId === undefined
             ? {
-                ...t,
-                open: false,
+                ...t
               }
             : t
         ),
@@ -133,10 +132,10 @@ function dispatch(action: Action) {
   })
 }
 
-function toast({ ...props }: ToasterToast) {
+function toast(props: Omit<ToasterToast, "id">) {
   const id = genId()
 
-  const update = (props: ToasterToast) =>
+  const update = (props: Partial<ToasterToast>) =>
     dispatch({
       type: actionTypes.UPDATE_TOAST,
       toast: { ...props, id },
@@ -148,10 +147,6 @@ function toast({ ...props }: ToasterToast) {
     toast: {
       ...props,
       id,
-      open: true,
-      onOpenChange: (open) => {
-        if (!open) dismiss()
-      },
     },
   })
 
