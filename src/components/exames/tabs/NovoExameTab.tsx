@@ -92,7 +92,7 @@ const NovoExameTab: React.FC<NovoExameTabProps> = ({
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background z-50">
                   <SelectItem value="periodico">Periódico</SelectItem>
                   <SelectItem value="mudancaFuncao">Mudança de Função</SelectItem>
                   <SelectItem value="retornoTrabalho">Retorno ao Trabalho</SelectItem>
@@ -110,7 +110,7 @@ const NovoExameTab: React.FC<NovoExameTabProps> = ({
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o exame" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background z-50">
                   {funcionario.dadosProfissionais.funcaoId && 
                    mockExamesFuncao[funcionario.dadosProfissionais.funcaoId] && 
                    mockExamesFuncao[funcionario.dadosProfissionais.funcaoId][tipoExameSelecionado] ? (
@@ -145,7 +145,7 @@ const NovoExameTab: React.FC<NovoExameTabProps> = ({
                     <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 z-50" align="start">
                   <Calendar
                     mode="single"
                     selected={dataAgendada}
@@ -177,7 +177,7 @@ const NovoExameTab: React.FC<NovoExameTabProps> = ({
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a clínica" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background z-50">
                   <SelectItem value="1">RP Medicina e Segurança do Trabalho</SelectItem>
                   <SelectItem value="2">Sindiconvenios</SelectItem>
                 </SelectContent>
@@ -190,7 +190,7 @@ const NovoExameTab: React.FC<NovoExameTabProps> = ({
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background z-50">
                   <SelectItem value="Apto">Apto</SelectItem>
                   <SelectItem value="Apto com restrições">Apto com restrições</SelectItem>
                   <SelectItem value="Inapto temporariamente">Inapto temporariamente</SelectItem>

@@ -31,8 +31,8 @@ export const FuncaoDialog: React.FC<FuncaoDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader className="flex-shrink-0">
+      <DialogContent className="max-w-[90vw] md:max-w-[800px] max-h-[90vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="p-6 pb-2 flex-shrink-0">
           <DialogTitle>{editingFuncao ? 'Editar' : 'Nova'} Função</DialogTitle>
           <DialogDescription>
             {editingFuncao
@@ -40,8 +40,8 @@ export const FuncaoDialog: React.FC<FuncaoDialogProps> = ({
               : 'Preencha as informações para cadastrar uma nova função.'}
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-grow pr-4 max-h-[calc(90vh-180px)]">
-          <div className="pb-6">
+        <ScrollArea className="flex-grow px-6 max-h-[calc(90vh-140px)]">
+          <div className="py-4">
             <FuncaoForm 
               editingFuncao={editingFuncao} 
               onSubmit={onSubmit} 
