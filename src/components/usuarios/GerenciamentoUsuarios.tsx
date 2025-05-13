@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +17,7 @@ import UserActivationToggle from './UserActivationToggle';
 import UserPermissionsDialog from './UserPermissionsDialog';
 
 const GerenciamentoUsuarios: React.FC = () => {
-  const { users, addUser, updateUser, deleteUser, hasSpecificPermission } = useAuth();
+  const { users, createUser, updateUser, deleteUser, hasSpecificPermission } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -109,7 +108,7 @@ const GerenciamentoUsuarios: React.FC = () => {
       password: tempPassword // This is just for demo, in a real app you'd use proper auth
     };
     
-    addUser(userToAdd);
+    createUser(userToAdd);
     setNewUser({
       name: '',
       email: '',
