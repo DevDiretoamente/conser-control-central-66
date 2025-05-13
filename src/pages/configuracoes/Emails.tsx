@@ -27,6 +27,11 @@ const EmailsPage: React.FC = () => {
     }
   };
   
+  const handleInsertVariable = (variable: string) => {
+    // Logic to insert variable would go here
+    console.log(`Inserting variable: ${variable}`);
+  };
+  
   return (
     <div className="space-y-6">
       <div>
@@ -145,10 +150,38 @@ const EmailsPage: React.FC = () => {
               <div className="pt-4 space-y-2">
                 <p className="text-sm text-muted-foreground">Variáveis disponíveis:</p>
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" size="sm" onClick={() => {}} className="h-7">{{nome}}</Button>
-                  <Button variant="outline" size="sm" onClick={() => {}} className="h-7">{{tipo_exame}}</Button>
-                  <Button variant="outline" size="sm" onClick={() => {}} className="h-7">{{data_vencimento}}</Button>
-                  <Button variant="outline" size="sm" onClick={() => {}} className="h-7">{{data_realizacao}}</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleInsertVariable("{{nome}}")} 
+                    className="h-7"
+                  >
+                    {'{{nome}}'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleInsertVariable("{{tipo_exame}}")} 
+                    className="h-7"
+                  >
+                    {'{{tipo_exame}}'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleInsertVariable("{{data_vencimento}}")} 
+                    className="h-7"
+                  >
+                    {'{{data_vencimento}}'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleInsertVariable("{{data_realizacao}}")} 
+                    className="h-7"
+                  >
+                    {'{{data_realizacao}}'}
+                  </Button>
                 </div>
               </div>
               

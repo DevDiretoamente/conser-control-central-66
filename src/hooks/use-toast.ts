@@ -1,11 +1,11 @@
 
 import * as React from "react"
-import { toast as sonnerToast, type Toast, type ToastOptions } from "sonner"
+import { toast as sonnerToast } from "sonner"
 
 const TOAST_LIMIT = 5
 const TOAST_REMOVE_DELAY = 1000000
 
-type ToasterToast = Toast & {
+type ToasterToast = {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
@@ -183,19 +183,19 @@ function useToast() {
 }
 
 // Enhanced toast functions with common variants
-const successToast = (message: string, options?: ToastOptions) => {
+const successToast = (message: string, options?: any) => {
   return sonnerToast.success(message, options)
 }
 
-const errorToast = (message: string, options?: ToastOptions) => {
+const errorToast = (message: string, options?: any) => {
   return sonnerToast.error(message, options)
 }
 
-const warningToast = (message: string, options?: ToastOptions) => {
+const warningToast = (message: string, options?: any) => {
   return sonnerToast.warning(message, options)
 }
 
-const infoToast = (message: string, options?: ToastOptions) => {
+const infoToast = (message: string, options?: any) => {
   return sonnerToast.info(message, options)
 }
 
