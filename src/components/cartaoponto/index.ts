@@ -1,4 +1,5 @@
 
+// Direct default exports - no named exports
 export { default as CartaoPontoDialog } from './CartaoPontoDialog';
 export { default as CartaoPontoTable } from './CartaoPontoTable';
 export { default as CartaoPontoFilter } from './CartaoPontoFilter';

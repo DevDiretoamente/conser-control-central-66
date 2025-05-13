@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { CartaoPontoDetails } from '@/components/cartaoponto/CartaoPontoDetails';
-import { CartaoPontoDialog } from '@/components/cartaoponto/CartaoPontoDialog';
+import CartaoPontoDetails from '@/components/cartaoponto/CartaoPontoDetails';
+import CartaoPontoDialog from '@/components/cartaoponto/CartaoPontoDialog';
 import { CartaoPontoFormValues } from '@/components/cartaoponto/CartaoPontoDialog';
 import { cartaoPontoService } from '@/services/cartaoPontoService';
 import { CartaoPonto } from '@/types/cartaoPonto';

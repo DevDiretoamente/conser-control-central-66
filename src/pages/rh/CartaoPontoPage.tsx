@@ -5,11 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import { format, subMonths, addMonths, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { CartaoPontoFilter } from '@/components/cartaoponto/CartaoPontoFilter';
-import { CartaoPontoTable } from '@/components/cartaoponto/CartaoPontoTable';
-import { CartaoPontoDialog } from '@/components/cartaoponto/CartaoPontoDialog';
-import { CartaoPontoCalendar } from '@/components/cartaoponto/CartaoPontoCalendar';
-import { CartaoPontoSummary } from '@/components/cartaoponto/CartaoPontoSummary';
+import CartaoPontoFilter from '@/components/cartaoponto/CartaoPontoFilter';
+import CartaoPontoTable from '@/components/cartaoponto/CartaoPontoTable';
+import CartaoPontoDialog from '@/components/cartaoponto/CartaoPontoDialog';
+import CartaoPontoCalendar from '@/components/cartaoponto/CartaoPontoCalendar';
+import CartaoPontoSummary from '@/components/cartaoponto/CartaoPontoSummary';
 import { 
   Select,
   SelectContent,
@@ -130,9 +130,20 @@ const CartaoPontoPage: React.FC = () => {
   };
 
   const handleCreate = async (data: CartaoPontoFormValues) => {
+    if (!data.funcionarioId) {
+      toast({
+        title: 'Erro',
+        description: 'ID do funcionário é obrigatório.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     try {
       await cartaoPontoService.create({
         ...data,
+        funcionarioId: data.funcionarioId, // Ensure this is set
+        data: data.data || new Date().toISOString().split('T')[0], // Ensure date is set
         status: data.status as CartaoPontoStatus,
       });
       
