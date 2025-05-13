@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import {
   Dialog,
@@ -54,3 +55,4 @@ export const FuncaoDialog: React.FC<FuncaoDialogProps> = ({
 };
 
 export default FuncaoDialog;
+

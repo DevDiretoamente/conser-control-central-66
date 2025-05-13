@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -30,6 +31,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface CartaoPontoDialogProps {
   open: boolean;
@@ -113,159 +115,163 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[60vh] overflow-y-auto">
-            {/* Funcionário read-only */}
-            <FormField
-              control={form.control}
-              name="funcionarioNome"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Funcionário</FormLabel>
-                  <FormControl>
-                    <Input {...field} disabled={true} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <ScrollArea className="max-h-[60vh] pr-4">
+              <div className="space-y-4 pb-2">
+                {/* Funcionário read-only */}
+                <FormField
+                  control={form.control}
+                  name="funcionarioNome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Funcionário</FormLabel>
+                      <FormControl>
+                        <Input {...field} disabled={true} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Data */}
+                <FormField
+                  control={form.control}
+                  name="data"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Hora de Entrada */}
+                  <FormField
+                    control={form.control}
+                    name="horaEntrada"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Entrada</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {/* Hora de Saída */}
+                  <FormField
+                    control={form.control}
+                    name="horaSaida"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Saída</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Início do Almoço */}
+                  <FormField
+                    control={form.control}
+                    name="inicioAlmoco"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Início do Almoço</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {/* Fim do Almoço */}
+                  <FormField
+                    control={form.control}
+                    name="fimAlmoco"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Fim do Almoço</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                {/* Status */}
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="normal">Normal</SelectItem>
+                          <SelectItem value="pending">Pendente</SelectItem>
+                          <SelectItem value="approved">Aprovado</SelectItem>
+                          <SelectItem value="rejected">Rejeitado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Justificativa */}
+                <FormField
+                  control={form.control}
+                  name="justificativa"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Justificativa</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} placeholder="Justificativa para irregularidades" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Observações */}
+                <FormField
+                  control={form.control}
+                  name="observacoes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Observações</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} placeholder="Observações adicionais" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </ScrollArea>
             
-            {/* Data */}
-            <FormField
-              control={form.control}
-              name="data"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Data</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="grid grid-cols-2 gap-4">
-              {/* Hora de Entrada */}
-              <FormField
-                control={form.control}
-                name="horaEntrada"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Entrada</FormLabel>
-                    <FormControl>
-                      <Input type="time" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              {/* Hora de Saída */}
-              <FormField
-                control={form.control}
-                name="horaSaida"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Saída</FormLabel>
-                    <FormControl>
-                      <Input type="time" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              {/* Início do Almoço */}
-              <FormField
-                control={form.control}
-                name="inicioAlmoco"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Início do Almoço</FormLabel>
-                    <FormControl>
-                      <Input type="time" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              {/* Fim do Almoço */}
-              <FormField
-                control={form.control}
-                name="fimAlmoco"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fim do Almoço</FormLabel>
-                    <FormControl>
-                      <Input type="time" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            {/* Status */}
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="normal">Normal</SelectItem>
-                      <SelectItem value="pending">Pendente</SelectItem>
-                      <SelectItem value="approved">Aprovado</SelectItem>
-                      <SelectItem value="rejected">Rejeitado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* Justificativa */}
-            <FormField
-              control={form.control}
-              name="justificativa"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Justificativa</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} placeholder="Justificativa para irregularidades" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* Observações */}
-            <FormField
-              control={form.control}
-              name="observacoes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Observações</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} placeholder="Observações adicionais" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <DialogFooter>
+            <DialogFooter className="pt-2">
               <Button type="submit">Salvar</Button>
             </DialogFooter>
           </form>
@@ -276,3 +282,4 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
 };
 
 export default CartaoPontoDialog;
+

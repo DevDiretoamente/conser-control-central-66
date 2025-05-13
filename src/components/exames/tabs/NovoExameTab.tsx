@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import { Funcionario, ExameRealizado, ExameMedico } from '@/types/funcionario';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { calculateValidityDate, isSpecialExam } from '@/utils/examUtils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface NovoExameTabProps {
   funcionario: Funcionario;
@@ -80,143 +82,145 @@ const NovoExameTab: React.FC<NovoExameTabProps> = ({
           Registrar um novo exame para este funcionário
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Tipo de Exame</label>
-              <Select 
-                value={tipoExameSelecionado} 
-                onValueChange={setTipoExameSelecionado}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  <SelectItem value="periodico">Periódico</SelectItem>
-                  <SelectItem value="mudancaFuncao">Mudança de Função</SelectItem>
-                  <SelectItem value="retornoTrabalho">Retorno ao Trabalho</SelectItem>
-                  <SelectItem value="demissional">Demissional</SelectItem>
-                </SelectContent>
-              </Select>
+      <ScrollArea className="max-h-[calc(100vh-240px)]">
+        <CardContent>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Tipo de Exame</label>
+                <Select 
+                  value={tipoExameSelecionado} 
+                  onValueChange={setTipoExameSelecionado}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    <SelectItem value="periodico">Periódico</SelectItem>
+                    <SelectItem value="mudancaFuncao">Mudança de Função</SelectItem>
+                    <SelectItem value="retornoTrabalho">Retorno ao Trabalho</SelectItem>
+                    <SelectItem value="demissional">Demissional</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome do Exame</label>
+                <Select 
+                  value={exameSelected}
+                  onValueChange={handleExameChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o exame" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    {funcionario.dadosProfissionais.funcaoId && 
+                     mockExamesFuncao[funcionario.dadosProfissionais.funcaoId] && 
+                     mockExamesFuncao[funcionario.dadosProfissionais.funcaoId][tipoExameSelecionado] ? (
+                       mockExamesFuncao[funcionario.dadosProfissionais.funcaoId][tipoExameSelecionado].map(exam => (
+                         <SelectItem key={exam.id} value={exam.nome}>
+                           {exam.nome} {isSpecialExam(exam.nome) && "(Bienal)"}
+                         </SelectItem>
+                       ))
+                     ) : (
+                       <SelectItem value="exame-clinico">Exame Clínico</SelectItem>
+                     )}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Data de Realização</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !dataAgendada && "text-muted-foreground"
+                      )}
+                    >
+                      {dataAgendada ? (
+                        format(dataAgendada, "dd/MM/yyyy")
+                      ) : (
+                        <span>Selecione uma data</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-50" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dataAgendada}
+                      onSelect={handleDataRealizadoChange}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Validade</label>
+                <Input 
+                  value={novoExame?.dataValidade ? format(novoExame.dataValidade, "dd/MM/yyyy") : ""} 
+                  readOnly 
+                  className="bg-muted/50"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {exameSelected && isSpecialExam(exameSelected) 
+                    ? "Validade de 2 anos para Espirometria" 
+                    : "Validade de 1 ano"}
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Clínica</label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a clínica" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    <SelectItem value="1">RP Medicina e Segurança do Trabalho</SelectItem>
+                    <SelectItem value="2">Sindiconvenios</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Resultado</label>
+                <Select defaultValue="Apto">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    <SelectItem value="Apto">Apto</SelectItem>
+                    <SelectItem value="Apto com restrições">Apto com restrições</SelectItem>
+                    <SelectItem value="Inapto temporariamente">Inapto temporariamente</SelectItem>
+                    <SelectItem value="Inapto definitivamente">Inapto definitivamente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">Nome do Exame</label>
-              <Select 
-                value={exameSelected}
-                onValueChange={handleExameChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o exame" />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  {funcionario.dadosProfissionais.funcaoId && 
-                   mockExamesFuncao[funcionario.dadosProfissionais.funcaoId] && 
-                   mockExamesFuncao[funcionario.dadosProfissionais.funcaoId][tipoExameSelecionado] ? (
-                     mockExamesFuncao[funcionario.dadosProfissionais.funcaoId][tipoExameSelecionado].map(exam => (
-                       <SelectItem key={exam.id} value={exam.nome}>
-                         {exam.nome} {isSpecialExam(exam.nome) && "(Bienal)"}
-                       </SelectItem>
-                     ))
-                   ) : (
-                     <SelectItem value="exame-clinico">Exame Clínico</SelectItem>
-                   )}
-                </SelectContent>
-              </Select>
+              <label className="text-sm font-medium">Observações</label>
+              <Textarea placeholder="Observações sobre o exame" className="resize-none" />
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">Data de Realização</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full pl-3 text-left font-normal",
-                      !dataAgendada && "text-muted-foreground"
-                    )}
-                  >
-                    {dataAgendada ? (
-                      format(dataAgendada, "dd/MM/yyyy")
-                    ) : (
-                      <span>Selecione uma data</span>
-                    )}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 z-50" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dataAgendada}
-                    onSelect={handleDataRealizadoChange}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Validade</label>
-              <Input 
-                value={novoExame?.dataValidade ? format(novoExame.dataValidade, "dd/MM/yyyy") : ""} 
-                readOnly 
-                className="bg-muted/50"
+              <label className="text-sm font-medium">Documento do ASO</label>
+              <DocumentUploader
+                label="Anexar ASO"
+                description="PDF ou imagem do ASO"
+                allowedTypes=".pdf,.jpg,.jpeg,.png"
+                onFileChange={() => {}}
+                value={null}
               />
-              <p className="text-xs text-muted-foreground">
-                {exameSelected && isSpecialExam(exameSelected) 
-                  ? "Validade de 2 anos para Espirometria" 
-                  : "Validade de 1 ano"}
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Clínica</label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a clínica" />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  <SelectItem value="1">RP Medicina e Segurança do Trabalho</SelectItem>
-                  <SelectItem value="2">Sindiconvenios</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Resultado</label>
-              <Select defaultValue="Apto">
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  <SelectItem value="Apto">Apto</SelectItem>
-                  <SelectItem value="Apto com restrições">Apto com restrições</SelectItem>
-                  <SelectItem value="Inapto temporariamente">Inapto temporariamente</SelectItem>
-                  <SelectItem value="Inapto definitivamente">Inapto definitivamente</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Observações</label>
-            <Textarea placeholder="Observações sobre o exame" className="resize-none" />
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Documento do ASO</label>
-            <DocumentUploader
-              label="Anexar ASO"
-              description="PDF ou imagem do ASO"
-              allowedTypes=".pdf,.jpg,.jpeg,.png"
-              onFileChange={() => {}}
-              value={null}
-            />
-          </div>
-        </div>
-      </CardContent>
+        </CardContent>
+      </ScrollArea>
       <CardFooter className="flex justify-end gap-2">
         <Button variant="outline" onClick={onCancel}>
           Cancelar
@@ -230,3 +234,4 @@ const NovoExameTab: React.FC<NovoExameTabProps> = ({
 };
 
 export default NovoExameTab;
+
