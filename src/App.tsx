@@ -115,6 +115,13 @@ const App: React.FC = () => {
               <ConfiguracoesPage />
             </ProtectedRoute>
           } />
+          
+          <Route path="/configuracoes/emails" element={
+            <ProtectedRoute requiredPermissions={[{ area: 'configuracoes', level: 'write' }]}>
+              <EmailsPage />
+            </ProtectedRoute>
+          } />
+          
           <Route path="/funcoes" element={
             <ProtectedRoute requiredPermissions={[{ area: 'funcoes', level: 'read' }]}>
               <FuncoesPage />
@@ -147,7 +154,7 @@ const App: React.FC = () => {
           } />
           <Route path="/emails" element={
             <ProtectedRoute requiredPermissions={[{ area: 'configuracoes', level: 'write' }]}>
-              <EmailsPage />
+              <Navigate to="/configuracoes/emails" replace />
             </ProtectedRoute>
           } />
           

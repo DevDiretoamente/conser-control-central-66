@@ -19,11 +19,11 @@ const AppLayout: React.FC = () => {
   }, [location]);
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background overflow-hidden">
       <AppSidebar isCollapsed={isSidebarCollapsed} />
-      <div className={`flex-1 ${isSidebarCollapsed ? 'ml-16' : 'ml-64'} transition-all duration-300`}>
+      <div className={`flex-1 ${isSidebarCollapsed ? 'ml-16' : 'ml-64'} transition-all duration-300 overflow-auto`}>
         <Header toggleSidebar={toggleSidebar} />
-        <main className="container mx-auto p-6 max-w-7xl">
+        <main className="container mx-auto p-6 max-w-7xl pb-20">
           <Outlet />
         </main>
       </div>

@@ -80,7 +80,7 @@ const EmailsPage: React.FC = () => {
                     <SelectTrigger id="smtp-encryption">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent position="popper" className="bg-background">
+                    <SelectContent position="popper" className="bg-background z-50">
                       <SelectItem value="tls">TLS</SelectItem>
                       <SelectItem value="ssl">SSL</SelectItem>
                       <SelectItem value="none">Nenhuma</SelectItem>
@@ -124,7 +124,7 @@ const EmailsPage: React.FC = () => {
                   <SelectTrigger id="template-select">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent position="popper" className="bg-background">
+                  <SelectContent position="popper" className="bg-background z-50">
                     <SelectItem value="exame_proximo">Próximo exame</SelectItem>
                     <SelectItem value="exame_vencido">Exame vencido</SelectItem>
                     <SelectItem value="epi_entregue">EPI entregue</SelectItem>
@@ -156,7 +156,7 @@ const EmailsPage: React.FC = () => {
                     onClick={() => handleInsertVariable("{{nome}}")} 
                     className="h-7"
                   >
-                    {'{{nome}}'}
+                    {'{{'+'nome'+'}}'}
                   </Button>
                   <Button 
                     variant="outline" 
@@ -164,7 +164,7 @@ const EmailsPage: React.FC = () => {
                     onClick={() => handleInsertVariable("{{tipo_exame}}")} 
                     className="h-7"
                   >
-                    {'{{tipo_exame}}'}
+                    {'{{'+'tipo_exame'+'}}'}
                   </Button>
                   <Button 
                     variant="outline" 
@@ -172,7 +172,7 @@ const EmailsPage: React.FC = () => {
                     onClick={() => handleInsertVariable("{{data_vencimento}}")} 
                     className="h-7"
                   >
-                    {'{{data_vencimento}}'}
+                    {'{{'+'data_vencimento'+'}}'}
                   </Button>
                   <Button 
                     variant="outline" 
@@ -180,7 +180,7 @@ const EmailsPage: React.FC = () => {
                     onClick={() => handleInsertVariable("{{data_realizacao}}")} 
                     className="h-7"
                   >
-                    {'{{data_realizacao}}'}
+                    {'{{'+'data_realizacao'+'}}'}
                   </Button>
                 </div>
               </div>

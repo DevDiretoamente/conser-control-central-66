@@ -125,7 +125,7 @@ const EditarFuncionario: React.FC = () => {
           <TabsTrigger value="documentos">Documentos e Impressões</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="formulario">
+        <TabsContent value="formulario" className="overflow-visible">
           <FuncionarioForm 
             defaultValues={funcionario} 
             onSuccess={handleSuccess} 
@@ -134,7 +134,7 @@ const EditarFuncionario: React.FC = () => {
           />
         </TabsContent>
         
-        <TabsContent value="documentos">
+        <TabsContent value="documentos" className="overflow-visible">
           <DocumentosImpressaoTab 
             funcionario={funcionario}
             onUpdate={async (updatedFuncionario) => {

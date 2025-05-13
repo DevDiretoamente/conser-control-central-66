@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { Funcionario, Funcao, EPI, Uniforme, ExameMedico, Setor } from '@/types/funcionario';
+import { Funcionario, Funcao, Setor } from '@/types/funcionario';
 import {
   FormField,
   FormItem,
@@ -9,7 +8,6 @@ import {
   FormControl,
   FormMessage,
 } from '@/components/ui/form';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { mockFuncoes, mockSetores } from '@/data/funcionarioMockData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -73,7 +71,7 @@ const FuncaoTab: React.FC<FuncaoTabProps> = ({ form }) => {
                     <SelectValue placeholder="Selecione uma função" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent>
+                <SelectContent className="z-50 bg-background">
                   <SelectItem value="sem_funcao">Selecione uma função</SelectItem>
                   {mockFuncoes.filter(f => f.ativo).map((funcao) => (
                     <SelectItem key={funcao.id} value={funcao.id}>
