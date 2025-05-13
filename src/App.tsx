@@ -21,6 +21,8 @@ import AppLayout from './components/layout/AppLayout';
 import ExamesPage from './pages/configuracoes/Exames';
 import ConfiguracoesPage from './pages/configuracoes/Configuracoes';
 import EmailsPage from './pages/configuracoes/Emails';
+import CartaoPontoPage from './pages/rh/CartaoPontoPage';
+import CartaoPontoDetailPage from './pages/rh/CartaoPontoDetailPage';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -67,6 +69,19 @@ const App: React.FC = () => {
           <Route path="/rh" element={
             <ProtectedRoute requiredPermissions={[{ area: 'rh', level: 'read' }]}>
               <RHPage />
+            </ProtectedRoute>
+          } />
+          
+          {/* Cartão Ponto Routes */}
+          <Route path="/rh/cartao-ponto" element={
+            <ProtectedRoute requiredPermissions={[{ area: 'cartaoponto', level: 'read' }]}>
+              <CartaoPontoPage />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/rh/cartao-ponto/:id" element={
+            <ProtectedRoute requiredPermissions={[{ area: 'cartaoponto', level: 'read' }]}>
+              <CartaoPontoDetailPage />
             </ProtectedRoute>
           } />
           

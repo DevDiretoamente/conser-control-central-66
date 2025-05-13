@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Stethoscope, FileText, BadgeCheck } from 'lucide-react';
+import { Users, Stethoscope, FileText, BadgeCheck, Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const RHPage: React.FC = () => {
@@ -15,6 +15,7 @@ const RHPage: React.FC = () => {
     exames: hasSpecificPermission('exames', 'read'),
     documentos: hasSpecificPermission('documentos', 'read'),
     certificacoes: hasSpecificPermission('documentos', 'read'),
+    cartaoPonto: hasSpecificPermission('cartaoponto', 'read'),
   };
 
   return (
@@ -44,6 +45,31 @@ const RHPage: React.FC = () => {
             <CardFooter>
               <Button className="w-full" onClick={() => navigate('/funcionarios')}>
                 Acessar Funcionários
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
+
+        {/* Cartão de Cartão Ponto */}
+        {mostraTelas.cartaoPonto && (
+          <Card className="overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 pb-4">
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                Cartão Ponto
+              </CardTitle>
+              <CardDescription>
+                Controle de jornada dos funcionários
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <p className="mb-2 text-sm text-muted-foreground">
+                Registros de ponto, horas trabalhadas e controle de jornada.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button className="w-full" onClick={() => navigate('/rh/cartao-ponto')}>
+                Acessar Cartão Ponto
               </Button>
             </CardFooter>
           </Card>
