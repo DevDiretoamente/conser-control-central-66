@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
@@ -23,6 +22,7 @@ import ConfiguracoesPage from './pages/configuracoes/Configuracoes';
 import EmailsPage from './pages/configuracoes/Emails';
 import CartaoPontoPage from './pages/rh/CartaoPontoPage';
 import CartaoPontoDetailPage from './pages/rh/CartaoPontoDetailPage';
+import UsuariosPage from './pages/configuracoes/Usuarios';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -134,6 +134,12 @@ const App: React.FC = () => {
           <Route path="/configuracoes/emails" element={
             <ProtectedRoute requiredPermissions={[{ area: 'configuracoes', level: 'write' }]}>
               <EmailsPage />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/configuracoes/usuarios" element={
+            <ProtectedRoute requiredPermissions={[{ area: 'usuarios', level: 'read' }]}>
+              <UsuariosPage />
             </ProtectedRoute>
           } />
           
