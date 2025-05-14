@@ -1,14 +1,12 @@
 
 export type CartaoPontoStatus = 
   'normal' | 
-  'pending' | 
-  'approved' | 
-  'rejected' |
+  'sobreaviso' | // On standby/willingness
   'dispensado' | // Dispensed
+  'ferias' | // Vacation 
   'feriado' | // Holiday
   'falta_justificada' | // Justified absence
-  'falta_injustificada' | // Unjustified absence
-  'sobreaviso'; // On standby/willingness
+  'falta_injustificada'; // Unjustified absence
 
 export type TipoJornada = 'normal' | 'sabado' | 'domingo_feriado';
 

@@ -150,8 +150,8 @@ const CartaoPontoPage: React.FC = () => {
     try {
       await cartaoPontoService.create({
         ...data,
-        funcionarioId: data.funcionarioId, // Ensure this is set
-        data: data.data || new Date().toISOString().split('T')[0], // Ensure date is set
+        funcionarioId: data.funcionarioId,
+        data: data.data || new Date().toISOString().split('T')[0],
         status: data.status as CartaoPontoStatus,
       });
       
@@ -216,13 +216,13 @@ const CartaoPontoPage: React.FC = () => {
     }
   };
 
-  const handleStatusChange = async (id: string, status: 'approved' | 'rejected', observacao?: string) => {
+  const handleStatusChange = async (id: string, status: CartaoPontoStatus, observacao?: string) => {
     try {
       await cartaoPontoService.updateStatus(id, status, observacao);
       
       toast({
         title: 'Sucesso',
-        description: `Registro ${status === 'approved' ? 'aprovado' : 'rejeitado'} com sucesso.`,
+        description: `Status atualizado com sucesso.`,
       });
       
       loadRegistros();
@@ -310,7 +310,7 @@ const CartaoPontoPage: React.FC = () => {
         onValueChange={value => setViewMode(value as 'calendar' | 'list' | 'beneficios')} 
         className="w-full"
       >
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
           <TabsList>
             <TabsTrigger value="calendar">
               <Calendar className="mr-2 h-4 w-4" /> Calendário

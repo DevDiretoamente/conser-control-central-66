@@ -34,6 +34,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { isWeekend, parseISO } from 'date-fns';
 import { Calendar, Clock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { convertTimeStringToMinutes, calculateTimeDifference } from '@/lib/utils';
 
 interface CartaoPontoDialogProps {
   open: boolean;
@@ -54,12 +55,41 @@ const cartaoPontoSchema = z.object({
   horaSaida: z.string().optional(),
   inicioAlmoco: z.string().optional(),
   fimAlmoco: z.string().optional(),
-  horaExtraInicio: z.string().optional(),
   horaExtraFim: z.string().optional(),
   tipoJornada: z.string() as z.ZodType<TipoJornada>,
   status: z.string() as z.ZodType<CartaoPontoStatus>,
   justificativa: z.string().optional(),
   observacoes: z.string().optional(),
+})
+.refine((data) => {
+  // Validate that end time is after start time if both are provided
+  if (data.horaEntrada && data.horaSaida) {
+    return convertTimeStringToMinutes(data.horaSaida) > convertTimeStringToMinutes(data.horaEntrada);
+  }
+  return true;
+}, {
+  message: "A hora de saída deve ser posterior à hora de entrada",
+  path: ["horaSaida"],
+})
+.refine((data) => {
+  // Validate that lunch end is after lunch start if both are provided
+  if (data.inicioAlmoco && data.fimAlmoco) {
+    return convertTimeStringToMinutes(data.fimAlmoco) > convertTimeStringToMinutes(data.inicioAlmoco);
+  }
+  return true;
+}, {
+  message: "O retorno do almoço deve ser posterior ao início do almoço",
+  path: ["fimAlmoco"],
+})
+.refine((data) => {
+  // Validate that overtime end is after workday end if provided
+  if (data.horaSaida && data.horaExtraFim) {
+    return convertTimeStringToMinutes(data.horaExtraFim) > convertTimeStringToMinutes(data.horaSaida);
+  }
+  return true;
+}, {
+  message: "A saída de hora extra deve ser posterior à saída da tarde",
+  path: ["horaExtraFim"],
 });
 
 export type CartaoPontoFormValues = z.infer<typeof cartaoPontoSchema>;
@@ -83,7 +113,6 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
       horaSaida: cartaoPonto?.horaSaida || '',
       inicioAlmoco: cartaoPonto?.inicioAlmoco || '',
       fimAlmoco: cartaoPonto?.fimAlmoco || '',
-      horaExtraInicio: cartaoPonto?.horaExtraInicio || '',
       horaExtraFim: cartaoPonto?.horaExtraFim || '',
       tipoJornada: cartaoPonto?.tipoJornada || 'normal',
       status: cartaoPonto?.status || 'normal',
@@ -110,6 +139,16 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
         } catch (error) {
           console.error('Error parsing date:', error);
         }
+      }
+
+      // Show justificativa field based on status
+      const status = form.getValues('status');
+      if (status === 'falta_justificada' || status === 'falta_injustificada') {
+        form.setValue('horaEntrada', '');
+        form.setValue('horaSaida', '');
+        form.setValue('inicioAlmoco', '');
+        form.setValue('fimAlmoco', '');
+        form.setValue('horaExtraFim', '');
       }
     });
     
@@ -139,8 +178,11 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
   
   const title = isEdit ? 'Editar Registro de Ponto' : 'Novo Registro de Ponto';
   
-  // Get the current tipoJornada
-  const currentTipoJornada = form.watch('tipoJornada');
+  // Get the current status to show/hide fields
+  const currentStatus = form.watch('status');
+  const showTimeFields = currentStatus !== 'falta_justificada' && 
+                        currentStatus !== 'falta_injustificada' && 
+                        currentStatus !== 'ferias';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -151,7 +193,7 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <ScrollArea className="max-h-[60vh] pr-4">
+            <ScrollArea className="max-h-[65vh] pr-4 overflow-y-auto">
               <div className="space-y-4 pb-2">
                 {/* Funcionário read-only */}
                 <FormField
@@ -185,6 +227,37 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
                   )}
                 />
                 
+                {/* Status */}
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="normal">Normal</SelectItem>
+                          <SelectItem value="sobreaviso">Sobreaviso</SelectItem>
+                          <SelectItem value="dispensado">Dispensado</SelectItem>
+                          <SelectItem value="ferias">Férias</SelectItem>
+                          <SelectItem value="feriado">Feriado</SelectItem>
+                          <SelectItem value="falta_justificada">Falta Justificada</SelectItem>
+                          <SelectItem value="falta_injustificada">Falta Injustificada</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
                 {/* Tipo de Jornada (read-only, calculated from date) */}
                 <FormField
                   control={form.control}
@@ -204,7 +277,7 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="normal">Normal (Segunda a Sexta)</SelectItem>
-                          <SelectItem value="sabado">Sábado (Extras 50% ou 80%)</SelectItem>
+                          <SelectItem value="sabado">Sábado (Extras 80%)</SelectItem>
                           <SelectItem value="domingo_feriado">Domingo/Feriado (Extras 110%)</SelectItem>
                         </SelectContent>
                       </Select>
@@ -212,173 +285,130 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
                   )}
                 />
                 
-                <Separator className="my-4" />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Hora de Entrada */}
-                  <FormField
-                    control={form.control}
-                    name="horaEntrada"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Entrada Manhã</FormLabel>
-                        <FormControl>
-                          <div className="flex items-center">
-                            <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                            <Input type="time" {...field} />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  {/* Hora de Saída */}
-                  <FormField
-                    control={form.control}
-                    name="horaSaida"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Saída Tarde</FormLabel>
-                        <FormControl>
-                          <div className="flex items-center">
-                            <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                            <Input type="time" {...field} />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Início do Almoço */}
-                  <FormField
-                    control={form.control}
-                    name="inicioAlmoco"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Saída Almoço</FormLabel>
-                        <FormControl>
-                          <div className="flex items-center">
-                            <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                            <Input type="time" {...field} />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  {/* Fim do Almoço */}
-                  <FormField
-                    control={form.control}
-                    name="fimAlmoco"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Retorno Almoço</FormLabel>
-                        <FormControl>
-                          <div className="flex items-center">
-                            <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                            <Input type="time" {...field} />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <Separator className="my-4" />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Hora Extra Início */}
-                  <FormField
-                    control={form.control}
-                    name="horaExtraInicio"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Início Hora Extra</FormLabel>
-                        <FormControl>
-                          <div className="flex items-center">
-                            <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                            <Input type="time" {...field} />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  {/* Hora Extra Fim */}
-                  <FormField
-                    control={form.control}
-                    name="horaExtraFim"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Término Hora Extra</FormLabel>
-                        <FormControl>
-                          <div className="flex items-center">
-                            <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                            <Input type="time" {...field} />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                {showTimeFields && (
+                  <>
+                    <Separator className="my-4" />
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Hora de Entrada */}
+                      <FormField
+                        control={form.control}
+                        name="horaEntrada"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Entrada da manhã</FormLabel>
+                            <FormControl>
+                              <div className="flex items-center">
+                                <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                                <Input type="time" {...field} />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      {/* Início do Almoço */}
+                      <FormField
+                        control={form.control}
+                        name="inicioAlmoco"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Início do almoço</FormLabel>
+                            <FormControl>
+                              <div className="flex items-center">
+                                <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                                <Input type="time" {...field} />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Fim do Almoço */}
+                      <FormField
+                        control={form.control}
+                        name="fimAlmoco"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Retorno do almoço</FormLabel>
+                            <FormControl>
+                              <div className="flex items-center">
+                                <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                                <Input type="time" {...field} />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      {/* Hora de Saída */}
+                      <FormField
+                        control={form.control}
+                        name="horaSaida"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Saída da tarde</FormLabel>
+                            <FormControl>
+                              <div className="flex items-center">
+                                <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                                <Input type="time" {...field} />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Hora Extra Fim */}
+                      <FormField
+                        control={form.control}
+                        name="horaExtraFim"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Saída da extra</FormLabel>
+                            <FormControl>
+                              <div className="flex items-center">
+                                <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                                <Input type="time" {...field} />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </>
+                )}
                 
                 <Separator className="my-4" />
-                
-                {/* Status */}
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione um status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="normal">Normal</SelectItem>
-                          <SelectItem value="pending">Pendente</SelectItem>
-                          <SelectItem value="approved">Aprovado</SelectItem>
-                          <SelectItem value="rejected">Rejeitado</SelectItem>
-                          <SelectItem value="dispensado">Dispensado</SelectItem>
-                          <SelectItem value="feriado">Feriado</SelectItem>
-                          <SelectItem value="falta_justificada">Falta Justificada</SelectItem>
-                          <SelectItem value="falta_injustificada">Falta Injustificada</SelectItem>
-                          <SelectItem value="sobreaviso">Sobreaviso</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 
                 {/* Justificativa */}
-                <FormField
-                  control={form.control}
-                  name="justificativa"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Justificativa</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} placeholder="Justificativa para irregularidades" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {(currentStatus === 'falta_justificada' || currentStatus === 'falta_injustificada') && (
+                  <FormField
+                    control={form.control}
+                    name="justificativa"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Justificativa</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            placeholder="Informe o motivo da ausência" 
+                            className="min-h-[100px]"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
                 
                 {/* Observações */}
                 <FormField
@@ -388,7 +418,11 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
                     <FormItem>
                       <FormLabel>Observações</FormLabel>
                       <FormControl>
-                        <Textarea {...field} placeholder="Observações adicionais" />
+                        <Textarea 
+                          {...field} 
+                          placeholder="Observações adicionais" 
+                          className="min-h-[100px]"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -398,6 +432,9 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
             </ScrollArea>
             
             <DialogFooter className="pt-2">
+              <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
+                Cancelar
+              </Button>
               <Button type="submit">Salvar</Button>
             </DialogFooter>
           </form>

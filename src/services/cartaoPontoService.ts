@@ -3,6 +3,7 @@ import { CartaoPonto, CartaoPontoFilterOptions, CartaoPontoStatus, CartaoPontoSu
 import { beneficioService } from './beneficioService';
 import { v4 as uuidv4 } from 'uuid';
 import { isWeekend, getDay, parseISO } from 'date-fns';
+import { convertTimeStringToMinutes, convertMinutesToTimeString, formatDecimalHours } from '@/lib/utils';
 
 // Mock data for card points
 const mockCartaoPontos: CartaoPonto[] = [
@@ -109,90 +110,116 @@ const determineTipoJornada = (date: string): TipoJornada => {
   }
 };
 
-// Helper function to determine overtime rate based on date and time
-const determineOvertimeRate = (date: string): number => {
+// Helper function to determine overtime rate based on date and accumulated overtime
+const determineOvertimeRate = (date: string, totalMonthlyOvertime: number): number => {
   const dateObj = parseISO(date);
   const dayOfWeek = getDay(dateObj);
   
   if (dayOfWeek === 0) { // Sunday
     return 1.1; // 110% rate
   } else if (dayOfWeek === 6) { // Saturday
-    return 0.8; // 80% rate - can be adjusted based on specific rules
+    return 0.8; // 80% rate
   } else {
-    return 0.5; // 50% rate for weekdays
+    // New rule: if total monthly overtime exceeds 50 hours, apply 80% rate
+    return totalMonthlyOvertime > 50 ? 0.8 : 0.5;
   }
 };
 
-// Helper function to calculate hours between two time strings
-const calculateHoursDifference = (start: string, end: string): number => {
-  if (!start || !end) return 0;
-  
-  const [startHour, startMinute] = start.split(':').map(Number);
-  const [endHour, endMinute] = end.split(':').map(Number);
-  
-  const startMinutes = startHour * 60 + startMinute;
-  const endMinutes = endHour * 60 + endMinute;
-  
-  return (endMinutes - startMinutes) / 60;
-};
-
-// Enhanced calculation of total work hours accounting for work day type and lunch break
+// Calculate total work hours accounting for proper 60-minute time format
 const calculateTotalHours = (
   entrada: string | undefined, 
   saida: string | undefined, 
   inicioAlmoco: string | undefined, 
   fimAlmoco: string | undefined,
   tipoJornada: TipoJornada = 'normal',
-  horaExtraInicio?: string,
   horaExtraFim?: string
 ): { 
   totalHoras: number;
   horasExtras: number;
   eligibleLanche: boolean;
 } => {
-  if (!entrada || !saida) return { totalHoras: 0, horasExtras: 0, eligibleLanche: false };
+  if (!entrada || !saida) {
+    return { totalHoras: 0, horasExtras: 0, eligibleLanche: false };
+  }
   
-  let totalHoras = 0;
+  // Convert times to minutes for accurate calculations
+  const entradaMinutes = convertTimeStringToMinutes(entrada);
+  const saidaMinutes = convertTimeStringToMinutes(saida);
+  
+  // Calculate lunch break time
+  let almocoMinutes = 0;
+  if (inicioAlmoco && fimAlmoco) {
+    const inicioAlmocoMinutes = convertTimeStringToMinutes(inicioAlmoco);
+    const fimAlmocoMinutes = convertTimeStringToMinutes(fimAlmoco);
+    almocoMinutes = fimAlmocoMinutes - inicioAlmocoMinutes;
+  }
+  
+  // Calculate work hours excluding lunch
+  const workMinutes = saidaMinutes - entradaMinutes - almocoMinutes;
+  
+  // Calculate overtime if applicable
+  let extraMinutes = 0;
+  if (horaExtraFim) {
+    const extraFimMinutes = convertTimeStringToMinutes(horaExtraFim);
+    extraMinutes = extraFimMinutes - saidaMinutes;
+  }
+  
+  // Convert minutes to decimal hours
+  const workHours = workMinutes / 60;
+  const extraHours = extraMinutes / 60;
+  
+  // Calculate total hours
+  const totalHoras = workHours + extraHours;
+  
+  // Determine regular work hours based on day type
+  let regularHours = 0;
   let horasExtras = 0;
   
-  // Calculate main shift hours
-  const shiftHours = calculateHoursDifference(entrada, saida);
-  
-  // Subtract lunch break if applicable
-  let lunchHours = 0;
-  if (inicioAlmoco && fimAlmoco) {
-    lunchHours = calculateHoursDifference(inicioAlmoco, fimAlmoco);
-    totalHoras = shiftHours - lunchHours;
-  } else {
-    totalHoras = shiftHours;
-  }
-  
-  // Add extra hours if specified
-  if (horaExtraInicio && horaExtraFim) {
-    const extraHours = calculateHoursDifference(horaExtraInicio, horaExtraFim);
-    totalHoras += extraHours;
-  }
-  
-  // Calculate overtime based on day type
   if (tipoJornada === 'domingo_feriado') {
     // All hours on Sunday or holiday are overtime
     horasExtras = totalHoras;
+    regularHours = 0;
   } else if (tipoJornada === 'sabado') {
     // All hours on Saturday are overtime
     horasExtras = totalHoras;
+    regularHours = 0;
   } else {
-    // Regular weekday
-    // Check if it's Friday (different schedule: 7:00-16:00)
-    const isFriday = false; // This would be determined by the date
-    const regularHours = isFriday ? 8 : 9; // 8 hours on Friday, 9 hours on other days
-    
+    // Regular weekday: 8 hours regular, rest is overtime
+    regularHours = 8;
     horasExtras = Math.max(0, totalHoras - regularHours);
   }
   
   // Check if eligible for afternoon snack (more than 1 hour of overtime)
   const eligibleLanche = horasExtras > 1;
   
-  return { totalHoras, horasExtras, eligibleLanche };
+  return { 
+    totalHoras, 
+    horasExtras, 
+    eligibleLanche 
+  };
+};
+
+// Function to get total overtime for an employee in the current month
+const getTotalMonthlyOvertime = async (
+  funcionarioId: string, 
+  currentMonth: number, 
+  currentYear: number
+): Promise<number> => {
+  const startDate = new Date(currentYear, currentMonth - 1, 1);
+  const endDate = new Date(currentYear, currentMonth, 0);
+  
+  // Filter records for the employee within the month
+  const records = mockCartaoPontos.filter(cp => {
+    const recordDate = new Date(cp.data);
+    return cp.funcionarioId === funcionarioId && 
+           recordDate >= startDate && 
+           recordDate <= endDate;
+  });
+  
+  // Sum up overtime hours
+  return records.reduce((sum, record) => {
+    return sum + (record.horasExtras || 0);
+  }, 0);
 };
 
 export const cartaoPontoService = {
@@ -233,10 +260,22 @@ export const cartaoPontoService = {
   
   create: async (cartaoPonto: Omit<CartaoPonto, 'id' | 'createdAt' | 'updatedAt'>): Promise<CartaoPonto> => {
     const now = new Date().toISOString();
+    const currentDate = new Date(cartaoPonto.data);
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
     
     // Determine day type based on date
     const tipoJornada = determineTipoJornada(cartaoPonto.data);
-    const taxaHoraExtra = determineOvertimeRate(cartaoPonto.data);
+    
+    // Get total overtime for the employee in the current month
+    const totalMonthlyOvertime = await getTotalMonthlyOvertime(
+      cartaoPonto.funcionarioId, 
+      currentMonth, 
+      currentYear
+    );
+    
+    // Determine the overtime rate based on day type and accumulated overtime
+    const taxaHoraExtra = determineOvertimeRate(cartaoPonto.data, totalMonthlyOvertime);
     
     // Calculate total hours and overtime
     const calculatedHours = calculateTotalHours(
@@ -245,7 +284,6 @@ export const cartaoPontoService = {
       cartaoPonto.inicioAlmoco,
       cartaoPonto.fimAlmoco,
       tipoJornada,
-      cartaoPonto.horaExtraInicio,
       cartaoPonto.horaExtraFim
     );
     
@@ -282,8 +320,23 @@ export const cartaoPontoService = {
     
     // If the date was changed, recalculate day type and overtime rate
     if (cartaoPonto.data && cartaoPonto.data !== mockCartaoPontos[index].data) {
+      const currentDate = new Date(cartaoPonto.data);
+      const currentMonth = currentDate.getMonth() + 1;
+      const currentYear = currentDate.getFullYear();
+      
       updatedRecord.tipoJornada = determineTipoJornada(cartaoPonto.data);
-      updatedRecord.taxaHoraExtra = determineOvertimeRate(cartaoPonto.data);
+      
+      // Get total overtime for the month
+      const totalMonthlyOvertime = await getTotalMonthlyOvertime(
+        updatedRecord.funcionarioId, 
+        currentMonth, 
+        currentYear
+      );
+      
+      updatedRecord.taxaHoraExtra = determineOvertimeRate(
+        cartaoPonto.data, 
+        totalMonthlyOvertime
+      );
     }
     
     // Recalculate hours if time fields were updated
@@ -292,7 +345,6 @@ export const cartaoPontoService = {
       cartaoPonto.horaSaida !== undefined ||
       cartaoPonto.inicioAlmoco !== undefined ||
       cartaoPonto.fimAlmoco !== undefined ||
-      cartaoPonto.horaExtraInicio !== undefined ||
       cartaoPonto.horaExtraFim !== undefined
     ) {
       const calculatedHours = calculateTotalHours(
@@ -301,7 +353,6 @@ export const cartaoPontoService = {
         updatedRecord.inicioAlmoco,
         updatedRecord.fimAlmoco,
         updatedRecord.tipoJornada,
-        updatedRecord.horaExtraInicio,
         updatedRecord.horaExtraFim
       );
       
@@ -364,14 +415,14 @@ export const cartaoPontoService = {
     0);
     
     const diasTrabalhados = records.filter(r => 
-      r.status !== 'falta_injustificada' && r.status !== 'falta_justificada'
+      r.status === 'normal' || r.status === 'sobreaviso'
     ).length;
     
     const diasUteis = 22; // Assuming 22 working days per month
     const diasFaltantes = diasUteis - diasTrabalhados;
     
     const registrosIncompletos = records.filter(r => 
-      !r.horaEntrada || !r.horaSaida || r.status === 'pending'
+      (r.status === 'normal' && (!r.horaEntrada || !r.horaSaida))
     ).length;
     
     // Check eligibility for food voucher (no unjustified absences)
