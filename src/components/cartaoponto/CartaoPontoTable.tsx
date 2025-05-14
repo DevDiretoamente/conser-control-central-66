@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { CartaoPonto } from '@/types/cartaoPonto';
-import { Eye, Edit, Trash, Clock, Check, X } from 'lucide-react';
+import { Eye, Edit, Trash, Check, X, Clock } from 'lucide-react';
 import CartaoPontoDialog from './CartaoPontoDialog';
 import { CartaoPontoFormValues } from './CartaoPontoDialog';
 import { Badge } from '@/components/ui/badge';
@@ -66,9 +66,25 @@ const CartaoPontoTable: React.FC<CartaoPontoTableProps> = ({
         return <Badge className="bg-green-500 hover:bg-green-600">Aprovado</Badge>;
       case 'rejected':
         return <Badge variant="destructive">Rejeitado</Badge>;
+      case 'dispensado':
+        return <Badge variant="outline" className="bg-blue-500 text-white hover:bg-blue-600">Dispensado</Badge>;
+      case 'feriado':
+        return <Badge variant="outline" className="bg-purple-500 text-white hover:bg-purple-600">Feriado</Badge>;
+      case 'falta_justificada':
+        return <Badge variant="outline" className="bg-yellow-500 text-white hover:bg-yellow-600">Justificada</Badge>;
+      case 'falta_injustificada':
+        return <Badge variant="destructive">Injustificada</Badge>;
+      case 'sobreaviso':
+        return <Badge variant="outline" className="bg-orange-500 text-white hover:bg-orange-600">Sobreaviso</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
+  };
+
+  // Helper to get overtime rate display
+  const getOvertimeRateDisplay = (rate?: number) => {
+    if (!rate) return '-';
+    return `${rate * 100}%`;
   };
 
   return (
@@ -82,6 +98,8 @@ const CartaoPontoTable: React.FC<CartaoPontoTableProps> = ({
               <TableHead>Entrada</TableHead>
               <TableHead>Saída</TableHead>
               <TableHead>Total</TableHead>
+              <TableHead>Extras</TableHead>
+              <TableHead>Taxa</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -89,7 +107,7 @@ const CartaoPontoTable: React.FC<CartaoPontoTableProps> = ({
           <TableBody>
             {registros.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-4 text-muted-foreground">
                   Nenhum registro encontrado
                 </TableCell>
               </TableRow>
@@ -101,6 +119,8 @@ const CartaoPontoTable: React.FC<CartaoPontoTableProps> = ({
                   <TableCell>{registro.horaEntrada || '-'}</TableCell>
                   <TableCell>{registro.horaSaida || '-'}</TableCell>
                   <TableCell>{registro.totalHoras?.toFixed(2) || '-'}</TableCell>
+                  <TableCell>{registro.horasExtras?.toFixed(2) || '-'}</TableCell>
+                  <TableCell>{getOvertimeRateDisplay(registro.taxaHoraExtra)}</TableCell>
                   <TableCell>{getStatusBadge(registro.status)}</TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button

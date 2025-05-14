@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { CartaoPonto } from '@/types/cartaoPonto';
-import { ArrowLeft, Clock, Edit, User, Calendar, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Clock, Edit, User, Calendar, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
 
 interface CartaoPontoDetailsProps {
   registro: CartaoPonto;
@@ -46,9 +46,41 @@ const CartaoPontoDetails: React.FC<CartaoPontoDetailsProps> = ({
         return <Badge className="bg-green-500 hover:bg-green-600">Aprovado</Badge>;
       case 'rejected':
         return <Badge variant="destructive">Rejeitado</Badge>;
+      case 'dispensado':
+        return <Badge variant="outline" className="bg-blue-500 text-white hover:bg-blue-600">Dispensado</Badge>;
+      case 'feriado':
+        return <Badge variant="outline" className="bg-purple-500 text-white hover:bg-purple-600">Feriado</Badge>;
+      case 'falta_justificada':
+        return <Badge variant="outline" className="bg-yellow-500 text-white hover:bg-yellow-600">Falta Justificada</Badge>;
+      case 'falta_injustificada':
+        return <Badge variant="destructive">Falta Injustificada</Badge>;
+      case 'sobreaviso':
+        return <Badge variant="outline" className="bg-orange-500 text-white hover:bg-orange-600">Sobreaviso</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
+  };
+  
+  // Helper function to get jornada badge
+  const getJornadaBadge = (tipoJornada?: string) => {
+    switch (tipoJornada) {
+      case 'normal':
+        return <Badge variant="outline">Jornada Normal</Badge>;
+      case 'sabado':
+        return <Badge variant="outline" className="bg-blue-500 text-white">Sábado</Badge>;
+      case 'domingo_feriado':
+        return <Badge variant="outline" className="bg-purple-500 text-white">Domingo/Feriado</Badge>;
+      default:
+        return null;
+    }
+  };
+  
+  // Helper to get overtime rate display
+  const getOvertimeRateDisplay = (rate?: number) => {
+    if (rate === 0.5) return '50%';
+    if (rate === 0.8) return '80%';
+    if (rate === 1.1) return '110%';
+    return '-';
   };
 
   return (
@@ -70,15 +102,16 @@ const CartaoPontoDetails: React.FC<CartaoPontoDetailsProps> = ({
       
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2">
             <div>
               <CardTitle className="text-2xl">Registro de Ponto</CardTitle>
               <CardDescription>
                 {registro.data && format(parseISO(registro.data), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
               </CardDescription>
             </div>
-            <div>
+            <div className="flex flex-col md:items-end gap-1">
               {getStatusBadge(registro.status)}
+              {getJornadaBadge(registro.tipoJornada)}
             </div>
           </div>
         </CardHeader>
@@ -95,7 +128,7 @@ const CartaoPontoDetails: React.FC<CartaoPontoDetailsProps> = ({
           
           <Separator />
           
-          {/* Horários */}
+          {/* Horários Regulares */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground flex items-center">
@@ -103,11 +136,11 @@ const CartaoPontoDetails: React.FC<CartaoPontoDetailsProps> = ({
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Entrada</p>
+                  <p className="text-sm text-muted-foreground">Entrada Manhã</p>
                   <p className="text-xl font-semibold">{formatTime(registro.horaEntrada)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Saída</p>
+                  <p className="text-sm text-muted-foreground">Saída Tarde</p>
                   <p className="text-xl font-semibold">{formatTime(registro.horaSaida)}</p>
                 </div>
               </div>
@@ -119,13 +152,34 @@ const CartaoPontoDetails: React.FC<CartaoPontoDetailsProps> = ({
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Início</p>
+                  <p className="text-sm text-muted-foreground">Saída Almoço</p>
                   <p className="text-xl font-semibold">{formatTime(registro.inicioAlmoco)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Fim</p>
+                  <p className="text-sm text-muted-foreground">Retorno Almoço</p>
                   <p className="text-xl font-semibold">{formatTime(registro.fimAlmoco)}</p>
                 </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Horas Extras */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-muted-foreground flex items-center">
+              <Clock className="mr-2 h-4 w-4" /> HORAS EXTRAS
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Início</p>
+                <p className="text-xl font-semibold">{formatTime(registro.horaExtraInicio)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Término</p>
+                <p className="text-xl font-semibold">{formatTime(registro.horaExtraFim)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Taxa</p>
+                <p className="text-xl font-semibold">{getOvertimeRateDisplay(registro.taxaHoraExtra)}</p>
               </div>
             </div>
           </div>
@@ -147,10 +201,30 @@ const CartaoPontoDetails: React.FC<CartaoPontoDetailsProps> = ({
               </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Criado em</p>
+              <p className="text-sm text-muted-foreground">Atualizado em</p>
               <p className="text-sm">
-                {registro.createdAt && format(new Date(registro.createdAt), "dd/MM/yyyy HH:mm")}
+                {registro.updatedAt && format(new Date(registro.updatedAt), "dd/MM/yyyy HH:mm")}
               </p>
+            </div>
+          </div>
+          
+          {/* Benefícios */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center space-x-2">
+              <p className="text-sm text-muted-foreground">Elegível para Cesta Básica:</p>
+              {registro.eligibleCestaBasica ? (
+                <CheckCircle className="h-5 w-5 text-green-500" />
+              ) : (
+                <XCircle className="h-5 w-5 text-red-500" />
+              )}
+            </div>
+            <div className="flex items-center space-x-2">
+              <p className="text-sm text-muted-foreground">Elegível para Lanche da Tarde:</p>
+              {registro.eligibleLanche ? (
+                <CheckCircle className="h-5 w-5 text-green-500" />
+              ) : (
+                <XCircle className="h-5 w-5 text-red-500" />
+              )}
             </div>
           </div>
           

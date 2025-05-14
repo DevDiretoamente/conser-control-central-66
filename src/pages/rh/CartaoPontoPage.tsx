@@ -10,6 +10,7 @@ import CartaoPontoTable from '@/components/cartaoponto/CartaoPontoTable';
 import CartaoPontoDialog from '@/components/cartaoponto/CartaoPontoDialog';
 import CartaoPontoCalendar from '@/components/cartaoponto/CartaoPontoCalendar';
 import CartaoPontoSummary from '@/components/cartaoponto/CartaoPontoSummary';
+import BeneficiosTab from '@/components/cartaoponto/BeneficiosTab';
 import { 
   Select,
   SelectContent,
@@ -30,7 +31,7 @@ import {
 } from '@/types/cartaoPonto';
 import { CartaoPontoFormValues } from '@/components/cartaoponto/CartaoPontoDialog';
 import { cartaoPontoService } from '@/services/cartaoPontoService';
-import { Calendar, Plus, ChevronLeft, ChevronRight, Table as TableIcon } from 'lucide-react';
+import { Calendar, Plus, ChevronLeft, ChevronRight, Table as TableIcon, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 // Mock employee data for demo purposes
@@ -48,21 +49,28 @@ const CartaoPontoPage: React.FC = () => {
   const [registros, setRegistros] = useState<CartaoPonto[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [viewMode, setViewMode] = useState<'calendar' | 'list' | 'beneficios'>('calendar');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedFuncionario, setSelectedFuncionario] = useState('');
   const [summary, setSummary] = useState({
     totalHorasMes: 0,
     totalHorasExtras: 0,
+    totalHorasExtras50: 0,
+    totalHorasExtras80: 0,
+    totalHorasExtras110: 0,
     diasTrabalhados: 0,
     diasFaltantes: 0,
     registrosIncompletos: 0,
+    valorCestaBasica: 0,
+    valorLanche: 0,
+    elegibleValeAlimentacao: false,
   });
   
   const canCreate = hasSpecificPermission('cartaoponto', 'create');
   const canEdit = hasSpecificPermission('cartaoponto', 'write');
   const canDelete = hasSpecificPermission('cartaoponto', 'delete');
   const canManage = hasSpecificPermission('cartaoponto', 'manage');
+  const canManageBeneficios = hasSpecificPermission('cartaoponto', 'manage') || hasSpecificPermission('admin', 'write');
 
   useEffect(() => {
     loadRegistros();
@@ -265,28 +273,30 @@ const CartaoPontoPage: React.FC = () => {
         </div>
       </div>
       
-      {/* Funcionário selector */}
-      <div className="flex items-center space-x-2">
-        <span className="text-sm font-medium">Funcionário:</span>
-        <Select
-          value={selectedFuncionario}
-          onValueChange={setSelectedFuncionario}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Selecione um funcionário" />
-          </SelectTrigger>
-          <SelectContent>
-            {mockFuncionarios.map((funcionario) => (
-              <SelectItem key={funcionario.id} value={funcionario.id}>
-                {funcionario.nome}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Não exibir seletor de funcionário na aba de benefícios */}
+      {viewMode !== 'beneficios' && (
+        <div className="flex items-center space-x-2">
+          <span className="text-sm font-medium">Funcionário:</span>
+          <Select
+            value={selectedFuncionario}
+            onValueChange={setSelectedFuncionario}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Selecione um funcionário" />
+            </SelectTrigger>
+            <SelectContent>
+              {mockFuncionarios.map((funcionario) => (
+                <SelectItem key={funcionario.id} value={funcionario.id}>
+                  {funcionario.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
       
-      {/* Summary cards */}
-      {selectedFuncionario && (
+      {/* Summary cards - only if funcionario is selected and not in beneficios tab */}
+      {selectedFuncionario && viewMode !== 'beneficios' && (
         <CartaoPontoSummary 
           summary={summary} 
           month={format(currentDate, 'MMMM', { locale: ptBR })}
@@ -294,28 +304,41 @@ const CartaoPontoPage: React.FC = () => {
       )}
       
       {/* View tabs */}
-      <Tabs defaultValue="calendar" className="w-full">
+      <Tabs 
+        defaultValue="calendar" 
+        value={viewMode}
+        onValueChange={value => setViewMode(value as 'calendar' | 'list' | 'beneficios')} 
+        className="w-full"
+      >
         <div className="flex justify-between items-center mb-4">
           <TabsList>
-            <TabsTrigger value="calendar" onClick={() => setViewMode('calendar')}>
+            <TabsTrigger value="calendar">
               <Calendar className="mr-2 h-4 w-4" /> Calendário
             </TabsTrigger>
-            <TabsTrigger value="list" onClick={() => setViewMode('list')}>
+            <TabsTrigger value="list">
               <TableIcon className="mr-2 h-4 w-4" /> Lista
             </TabsTrigger>
+            {canManageBeneficios && (
+              <TabsTrigger value="beneficios">
+                <Settings className="mr-2 h-4 w-4" /> Benefícios
+              </TabsTrigger>
+            )}
           </TabsList>
           
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="icon" onClick={handlePreviousMonth}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium min-w-[120px] text-center">
-              {format(currentDate, 'MMMM yyyy', { locale: ptBR })}
-            </span>
-            <Button variant="outline" size="icon" onClick={handleNextMonth}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+          {/* Don't show month selector in beneficios tab */}
+          {viewMode !== 'beneficios' && (
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="icon" onClick={handlePreviousMonth}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium min-w-[120px] text-center">
+                {format(currentDate, 'MMMM yyyy', { locale: ptBR })}
+              </span>
+              <Button variant="outline" size="icon" onClick={handleNextMonth}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
 
         <TabsContent value="calendar">
@@ -338,6 +361,10 @@ const CartaoPontoPage: React.FC = () => {
               canApprove={canManage}
             />
           </div>
+        </TabsContent>
+        
+        <TabsContent value="beneficios">
+          <BeneficiosTab />
         </TabsContent>
       </Tabs>
 

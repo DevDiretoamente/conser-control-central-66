@@ -1,6 +1,5 @@
 
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,9 +18,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { CartaoPonto, CartaoPontoStatus } from '@/types/cartaoPonto';
 import {
   Select,
   SelectContent,
@@ -29,9 +25,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { CartaoPonto, CartaoPontoStatus, TipoJornada } from '@/types/cartaoPonto';
 import { toast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { isWeekend, parseISO } from 'date-fns';
+import { Calendar, Clock } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 interface CartaoPontoDialogProps {
   open: boolean;
@@ -52,6 +54,9 @@ const cartaoPontoSchema = z.object({
   horaSaida: z.string().optional(),
   inicioAlmoco: z.string().optional(),
   fimAlmoco: z.string().optional(),
+  horaExtraInicio: z.string().optional(),
+  horaExtraFim: z.string().optional(),
+  tipoJornada: z.string() as z.ZodType<TipoJornada>,
   status: z.string() as z.ZodType<CartaoPontoStatus>,
   justificativa: z.string().optional(),
   observacoes: z.string().optional(),
@@ -78,11 +83,38 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
       horaSaida: cartaoPonto?.horaSaida || '',
       inicioAlmoco: cartaoPonto?.inicioAlmoco || '',
       fimAlmoco: cartaoPonto?.fimAlmoco || '',
+      horaExtraInicio: cartaoPonto?.horaExtraInicio || '',
+      horaExtraFim: cartaoPonto?.horaExtraFim || '',
+      tipoJornada: cartaoPonto?.tipoJornada || 'normal',
       status: cartaoPonto?.status || 'normal',
       justificativa: cartaoPonto?.justificativa || '',
       observacoes: cartaoPonto?.observacoes || '',
     },
   });
+
+  // Update tipoJornada when date changes
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'data' && value.data) {
+        try {
+          const dateObj = parseISO(value.data);
+          const isWeekendDay = isWeekend(dateObj);
+          
+          // Set tipoJornada based on day of week
+          if (isWeekendDay) {
+            const isSunday = dateObj.getDay() === 0;
+            form.setValue('tipoJornada', isSunday ? 'domingo_feriado' : 'sabado');
+          } else {
+            form.setValue('tipoJornada', 'normal');
+          }
+        } catch (error) {
+          console.error('Error parsing date:', error);
+        }
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   const onSubmit = async (data: CartaoPontoFormValues) => {
     try {
@@ -106,10 +138,13 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
   };
   
   const title = isEdit ? 'Editar Registro de Ponto' : 'Novo Registro de Ponto';
+  
+  // Get the current tipoJornada
+  const currentTipoJornada = form.watch('tipoJornada');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
@@ -140,12 +175,44 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
                     <FormItem>
                       <FormLabel>Data</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <div className="flex items-center">
+                          <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <Input type="date" {...field} />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                
+                {/* Tipo de Jornada (read-only, calculated from date) */}
+                <FormField
+                  control={form.control}
+                  name="tipoJornada"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Jornada</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        disabled={true} // Made read-only as it's calculated from date
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Tipo de jornada" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="normal">Normal (Segunda a Sexta)</SelectItem>
+                          <SelectItem value="sabado">Sábado (Extras 50% ou 80%)</SelectItem>
+                          <SelectItem value="domingo_feriado">Domingo/Feriado (Extras 110%)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                
+                <Separator className="my-4" />
                 
                 <div className="grid grid-cols-2 gap-4">
                   {/* Hora de Entrada */}
@@ -154,9 +221,12 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
                     name="horaEntrada"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Entrada</FormLabel>
+                        <FormLabel>Entrada Manhã</FormLabel>
                         <FormControl>
-                          <Input type="time" {...field} />
+                          <div className="flex items-center">
+                            <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                            <Input type="time" {...field} />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -169,9 +239,12 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
                     name="horaSaida"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Saída</FormLabel>
+                        <FormLabel>Saída Tarde</FormLabel>
                         <FormControl>
-                          <Input type="time" {...field} />
+                          <div className="flex items-center">
+                            <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                            <Input type="time" {...field} />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -186,9 +259,12 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
                     name="inicioAlmoco"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Início do Almoço</FormLabel>
+                        <FormLabel>Saída Almoço</FormLabel>
                         <FormControl>
-                          <Input type="time" {...field} />
+                          <div className="flex items-center">
+                            <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                            <Input type="time" {...field} />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -201,15 +277,60 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
                     name="fimAlmoco"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Fim do Almoço</FormLabel>
+                        <FormLabel>Retorno Almoço</FormLabel>
                         <FormControl>
-                          <Input type="time" {...field} />
+                          <div className="flex items-center">
+                            <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                            <Input type="time" {...field} />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
+                
+                <Separator className="my-4" />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Hora Extra Início */}
+                  <FormField
+                    control={form.control}
+                    name="horaExtraInicio"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Início Hora Extra</FormLabel>
+                        <FormControl>
+                          <div className="flex items-center">
+                            <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                            <Input type="time" {...field} />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {/* Hora Extra Fim */}
+                  <FormField
+                    control={form.control}
+                    name="horaExtraFim"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Término Hora Extra</FormLabel>
+                        <FormControl>
+                          <div className="flex items-center">
+                            <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                            <Input type="time" {...field} />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <Separator className="my-4" />
                 
                 {/* Status */}
                 <FormField
@@ -232,6 +353,11 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
                           <SelectItem value="pending">Pendente</SelectItem>
                           <SelectItem value="approved">Aprovado</SelectItem>
                           <SelectItem value="rejected">Rejeitado</SelectItem>
+                          <SelectItem value="dispensado">Dispensado</SelectItem>
+                          <SelectItem value="feriado">Feriado</SelectItem>
+                          <SelectItem value="falta_justificada">Falta Justificada</SelectItem>
+                          <SelectItem value="falta_injustificada">Falta Injustificada</SelectItem>
+                          <SelectItem value="sobreaviso">Sobreaviso</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -282,4 +408,3 @@ const CartaoPontoDialog: React.FC<CartaoPontoDialogProps> = ({
 };
 
 export default CartaoPontoDialog;
-
