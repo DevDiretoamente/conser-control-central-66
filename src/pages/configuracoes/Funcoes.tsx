@@ -21,11 +21,13 @@ const FuncoesPage = () => {
 
       <h1 className="text-2xl font-bold mb-6">Gerenciamento de Funções</h1>
       
-      <ScrollArea className="h-[calc(100vh-180px)]">
-        <div className="pr-4">
-          <FuncoesTab />
-        </div>
-      </ScrollArea>
+      <div className="h-[calc(100vh-180px)] overflow-hidden">
+        <ScrollArea className="h-full w-full">
+          <div className="pr-4 pb-6">
+            <FuncoesTab />
+          </div>
+        </ScrollArea>
+      </div>
     </div>
   );
 };

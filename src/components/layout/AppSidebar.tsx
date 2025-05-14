@@ -16,7 +16,8 @@ import {
   BadgeCheck,
   UserCog,
   Mail,
-  Stethoscope
+  Stethoscope,
+  CreditCard
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole, PermissionLevel, PermissionArea } from '@/types/auth';
@@ -75,6 +76,12 @@ const AppSidebar = ({ isCollapsed = false }) => {
           icon={Clock} 
           label="Cartão Ponto" 
           hasPermission={hasSpecificPermission('cartaoponto', 'read')}
+        />
+        <NavItem 
+          to="/beneficios" 
+          icon={CreditCard} 
+          label="Benefícios" 
+          hasPermission={hasSpecificPermission('cartaoponto', 'manage') || hasSpecificPermission('admin', 'read')}
         />
       </div>
     </div>

@@ -23,6 +23,7 @@ import EmailsPage from './pages/configuracoes/Emails';
 import CartaoPontoPage from './pages/rh/CartaoPontoPage';
 import CartaoPontoDetailPage from './pages/rh/CartaoPontoDetailPage';
 import UsuariosPage from './pages/configuracoes/Usuarios';
+import BeneficiosPage from './pages/configuracoes/Beneficios';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -206,7 +207,10 @@ const App: React.FC = () => {
               <div>Página de Financeiro</div>
             </ProtectedRoute>
           } />
-
+          
+          {/* Benefícios Routes */}
+          <Route path="/beneficios" element={<BeneficiosPage />} />
+          
           {/* Default route - redirect to home */}
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
