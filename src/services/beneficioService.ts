@@ -1,80 +1,243 @@
 
 import { Beneficio } from '@/types/cartaoPonto';
-import { v4 as uuidv4 } from 'uuid';
+import { toast } from '@/hooks/use-toast';
 
-// Mock data for benefits - These are now global values applied to all eligible employees
-const mockBeneficios: Beneficio[] = [
+// Mock storage key for benefits
+const BENEFICIOS_STORAGE_KEY = 'app_beneficios';
+
+// Default values
+const DEFAULT_BENEFICIOS: Beneficio[] = [
   {
-    id: '1',
+    id: 'cesta-basica-default',
     tipo: 'cesta_basica',
-    valor: 120.00,
-    dataAtualizacao: '2025-05-01T10:00:00Z',
-    observacoes: 'Valor base da cesta básica para todos os funcionários elegíveis'
+    valor: 450.00,
+    dataAtualizacao: new Date().toISOString(),
+    observacoes: 'Valor padrão da cesta básica'
   },
   {
-    id: '2',
+    id: 'lanche-default',
     tipo: 'lanche',
-    valor: 15.00,
-    dataAtualizacao: '2025-05-01T10:00:00Z',
-    observacoes: 'Valor do lanche da tarde para cada dia de trabalho com hora extra'
+    valor: 5.00,
+    dataAtualizacao: new Date().toISOString(),
+    observacoes: 'Valor padrão do lanche por hora extra'
   }
 ];
 
-export const beneficioService = {
-  getAll: async (): Promise<Beneficio[]> => {
-    return [...mockBeneficios];
-  },
-  
-  getByTipo: async (tipo: 'cesta_basica' | 'lanche'): Promise<Beneficio | null> => {
-    const beneficio = mockBeneficios.find(b => b.tipo === tipo);
-    return beneficio || null;
-  },
-  
-  update: async (id: string, data: Partial<Beneficio>): Promise<Beneficio | null> => {
-    const index = mockBeneficios.findIndex(b => b.id === id);
-    if (index === -1) return null;
-    
-    const updatedBeneficio = {
-      ...mockBeneficios[index],
-      ...data,
-      dataAtualizacao: new Date().toISOString()
-    };
-    
-    mockBeneficios[index] = updatedBeneficio;
-    return updatedBeneficio;
-  },
-  
-  create: async (data: Omit<Beneficio, 'id' | 'dataAtualizacao'>): Promise<Beneficio> => {
-    const now = new Date().toISOString();
-    
-    const newBeneficio: Beneficio = {
-      id: uuidv4(),
-      ...data,
-      dataAtualizacao: now
-    };
-    
-    mockBeneficios.push(newBeneficio);
-    return newBeneficio;
-  },
-  
-  delete: async (id: string): Promise<boolean> => {
-    const index = mockBeneficios.findIndex(b => b.id === id);
-    if (index === -1) return false;
-    
-    mockBeneficios.splice(index, 1);
-    return true;
-  },
-  
-  // Get the current global values for benefits
-  getCurrentValues: async (): Promise<{cestaBasica: number, lanche: number}> => {
-    const cestaBasica = mockBeneficios.find(b => b.tipo === 'cesta_basica')?.valor || 0;
-    const lanche = mockBeneficios.find(b => b.tipo === 'lanche')?.valor || 0;
-    
-    return {
-      cestaBasica,
-      lanche
-    };
+// Helper to get benefícios from storage or default values
+const getBeneficiosFromStorage = (): Beneficio[] => {
+  try {
+    const savedBeneficios = localStorage.getItem(BENEFICIOS_STORAGE_KEY);
+    return savedBeneficios ? JSON.parse(savedBeneficios) : DEFAULT_BENEFICIOS;
+  } catch (error) {
+    console.error('Error loading benefícios from storage:', error);
+    return DEFAULT_BENEFICIOS;
   }
 };
 
-export type BeneficioService = typeof beneficioService;
+// Helper to save beneficios to storage
+const saveBeneficiosToStorage = (beneficios: Beneficio[]): void => {
+  try {
+    localStorage.setItem(BENEFICIOS_STORAGE_KEY, JSON.stringify(beneficios));
+    console.log('Benefícios saved to storage successfully');
+  } catch (error) {
+    console.error('Error saving benefícios to storage:', error);
+    toast({
+      title: 'Erro',
+      description: 'Erro ao salvar benefícios no armazenamento local.',
+      variant: 'destructive',
+    });
+  }
+};
+
+// Service object with operations for benefícios
+export const beneficioService = {
+  // Get all benefícios
+  getAll: async (): Promise<Beneficio[]> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const beneficios = getBeneficiosFromStorage();
+        resolve(beneficios);
+      }, 300);
+    });
+  },
+  
+  // Get a specific benefício by ID
+  getById: async (id: string): Promise<Beneficio | undefined> => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const beneficios = getBeneficiosFromStorage();
+        const beneficio = beneficios.find(b => b.id === id);
+        
+        if (beneficio) {
+          resolve(beneficio);
+        } else {
+          reject(new Error('Benefício não encontrado'));
+        }
+      }, 300);
+    });
+  },
+  
+  // Get a specific benefício by type
+  getByTipo: async (tipo: 'cesta_basica' | 'lanche'): Promise<Beneficio | undefined> => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const beneficios = getBeneficiosFromStorage();
+        const beneficio = beneficios.find(b => b.tipo === tipo);
+        
+        if (beneficio) {
+          resolve(beneficio);
+        } else {
+          reject(new Error('Benefício não encontrado'));
+        }
+      }, 300);
+    });
+  },
+  
+  // Create a new benefício
+  create: async (beneficioData: Omit<Beneficio, 'id'>): Promise<Beneficio> => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const beneficios = getBeneficiosFromStorage();
+        
+        // Check if benefício of this type already exists
+        const existingBeneficio = beneficios.find(b => b.tipo === beneficioData.tipo);
+        if (existingBeneficio) {
+          reject(new Error('Já existe um benefício deste tipo cadastrado'));
+          return;
+        }
+        
+        const newBeneficio: Beneficio = {
+          ...beneficioData,
+          id: `beneficio-${Date.now()}`
+        };
+        
+        const updatedBeneficios = [...beneficios, newBeneficio];
+        saveBeneficiosToStorage(updatedBeneficios);
+        
+        resolve(newBeneficio);
+      }, 500);
+    });
+  },
+  
+  // Update an existing benefício
+  update: async (id: string, beneficioData: Partial<Beneficio>): Promise<Beneficio> => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const beneficios = getBeneficiosFromStorage();
+        const index = beneficios.findIndex(b => b.id === id);
+        
+        if (index === -1) {
+          reject(new Error('Benefício não encontrado para atualização'));
+          return;
+        }
+        
+        // If trying to change type, check if new type already exists (except for the current one)
+        if (beneficioData.tipo && beneficioData.tipo !== beneficios[index].tipo) {
+          const existingBeneficio = beneficios.find(b => 
+            b.tipo === beneficioData.tipo && b.id !== id
+          );
+          if (existingBeneficio) {
+            reject(new Error('Já existe um benefício deste tipo cadastrado'));
+            return;
+          }
+        }
+        
+        const updatedBeneficio = {
+          ...beneficios[index],
+          ...beneficioData,
+          dataAtualizacao: new Date().toISOString()
+        };
+        
+        const updatedBeneficios = [
+          ...beneficios.slice(0, index),
+          updatedBeneficio,
+          ...beneficios.slice(index + 1)
+        ];
+        
+        saveBeneficiosToStorage(updatedBeneficios);
+        resolve(updatedBeneficio);
+      }, 500);
+    });
+  },
+  
+  // Delete a benefício
+  delete: async (id: string): Promise<boolean> => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const beneficios = getBeneficiosFromStorage();
+        const index = beneficios.findIndex(b => b.id === id);
+        
+        if (index === -1) {
+          reject(new Error('Benefício não encontrado para exclusão'));
+          return;
+        }
+        
+        const updatedBeneficios = [
+          ...beneficios.slice(0, index),
+          ...beneficios.slice(index + 1)
+        ];
+        
+        saveBeneficiosToStorage(updatedBeneficios);
+        resolve(true);
+      }, 500);
+    });
+  },
+  
+  // Get current benefit values (latest of each type)
+  getCurrentValues: async (): Promise<{ cestaBasica: number; lanche: number }> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const beneficios = getBeneficiosFromStorage();
+        
+        // Get the latest cesta básica and lanche values
+        const cestaBasica = beneficios.find(b => b.tipo === 'cesta_basica')?.valor || 450.00;
+        const lanche = beneficios.find(b => b.tipo === 'lanche')?.valor || 5.00;
+        
+        resolve({ cestaBasica, lanche });
+      }, 300);
+    });
+  },
+  
+  // Update benefit value
+  updateValue: async (tipo: 'cesta_basica' | 'lanche', valor: number, observacoes?: string): Promise<Beneficio> => {
+    return new Promise((resolve, reject) => {
+      setTimeout(async () => {
+        try {
+          const beneficios = getBeneficiosFromStorage();
+          const beneficioIndex = beneficios.findIndex(b => b.tipo === tipo);
+          
+          if (beneficioIndex === -1) {
+            // If this type doesn't exist, create a new one
+            const newBeneficio = await beneficioService.create({
+              tipo,
+              valor,
+              dataAtualizacao: new Date().toISOString(),
+              observacoes
+            });
+            resolve(newBeneficio);
+          } else {
+            // Update existing benefit
+            const updatedBeneficio = await beneficioService.update(beneficios[beneficioIndex].id, {
+              valor,
+              observacoes,
+              dataAtualizacao: new Date().toISOString()
+            });
+            resolve(updatedBeneficio);
+          }
+        } catch (error) {
+          reject(error);
+        }
+      }, 500);
+    });
+  }
+};
+
+// Initialize default values if not already in storage
+(async () => {
+  const beneficios = getBeneficiosFromStorage();
+  if (beneficios.length === 0) {
+    saveBeneficiosToStorage(DEFAULT_BENEFICIOS);
+  }
+})();
+
+export default beneficioService;

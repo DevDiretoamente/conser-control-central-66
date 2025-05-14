@@ -1,222 +1,202 @@
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { useAuth } from './contexts/AuthContext';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import FuncionariosPage from './pages/funcionarios/ListaFuncionarios';
-import DetalheFuncionario from './pages/funcionarios/DetalheFuncionario';
-import EditarFuncionario from './pages/funcionarios/EditarFuncionario';
-import NovoFuncionario from './pages/funcionarios/NovoFuncionario';
-import FuncoesPage from './pages/configuracoes/Funcoes';
-import DetalheFuncao from './pages/configuracoes/DetalheFuncao';
-import EditarFuncao from './pages/configuracoes/EditarFuncao';
-import SetoresPage from './pages/configuracoes/Setores';
-import ExamesMedicosPage from './pages/funcionarios/ExamesMedicosPage';
-import Obras from './pages/obras/Obras';
-import { Permission } from './types/auth';
-import ClinicasPage from './pages/configuracoes/Clinicas';
-import RHPage from './pages/rh/RHPage';
-import AppLayout from './components/layout/AppLayout';
-import ExamesPage from './pages/configuracoes/Exames';
-import ConfiguracoesPage from './pages/configuracoes/Configuracoes';
-import EmailsPage from './pages/configuracoes/Emails';
-import CartaoPontoPage from './pages/rh/CartaoPontoPage';
-import CartaoPontoDetailPage from './pages/rh/CartaoPontoDetailPage';
-import UsuariosPage from './pages/configuracoes/Usuarios';
-import BeneficiosPage from './pages/configuracoes/Beneficios';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
+import { ThemeProvider } from './contexts/ThemeProvider'
+import { Toaster } from './components/ui/sonner'
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-  requiredPermissions: Permission[];
+// Layout
+import AppLayout from './components/layout/AppLayout'
+import ProtectedRoute from './components/auth/ProtectedRoute'
+
+// Pages
+import Index from './pages/Index'
+import Login from './pages/Login'
+import Dashboard from './pages/Dashboard'
+import NotFound from './pages/NotFound'
+import AccessDenied from './pages/AccessDenied'
+import InactiveAccount from './pages/InactiveAccount'
+
+// RH Pages
+import CartaoPontoPage from './pages/rh/CartaoPontoPage'
+import CartaoPontoDetailPage from './pages/rh/CartaoPontoDetailPage'
+import RelatoriosPage from './pages/rh/RelatoriosPage'
+
+// Funcionários
+import ListaFuncionarios from './pages/funcionarios/ListaFuncionarios'
+import NovoFuncionario from './pages/funcionarios/NovoFuncionario'
+import EditarFuncionario from './pages/funcionarios/EditarFuncionario'
+import DetalheFuncionario from './pages/funcionarios/DetalheFuncionario'
+import ExamesMedicosPage from './pages/funcionarios/ExamesMedicosPage'
+
+// Configurações
+import Funcoes from './pages/configuracoes/Funcoes'
+import DetalheFuncao from './pages/configuracoes/DetalheFuncao'
+import EditarFuncao from './pages/configuracoes/EditarFuncao'
+import Setores from './pages/configuracoes/Setores'
+import Clinicas from './pages/configuracoes/Clinicas'
+import Exames from './pages/configuracoes/Exames'
+import Usuarios from './pages/configuracoes/Usuarios'
+import Emails from './pages/configuracoes/Emails'
+import Beneficios from './pages/configuracoes/Beneficios'
+
+// Módulos
+import Frota from './pages/frota/Frota'
+import Obras from './pages/obras/Obras'
+import Patrimonio from './pages/patrimonio/Patrimonio'
+import Financeiro from './pages/financeiro/Financeiro'
+
+function App() {
+  return (
+    <ThemeProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+            <Route index element={<Dashboard />} />
+
+            {/* RH */}
+            <Route path="rh/cartao-ponto" element={
+              <ProtectedRoute permission="cartaoponto" level="read">
+                <CartaoPontoPage />
+              </ProtectedRoute>
+            } />
+            <Route path="rh/cartao-ponto/:id" element={
+              <ProtectedRoute permission="cartaoponto" level="read">
+                <CartaoPontoDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="rh/relatorios" element={
+              <ProtectedRoute permission="cartaoponto" level="read">
+                <RelatoriosPage />
+              </ProtectedRoute>
+            } />
+
+            {/* Funcionários */}
+            <Route path="funcionarios" element={
+              <ProtectedRoute permission="funcionarios" level="read">
+                <ListaFuncionarios />
+              </ProtectedRoute>
+            } />
+            <Route path="funcionarios/novo" element={
+              <ProtectedRoute permission="funcionarios" level="create">
+                <NovoFuncionario />
+              </ProtectedRoute>
+            } />
+            <Route path="funcionarios/:id" element={
+              <ProtectedRoute permission="funcionarios" level="read">
+                <DetalheFuncionario />
+              </ProtectedRoute>
+            } />
+            <Route path="funcionarios/:id/editar" element={
+              <ProtectedRoute permission="funcionarios" level="write">
+                <EditarFuncionario />
+              </ProtectedRoute>
+            } />
+            <Route path="funcionarios/exames" element={
+              <ProtectedRoute permission="exames" level="read">
+                <ExamesMedicosPage />
+              </ProtectedRoute>
+            } />
+
+            {/* Outras rotas existentes */}
+            <Route path="obras" element={
+              <ProtectedRoute permission="obras" level="read">
+                <Obras />
+              </ProtectedRoute>
+            } />
+            <Route path="frota" element={
+              <ProtectedRoute permission="frota" level="read">
+                <Frota />
+              </ProtectedRoute>
+            } />
+            <Route path="patrimonio" element={
+              <ProtectedRoute permission="patrimonio" level="read">
+                <Patrimonio />
+              </ProtectedRoute>
+            } />
+            <Route path="financeiro" element={
+              <ProtectedRoute permission="financeiro" level="read">
+                <Financeiro />
+              </ProtectedRoute>
+            } />
+            
+            {/* Configurações */}
+            <Route path="funcoes" element={
+              <ProtectedRoute permission="funcoes" level="read">
+                <Funcoes />
+              </ProtectedRoute>
+            } />
+            <Route path="funcoes/:id" element={
+              <ProtectedRoute permission="funcoes" level="read">
+                <DetalheFuncao />
+              </ProtectedRoute>
+            } />
+            <Route path="funcoes/:id/editar" element={
+              <ProtectedRoute permission="funcoes" level="write">
+                <EditarFuncao />
+              </ProtectedRoute>
+            } />
+            <Route path="setores" element={
+              <ProtectedRoute permission="setores" level="read">
+                <Setores />
+              </ProtectedRoute>
+            } />
+            <Route path="clinicas" element={
+              <ProtectedRoute permission="clinicas" level="read">
+                <Clinicas />
+              </ProtectedRoute>
+            } />
+            <Route path="exames" element={
+              <ProtectedRoute permission="exames" level="read">
+                <Exames />
+              </ProtectedRoute>
+            } />
+            <Route path="configuracoes/usuarios" element={
+              <ProtectedRoute permission="usuarios" level="read">
+                <Usuarios />
+              </ProtectedRoute>
+            } />
+            <Route path="configuracoes/emails" element={
+              <ProtectedRoute permission="emails" level="read">
+                <Emails />
+              </ProtectedRoute>
+            } />
+            <Route path="beneficios" element={
+              <ProtectedRoute permission="cartaoponto" level="manage">
+                <Beneficios />
+              </ProtectedRoute>
+            } />
+
+            {/* Módulos */}
+            <Route path="obras" element={
+              <ProtectedRoute permission="obras" level="read">
+                <Obras />
+              </ProtectedRoute>
+            } />
+            <Route path="frota" element={
+              <ProtectedRoute permission="frota" level="read">
+                <Frota />
+              </ProtectedRoute>
+            } />
+            <Route path="patrimonio" element={
+              <ProtectedRoute permission="patrimonio" level="read">
+                <Patrimonio />
+              </ProtectedRoute>
+            } />
+            <Route path="financeiro" element={
+              <ProtectedRoute permission="financeiro" level="read">
+                <Financeiro />
+              </ProtectedRoute>
+            } />
+
+            {/* Access Denied */}
+            <Route path="acesso-negado" element={<AccessDenied />} />
+            <Route path="conta-inativa" element={<InactiveAccount />} />
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Router>
+      <Toaster />
+    </ThemeProvider>
+  )
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredPermissions }) => {
-  const { isAuthenticated, hasSpecificPermission, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <div>Carregando...</div>; 
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
-
-  const hasRequiredPermissions = requiredPermissions.every(permission =>
-    hasSpecificPermission(permission.area, permission.level)
-  );
-
-  if (!hasRequiredPermissions) {
-    return <div>Acesso negado.</div>;
-  }
-
-  return <>{children}</>;
-};
-
-const App: React.FC = () => {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        
-        {/* Protected Routes - Using AppLayout */}
-        <Route element={<AppLayout />}>
-          <Route path="/" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'rh', level: 'read' }]}>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
-
-          {/* RH Routes */}
-          <Route path="/rh" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'rh', level: 'read' }]}>
-              <RHPage />
-            </ProtectedRoute>
-          } />
-          
-          {/* Cartão Ponto Routes */}
-          <Route path="/rh/cartao-ponto" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'cartaoponto', level: 'read' }]}>
-              <CartaoPontoPage />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/rh/cartao-ponto/:id" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'cartaoponto', level: 'read' }]}>
-              <CartaoPontoDetailPage />
-            </ProtectedRoute>
-          } />
-          
-          {/* Funcionários Routes */}
-          <Route path="/funcionarios" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'funcionarios', level: 'read' }]}>
-              <FuncionariosPage />
-            </ProtectedRoute>
-          } />
-          
-          {/* IMPORTANT: Add the /exames route BEFORE any other funcionarios/* routes */}
-          <Route path="/funcionarios/exames" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'exames', level: 'read' }]}>
-              <ExamesMedicosPage />
-            </ProtectedRoute>
-          } />
-          
-          {/* IMPORTANT: Add the novo route BEFORE the parameterized route */}
-          <Route path="/funcionarios/novo" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'funcionarios', level: 'write' }]}>
-              <NovoFuncionario />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/funcionarios/:id" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'funcionarios', level: 'read' }]}>
-              <DetalheFuncionario />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/funcionarios/:id/edit" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'funcionarios', level: 'write' }]}>
-              <EditarFuncionario />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/funcionarios/:id/exames-medicos" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'exames', level: 'read' }]}>
-              <ExamesMedicosPage />
-            </ProtectedRoute>
-          } />
-          
-          {/* Configurações Routes */}
-          <Route path="/configuracoes" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'configuracoes', level: 'read' }]}>
-              <ConfiguracoesPage />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/configuracoes/emails" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'configuracoes', level: 'write' }]}>
-              <EmailsPage />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/configuracoes/usuarios" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'usuarios', level: 'read' }]}>
-              <UsuariosPage />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/funcoes" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'funcoes', level: 'read' }]}>
-              <FuncoesPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/funcoes/:id" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'funcoes', level: 'read' }]}>
-              <DetalheFuncao />
-            </ProtectedRoute>
-          } />
-          <Route path="/funcoes/:id/edit" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'funcoes', level: 'write' }]}>
-              <EditarFuncao />
-            </ProtectedRoute>
-          } />
-          <Route path="/setores" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'setores', level: 'read' }]}>
-              <SetoresPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/clinicas" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'clinicas', level: 'read' }]}>
-              <ClinicasPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/exames" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'exames', level: 'read' }]}>
-              <ExamesPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/emails" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'configuracoes', level: 'write' }]}>
-              <Navigate to="/configuracoes/emails" replace />
-            </ProtectedRoute>
-          } />
-          
-          {/* Obras Routes */}
-          <Route path="/obras" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'obras', level: 'read' }]}>
-              <Obras />
-            </ProtectedRoute>
-          } />
-          
-          {/* Frota Routes */}
-          <Route path="/frota" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'frota', level: 'read' }]}>
-              <div>Página de Frota</div>
-            </ProtectedRoute>
-          } />
-          
-          {/* Patrimônio Routes */}
-          <Route path="/patrimonio" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'patrimonio', level: 'read' }]}>
-              <div>Página de Patrimônio</div>
-            </ProtectedRoute>
-          } />
-          
-          {/* Financeiro Routes */}
-          <Route path="/financeiro" element={
-            <ProtectedRoute requiredPermissions={[{ area: 'financeiro', level: 'read' }]}>
-              <div>Página de Financeiro</div>
-            </ProtectedRoute>
-          } />
-          
-          {/* Benefícios Routes */}
-          <Route path="/beneficios" element={<BeneficiosPage />} />
-          
-          {/* Default route - redirect to home */}
-          <Route path="*" element={<Navigate to="/" />} />
-        </Route>
-      </Routes>
-    </Router>
-  );
-};
-
-export default App;
+export default App
