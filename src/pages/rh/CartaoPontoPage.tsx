@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -216,9 +215,9 @@ const CartaoPontoPage: React.FC = () => {
     }
   };
 
-  const handleStatusChange = async (id: string, status: CartaoPontoStatus, observacao?: string) => {
+  const handleStatusChange = async (id: string, status: string, observacao?: string) => {
     try {
-      await cartaoPontoService.updateStatus(id, status, observacao);
+      await cartaoPontoService.updateStatus(id, status as CartaoPontoStatus, observacao);
       
       toast({
         title: 'Sucesso',

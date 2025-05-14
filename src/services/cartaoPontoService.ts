@@ -1,4 +1,3 @@
-
 import { CartaoPonto, CartaoPontoFilterOptions, CartaoPontoStatus, CartaoPontoSummary, TipoJornada } from '@/types/cartaoPonto';
 import { beneficioService } from './beneficioService';
 import { v4 as uuidv4 } from 'uuid';
@@ -69,7 +68,7 @@ const mockCartaoPontos: CartaoPonto[] = [
     data: '2025-05-02',
     horaEntrada: '09:00',
     tipoJornada: 'normal',
-    status: 'pending',
+    status: 'normal',
     justificativa: 'Esqueci de marcar a saída',
     createdAt: '2025-05-02T09:00:00Z',
     updatedAt: '2025-05-02T09:00:00Z',

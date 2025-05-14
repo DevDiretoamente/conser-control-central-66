@@ -20,7 +20,7 @@ interface CartaoPontoTableProps {
   registros: CartaoPonto[];
   onUpdate: (id: string, data: CartaoPontoFormValues) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
-  onStatusChange: (id: string, status: 'approved' | 'rejected', observacao?: string) => Promise<void>;
+  onStatusChange?: (id: string, status: string, observacao?: string) => Promise<void>;
   canEdit: boolean;
   canDelete: boolean;
   canApprove: boolean;
@@ -60,12 +60,6 @@ const CartaoPontoTable: React.FC<CartaoPontoTableProps> = ({
     switch (status) {
       case 'normal':
         return <Badge variant="outline">Normal</Badge>;
-      case 'pending':
-        return <Badge variant="secondary">Pendente</Badge>;
-      case 'approved':
-        return <Badge className="bg-green-500 hover:bg-green-600">Aprovado</Badge>;
-      case 'rejected':
-        return <Badge variant="destructive">Rejeitado</Badge>;
       case 'dispensado':
         return <Badge variant="outline" className="bg-blue-500 text-white hover:bg-blue-600">Dispensado</Badge>;
       case 'feriado':
@@ -76,6 +70,8 @@ const CartaoPontoTable: React.FC<CartaoPontoTableProps> = ({
         return <Badge variant="destructive">Injustificada</Badge>;
       case 'sobreaviso':
         return <Badge variant="outline" className="bg-orange-500 text-white hover:bg-orange-600">Sobreaviso</Badge>;
+      case 'ferias':
+        return <Badge variant="outline" className="bg-green-500 text-white hover:bg-green-600">Férias</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -152,30 +148,6 @@ const CartaoPontoTable: React.FC<CartaoPontoTableProps> = ({
                       >
                         <Trash className="h-4 w-4" />
                       </Button>
-                    )}
-                    
-                    {canApprove && registro.status === 'pending' && (
-                      <>
-                        <Button
-                          variant="ghost" 
-                          size="icon"
-                          className="text-green-500 hover:text-green-700"
-                          onClick={() => onStatusChange(registro.id, 'approved')}
-                          title="Aprovar"
-                        >
-                          <Check className="h-4 w-4" />
-                        </Button>
-                        
-                        <Button
-                          variant="ghost" 
-                          size="icon"
-                          className="text-red-500 hover:text-red-700"
-                          onClick={() => onStatusChange(registro.id, 'rejected')}
-                          title="Rejeitar"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </>
                     )}
                   </TableCell>
                 </TableRow>
