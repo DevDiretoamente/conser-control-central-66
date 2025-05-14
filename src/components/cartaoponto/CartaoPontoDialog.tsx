@@ -34,7 +34,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { isWeekend, parseISO } from 'date-fns';
 import { Calendar, Clock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { convertTimeStringToMinutes, calculateTimeDifference } from '@/lib/utils';
+import { convertTimeStringToMinutes } from '@/lib/utils';
 
 interface CartaoPontoDialogProps {
   open: boolean;

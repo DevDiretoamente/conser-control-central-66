@@ -131,9 +131,12 @@ const CartaoPontoFilter: React.FC<CartaoPontoFilterProps> = ({
                   <SelectContent>
                     <SelectItem value="">Todos</SelectItem>
                     <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="pending">Pendente</SelectItem>
-                    <SelectItem value="approved">Aprovado</SelectItem>
-                    <SelectItem value="rejected">Rejeitado</SelectItem>
+                    <SelectItem value="sobreaviso">Sobreaviso</SelectItem>
+                    <SelectItem value="dispensado">Dispensado</SelectItem>
+                    <SelectItem value="ferias">Férias</SelectItem>
+                    <SelectItem value="feriado">Feriado</SelectItem>
+                    <SelectItem value="falta_justificada">Falta Justificada</SelectItem>
+                    <SelectItem value="falta_injustificada">Falta Injustificada</SelectItem>
                   </SelectContent>
                 </Select>
               </FormItem>
