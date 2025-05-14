@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -71,7 +70,8 @@ const BeneficiosTab: React.FC = () => {
         await beneficioService.create({
           tipo: 'cesta_basica',
           valor: valorNumerico,
-          observacoes: observacoesCestaBasica
+          observacoes: observacoesCestaBasica,
+          dataAtualizacao: new Date().toISOString()
         });
       }
       
@@ -104,7 +104,8 @@ const BeneficiosTab: React.FC = () => {
         await beneficioService.create({
           tipo: 'lanche',
           valor: valorNumerico,
-          observacoes: observacoesLanche
+          observacoes: observacoesLanche,
+          dataAtualizacao: new Date().toISOString()
         });
       }
       

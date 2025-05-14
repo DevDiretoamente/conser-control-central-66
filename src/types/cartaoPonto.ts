@@ -1,4 +1,3 @@
-
 export type CartaoPontoStatus = 
   'normal' | 
   'sobreaviso' | // On standby/willingness

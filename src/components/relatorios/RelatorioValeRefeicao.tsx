@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { format, addMonths, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -275,27 +274,29 @@ const RelatorioValeRefeicao: React.FC<RelatorioValeRefeicaoProps> = ({ mes, ano 
         </div>
       </div>
       
-      <style jsx global>{`
-        @media print {
-          body * {
-            visibility: hidden;
+      <style>
+        {`
+          @media print {
+            body * {
+              visibility: hidden;
+            }
+            .print\\:block,
+            .print\\:block * {
+              visibility: visible;
+            }
+            .print\\:block {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 100%;
+            }
+            @page {
+              size: landscape;
+              margin: 1cm;
+            }
           }
-          .print\\:block,
-          .print\\:block * {
-            visibility: visible;
-          }
-          .print\\:block {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-          @page {
-            size: landscape;
-            margin: 1cm;
-          }
-        }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
