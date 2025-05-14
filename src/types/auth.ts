@@ -10,6 +10,7 @@ export type PermissionArea =
   | 'patrimonio' 
   | 'financeiro' 
   | 'configuracoes'
+  | 'admin' // Added "admin" as a valid permission area
   // Resources
   | 'funcionarios'
   | 'exames'
@@ -18,7 +19,7 @@ export type PermissionArea =
   | 'funcoes'
   | 'setores'
   | 'clinicas'
-  | 'emails'  // Added "emails" as a valid permission area
+  | 'emails'
   | 'cartaoponto'; 
 
 // Define permission levels
