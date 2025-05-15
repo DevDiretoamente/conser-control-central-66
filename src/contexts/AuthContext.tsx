@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, AuthState, UserRole, Permission, PermissionArea, PermissionLevel, UserActivationHistoryEntry } from '@/types/auth';
+import { User, AuthState, UserRole, Permission, PermissionArea, PermissionLevel, UserActivationHistoryEntry, UserGroup } from '@/types/auth';
 import { useToast } from '@/components/ui/use-toast';
 
 interface AuthContextType extends AuthState {
@@ -14,8 +13,16 @@ interface AuthContextType extends AuthState {
   updateUser: (id: string, userData: Partial<User>) => void;
   deleteUser: (id: string) => void;
   updateUserPermissions: (userId: string, permissions: Permission[]) => void;
+  updateUserGroups: (userId: string, groupIds: string[]) => void;
   toggleUserActivation: (userId: string, active: boolean) => void;
   userActivationHistory: UserActivationHistoryEntry[];
+  
+  // Group management
+  groups: UserGroup[];
+  createGroup: (groupData: Omit<UserGroup, 'id' | 'createdAt'>) => void;
+  updateGroup: (id: string, groupData: Partial<UserGroup>) => void;
+  deleteGroup: (id: string) => void;
+  updateGroupPermissions: (groupId: string, permissions: Permission[]) => void;
 }
 
 const initialState: AuthState = {
@@ -39,6 +46,7 @@ const mockUsers: User[] = [
     isActive: true,
     createdAt: '2023-01-01T10:00:00Z',
     lastLogin: '2024-05-09T08:30:00Z',
+    groupIds: ['1'], // Admin group
     permissions: [
       { area: 'rh', level: 'manage' },
       { area: 'obras', level: 'manage' },
@@ -60,6 +68,7 @@ const mockUsers: User[] = [
     isActive: true,
     createdAt: '2023-02-15T14:30:00Z',
     lastLogin: '2024-05-08T16:45:00Z',
+    groupIds: ['2'], // RH Manager group
     permissions: [
       { area: 'rh', level: 'manage' },
       { area: 'funcionarios', level: 'write' },
@@ -78,6 +87,7 @@ const mockUsers: User[] = [
     isActive: true,
     createdAt: '2023-03-20T09:15:00Z',
     lastLogin: '2024-05-09T10:20:00Z',
+    groupIds: ['3'], // Operator group
     permissions: [
       { area: 'rh', level: 'read' },
       { area: 'funcionarios', level: 'read' },
@@ -95,10 +105,55 @@ const mockUsers: User[] = [
     isActive: false,
     createdAt: '2023-04-10T11:25:00Z',
     lastLogin: '2023-09-15T14:20:00Z',
+    groupIds: [],
     permissions: [
       { area: 'rh', level: 'read' },
       { area: 'funcionarios', level: 'read' },
     ]
+  },
+];
+
+// Mock permission groups
+const mockGroups: UserGroup[] = [
+  {
+    id: '1',
+    name: 'Administradores',
+    description: 'Acesso total ao sistema',
+    permissions: [
+      { area: 'rh', level: 'manage' },
+      { area: 'obras', level: 'manage' },
+      { area: 'frota', level: 'manage' },
+      { area: 'patrimonio', level: 'manage' },
+      { area: 'financeiro', level: 'manage' },
+      { area: 'configuracoes', level: 'manage' },
+      { area: 'usuarios', level: 'manage' },
+    ],
+    createdAt: '2023-01-01T10:00:00Z',
+  },
+  {
+    id: '2',
+    name: 'Gerentes RH',
+    description: 'Acesso de gerenciamento para o módulo de RH',
+    permissions: [
+      { area: 'rh', level: 'manage' },
+      { area: 'funcionarios', level: 'manage' },
+      { area: 'exames', level: 'manage' },
+      { area: 'documentos', level: 'manage' },
+      { area: 'cartaoponto', level: 'manage' },
+    ],
+    createdAt: '2023-01-02T10:00:00Z',
+  },
+  {
+    id: '3',
+    name: 'Operadores de RH',
+    description: 'Acesso básico ao módulo de RH',
+    permissions: [
+      { area: 'rh', level: 'read' },
+      { area: 'funcionarios', level: 'read' },
+      { area: 'exames', level: 'read' },
+      { area: 'cartaoponto', level: 'create' },
+    ],
+    createdAt: '2023-01-03T10:00:00Z',
   },
 ];
 
@@ -124,6 +179,7 @@ export const getHighestPermissionForArea = (user: User, area: PermissionArea): P
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AuthState>(initialState);
   const [users, setUsers] = useState<User[]>(mockUsers);
+  const [groups, setGroups] = useState<UserGroup[]>(mockGroups);
   const [userActivationHistory, setUserActivationHistory] = useState<UserActivationHistoryEntry[]>([]);
   const { toast } = useToast();
 
@@ -223,6 +279,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  // Combine user-specific permissions with permissions from their groups
+  const getCombinedPermissions = (user: User): Permission[] => {
+    if (!user) return [];
+    
+    // Start with user's direct permissions
+    let combinedPermissions: Permission[] = [...(user.permissions || [])];
+    
+    // Add permissions from user's groups
+    if (user.groupIds && user.groupIds.length > 0) {
+      const userGroups = groups.filter(group => user.groupIds?.includes(group.id));
+      
+      userGroups.forEach(group => {
+        group.permissions.forEach(groupPerm => {
+          // Check if this permission area already exists
+          const existingPermIdx = combinedPermissions.findIndex(p => p.area === groupPerm.area);
+          
+          if (existingPermIdx >= 0) {
+            // Compare and keep highest level permission
+            const levelHierarchy: Record<PermissionLevel, number> = {
+              'read': 1,
+              'create': 2,
+              'write': 3,
+              'delete': 4,
+              'manage': 5
+            };
+            
+            const existingLevel = levelHierarchy[combinedPermissions[existingPermIdx].level];
+            const groupLevel = levelHierarchy[groupPerm.level];
+            
+            if (groupLevel > existingLevel) {
+              combinedPermissions[existingPermIdx] = { ...groupPerm };
+            }
+          } else {
+            // Add new permission area
+            combinedPermissions.push({ ...groupPerm });
+          }
+        });
+      });
+    }
+    
+    return combinedPermissions;
+  };
+
   const hasPermission = (requiredRole: UserRole): boolean => {
     if (!state.isAuthenticated || !state.user) return false;
     
@@ -245,29 +344,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Admin role has all permissions
     if (state.user.role === 'admin') return true;
     
-    // Check specific permissions
-    if (state.user.permissions) {
-      // For specific area and level
-      if (level) {
-        const levelHierarchy: Record<PermissionLevel, number> = {
-          'read': 1,
-          'create': 2,
-          'write': 3,
-          'delete': 4,
-          'manage': 5
-        };
+    // Get combined permissions (user's direct permissions + group permissions)
+    const combinedPermissions = getCombinedPermissions(state.user);
+    
+    // For specific area and level
+    if (level) {
+      const levelHierarchy: Record<PermissionLevel, number> = {
+        'read': 1,
+        'create': 2,
+        'write': 3,
+        'delete': 4,
+        'manage': 5
+      };
 
-        const permission = state.user.permissions.find(p => p.area === area);
-        if (permission) {
-          const userPermissionLevel = levelHierarchy[permission.level];
-          const requiredPermissionLevel = levelHierarchy[level];
-          return userPermissionLevel >= requiredPermissionLevel;
-        }
-      } 
-      // Just check if user has any permission for the area
-      else {
-        return state.user.permissions.some(p => p.area === area);
+      const permission = combinedPermissions.find(p => p.area === area);
+      if (permission) {
+        const userPermissionLevel = levelHierarchy[permission.level];
+        const requiredPermissionLevel = levelHierarchy[level];
+        return userPermissionLevel >= requiredPermissionLevel;
       }
+    } 
+    // Just check if user has any permission for the area
+    else {
+      return combinedPermissions.some(p => p.area === area);
     }
     
     return false;
@@ -355,6 +454,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  const updateUserGroups = (userId: string, groupIds: string[]) => {
+    const updatedUsers = users.map(user => {
+      if (user.id === userId) {
+        return { ...user, groupIds };
+      }
+      return user;
+    });
+    
+    setUsers(updatedUsers);
+    
+    // If the logged in user was updated, update the logged in state
+    if (state.user && state.user.id === userId) {
+      const updatedUser = updatedUsers.find(u => u.id === userId);
+      if (updatedUser) {
+        setState({
+          ...state,
+          user: updatedUser,
+        });
+        localStorage.setItem('conservias-user', JSON.stringify(updatedUser));
+      }
+    }
+    
+    toast({
+      title: 'Grupos atualizados',
+      description: 'A associação a grupos do usuário foi atualizada com sucesso.',
+    });
+  };
+
   const toggleUserActivation = (userId: string, active: boolean) => {
     const user = users.find(u => u.id === userId);
     if (!user) return;
@@ -386,6 +513,78 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  const createGroup = (groupData: Omit<UserGroup, 'id' | 'createdAt'>) => {
+    const newGroup: UserGroup = {
+      ...groupData,
+      id: (groups.length + 1).toString(),
+      createdAt: new Date().toISOString(),
+      permissions: groupData.permissions || [],
+    };
+    
+    setGroups([...groups, newGroup]);
+    
+    toast({
+      title: 'Grupo criado',
+      description: `Grupo ${newGroup.name} criado com sucesso.`,
+    });
+  };
+
+  const updateGroup = (id: string, groupData: Partial<UserGroup>) => {
+    const updatedGroups = groups.map(group => {
+      if (group.id === id) {
+        return { ...group, ...groupData, updatedBy: state.user?.name };
+      }
+      return group;
+    });
+    
+    setGroups(updatedGroups);
+    
+    toast({
+      title: 'Grupo atualizado',
+      description: 'Informações do grupo atualizadas com sucesso.',
+    });
+  };
+
+  const deleteGroup = (id: string) => {
+    // Remove group
+    setGroups(groups.filter(group => group.id !== id));
+    
+    // Update users to remove this group from their groupIds
+    const updatedUsers = users.map(user => {
+      if (user.groupIds?.includes(id)) {
+        return {
+          ...user,
+          groupIds: user.groupIds.filter(groupId => groupId !== id)
+        };
+      }
+      return user;
+    });
+    
+    setUsers(updatedUsers);
+    
+    toast({
+      title: 'Grupo removido',
+      description: 'Grupo removido com sucesso.',
+      variant: 'destructive'
+    });
+  };
+
+  const updateGroupPermissions = (groupId: string, permissions: Permission[]) => {
+    const updatedGroups = groups.map(group => {
+      if (group.id === groupId) {
+        return { ...group, permissions };
+      }
+      return group;
+    });
+    
+    setGroups(updatedGroups);
+    
+    toast({
+      title: 'Permissões atualizadas',
+      description: 'As permissões do grupo foram atualizadas com sucesso.',
+    });
+  };
+
   const value = {
     ...state,
     login,
@@ -398,8 +597,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateUser,
     deleteUser,
     updateUserPermissions,
+    updateUserGroups,
     toggleUserActivation,
-    userActivationHistory
+    userActivationHistory,
+    // Group management
+    groups,
+    createGroup,
+    updateGroup,
+    deleteGroup,
+    updateGroupPermissions
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -31,6 +31,16 @@ export interface Permission {
   level: PermissionLevel;
 }
 
+// User Group definition
+export interface UserGroup {
+  id: string;
+  name: string;
+  description: string;
+  permissions: Permission[];
+  createdAt: string;
+  updatedBy?: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -38,6 +48,7 @@ export interface User {
   role: UserRole;
   avatar?: string;
   permissions?: Permission[];
+  groupIds?: string[]; // Added group memberships
   isActive: boolean;
   createdAt: string;
   lastLogin?: string;
@@ -70,4 +81,9 @@ export interface UserActivationHistoryEntry {
   timestamp: string;
   action: 'activated' | 'deactivated';
   performedBy: string;
+}
+
+// Group filter options
+export interface GroupFilterOptions {
+  searchTerm?: string;
 }
