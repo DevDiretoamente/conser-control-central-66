@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +18,7 @@ import UserActivationToggle from './UserActivationToggle';
 import UserPermissionsDialog from './UserPermissionsDialog';
 
 const GerenciamentoUsuarios: React.FC = () => {
-  const { users, createUser, updateUser, deleteUser, hasSpecificPermission } = useAuth();
+  const { users, createUser, updateUser, deleteUser, hasSpecificPermission, user: currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -32,11 +33,14 @@ const GerenciamentoUsuarios: React.FC = () => {
     permissions: []
   });
 
-  // Check if current user has permission to manage users
-  const canManageUsers = hasSpecificPermission('usuarios', 'manage');
-  const canCreateUsers = hasSpecificPermission('usuarios', 'create');
-  const canEditUsers = hasSpecificPermission('usuarios', 'write');
-  const canDeleteUsers = hasSpecificPermission('usuarios', 'delete');
+  // Check if current user is an administrator
+  const isAdmin = currentUser?.role === 'admin';
+  
+  // Check permissions - now restricted to admin only
+  const canManageUsers = isAdmin && hasSpecificPermission('usuarios', 'manage');
+  const canCreateUsers = isAdmin && hasSpecificPermission('usuarios', 'create');
+  const canEditUsers = isAdmin && hasSpecificPermission('usuarios', 'write');
+  const canDeleteUsers = isAdmin && hasSpecificPermission('usuarios', 'delete');
 
   const handleFilterChange = (filters: any) => {
     let results = [...users];
@@ -125,7 +129,6 @@ const GerenciamentoUsuarios: React.FC = () => {
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
     // In a real app, you might want to open an edit dialog here
-    // For now, we'll just open the permissions dialog
   };
 
   const handleDeleteUser = (user: User) => {
@@ -147,6 +150,13 @@ const GerenciamentoUsuarios: React.FC = () => {
     setIsPermissionsDialogOpen(true);
   };
 
+  // Admin check notification
+  const showAdminOnlyWarning = () => {
+    toast.warning('Apenas administradores podem gerenciar usuários', {
+      description: 'Contate um administrador do sistema para esta operação.'
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row justify-between gap-4">
@@ -154,8 +164,15 @@ const GerenciamentoUsuarios: React.FC = () => {
           <UserFilterToolbar onFilterChange={handleFilterChange} />
         </div>
         
-        {canCreateUsers && (
-          <Button onClick={() => setIsAddDialogOpen(true)}>
+        {isAdmin ? (
+          canCreateUsers && (
+            <Button onClick={() => setIsAddDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Usuário
+            </Button>
+          )
+        ) : (
+          <Button onClick={showAdminOnlyWarning} variant="outline">
             <Plus className="mr-2 h-4 w-4" />
             Novo Usuário
           </Button>
@@ -170,7 +187,9 @@ const GerenciamentoUsuarios: React.FC = () => {
         <CardHeader className="pb-3">
           <CardTitle>Usuários do Sistema</CardTitle>
           <CardDescription>
-            Gerencie os usuários que têm acesso ao sistema
+            {isAdmin 
+              ? "Gerencie os usuários que têm acesso ao sistema" 
+              : "Visualize os usuários que têm acesso ao sistema"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -206,42 +225,57 @@ const GerenciamentoUsuarios: React.FC = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                        {canManageUsers && (
+                        {isAdmin ? (
+                          <>
+                            {canManageUsers && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenPermissions(user);
+                                }}
+                              >
+                                <Shield className="h-4 w-4 text-blue-500" />
+                              </Button>
+                            )}
+                            
+                            {canEditUsers && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditUser(user);
+                                }}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            )}
+                            
+                            {canDeleteUsers && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteUser(user);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            )}
+                          </>
+                        ) : (
                           <Button 
                             variant="ghost" 
                             size="icon" 
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleOpenPermissions(user);
+                              showAdminOnlyWarning();
                             }}
                           >
-                            <Shield className="h-4 w-4 text-blue-500" />
-                          </Button>
-                        )}
-                        
-                        {canEditUsers && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditUser(user);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        )}
-                        
-                        {canDeleteUsers && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteUser(user);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                            <Shield className="h-4 w-4 text-muted-foreground" />
                           </Button>
                         )}
                       </div>
@@ -262,7 +296,7 @@ const GerenciamentoUsuarios: React.FC = () => {
         </CardContent>
       </Card>
       
-      {/* Add User Dialog */}
+      {/* Add User Dialog - Only for admins */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -318,7 +352,7 @@ const GerenciamentoUsuarios: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Delete User Dialog */}
+      {/* Delete User Dialog - Only for admins */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -337,8 +371,8 @@ const GerenciamentoUsuarios: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Permissions Dialog */}
-      {selectedUser && (
+      {/* Permissions Dialog - Only for admins */}
+      {selectedUser && isAdmin && (
         <UserPermissionsDialog 
           user={selectedUser}
           isOpen={isPermissionsDialogOpen}

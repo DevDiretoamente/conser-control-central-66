@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +10,6 @@ import CartaoPontoTable from '@/components/cartaoponto/CartaoPontoTable';
 import CartaoPontoDialog from '@/components/cartaoponto/CartaoPontoDialog';
 import CartaoPontoCalendar from '@/components/cartaoponto/CartaoPontoCalendar';
 import CartaoPontoSummary from '@/components/cartaoponto/CartaoPontoSummary';
-import BeneficiosTab from '@/components/cartaoponto/BeneficiosTab';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Select,
@@ -33,7 +31,7 @@ import {
 } from '@/types/cartaoPonto';
 import { CartaoPontoFormValues } from '@/components/cartaoponto/CartaoPontoDialog';
 import { cartaoPontoService } from '@/services/cartaoPontoService';
-import { Calendar, Plus, ChevronLeft, ChevronRight, Table as TableIcon, Settings, UserRound } from 'lucide-react';
+import { Calendar, Plus, ChevronLeft, ChevronRight, Table as TableIcon, UserRound } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 // Mock employee data for demo purposes
@@ -51,7 +49,7 @@ const CartaoPontoPage: React.FC = () => {
   const [registros, setRegistros] = useState<CartaoPonto[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'calendar' | 'list' | 'beneficios'>('calendar');
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedFuncionario, setSelectedFuncionario] = useState('');
   const [summary, setSummary] = useState({
@@ -72,7 +70,6 @@ const CartaoPontoPage: React.FC = () => {
   const canEdit = hasSpecificPermission('cartaoponto', 'write');
   const canDelete = hasSpecificPermission('cartaoponto', 'delete');
   const canManage = hasSpecificPermission('cartaoponto', 'manage');
-  const canManageBeneficios = hasSpecificPermission('cartaoponto', 'manage') || hasSpecificPermission('admin', 'write');
 
   useEffect(() => {
     // Only load records when an employee is selected
@@ -272,10 +269,6 @@ const CartaoPontoPage: React.FC = () => {
 
   // Helper to render the appropriate content based on employee selection
   const renderContent = () => {
-    if (viewMode === 'beneficios') {
-      return <BeneficiosTab />;
-    }
-
     if (!selectedFuncionario) {
       return (
         <Card className="border border-dashed border-gray-300 bg-gray-50">
@@ -371,7 +364,7 @@ const CartaoPontoPage: React.FC = () => {
         <Tabs 
           defaultValue="calendar" 
           value={viewMode}
-          onValueChange={value => setViewMode(value as 'calendar' | 'list' | 'beneficios')} 
+          onValueChange={value => setViewMode(value as 'calendar' | 'list')} 
           className="flex-grow"
         >
           <TabsList className="w-full md:w-auto">
@@ -381,16 +374,11 @@ const CartaoPontoPage: React.FC = () => {
             <TabsTrigger value="list">
               <TableIcon className="mr-2 h-4 w-4" /> Lista
             </TabsTrigger>
-            {canManageBeneficios && (
-              <TabsTrigger value="beneficios">
-                <Settings className="mr-2 h-4 w-4" /> Benefícios
-              </TabsTrigger>
-            )}
           </TabsList>
         </Tabs>
         
-        {/* Month selector - only visible when an employee is selected and not in beneficios tab */}
-        {selectedFuncionario && viewMode !== 'beneficios' && (
+        {/* Month selector - only visible when an employee is selected */}
+        {selectedFuncionario && (
           <div className="flex items-center space-x-2 ml-auto">
             <Button variant="outline" size="icon" onClick={handlePreviousMonth}>
               <ChevronLeft className="h-4 w-4" />
@@ -405,8 +393,8 @@ const CartaoPontoPage: React.FC = () => {
         )}
       </div>
       
-      {/* Summary cards - only if funcionario is selected and not in beneficios tab */}
-      {selectedFuncionario && viewMode !== 'beneficios' && (
+      {/* Summary cards - only if funcionario is selected */}
+      {selectedFuncionario && (
         <CartaoPontoSummary 
           summary={summary} 
           month={format(currentDate, 'MMMM', { locale: ptBR })}
