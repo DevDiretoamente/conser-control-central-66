@@ -19,6 +19,28 @@ export interface CostCenter {
   createdBy: string;
 }
 
+// Customer Types
+export type PersonType = 'physical' | 'legal'; // Physical person or legal entity
+
+export interface Customer {
+  id: string;
+  name: string;
+  type: PersonType;
+  document: string; // CPF or CNPJ
+  email: string;
+  phone: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  contactName?: string;
+  contactPhone?: string;
+  notes?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Supplier Types
 export type SupplierType = 'physical' | 'legal'; // Physical person or legal entity
 

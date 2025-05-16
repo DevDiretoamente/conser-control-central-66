@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
@@ -180,8 +181,26 @@ const InvoiceManagement: React.FC = () => {
     setFilteredInvoices(filtered);
   };
 
+  // Check for duplicate invoices (same supplier + invoice number)
+  const isDuplicateInvoice = (invoice: any): boolean => {
+    return invoices.some(
+      inv => 
+        inv.id !== (selectedInvoice?.id || '') && 
+        inv.supplierId === invoice.supplierId && 
+        inv.number.trim().toLowerCase() === invoice.number.trim().toLowerCase()
+    );
+  };
+
   const handleCreateInvoice = (data: any) => {
     setIsLoading(true);
+    
+    // Check for duplicate invoice
+    if (isDuplicateInvoice(data)) {
+      toast.error('Já existe uma nota fiscal com este número para este fornecedor.');
+      setIsLoading(false);
+      return;
+    }
+    
     // Simulate API call
     setTimeout(() => {
       try {
@@ -226,6 +245,14 @@ const InvoiceManagement: React.FC = () => {
     if (!selectedInvoice) return;
     
     setIsLoading(true);
+    
+    // Check for duplicate invoice
+    if (isDuplicateInvoice(data)) {
+      toast.error('Já existe uma nota fiscal com este número para este fornecedor.');
+      setIsLoading(false);
+      return;
+    }
+    
     // Simulate API call
     setTimeout(() => {
       try {

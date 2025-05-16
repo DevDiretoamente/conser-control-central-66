@@ -4,8 +4,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import CostCenterManagement from '@/components/financeiro/costcenter/CostCenterManagement';
 import InvoiceManagement from '@/components/financeiro/invoices/InvoiceManagement';
+import SupplierManagement from '@/components/financeiro/suppliers/SupplierManagement';
+import CustomerManagement from '@/components/financeiro/customers/CustomerManagement';
 import FinancialReports from '@/components/financeiro/reports/FinancialReports';
-import { FileText, BarChart3, FolderIcon } from 'lucide-react';
+import { FileText, BarChart3, FolderIcon, Users, User } from 'lucide-react';
 
 const FinanceiroPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('cost-centers');
@@ -28,16 +30,24 @@ const FinanceiroPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold">Gestão Financeira</h1>
           <p className="text-muted-foreground">
-            Gerenciamento de despesas, notas fiscais e centros de custo
+            Gerenciamento de despesas, notas fiscais, fornecedores e clientes
           </p>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-8">
+        <TabsList className="grid w-full grid-cols-5 mb-8">
           <TabsTrigger value="cost-centers" className="flex items-center gap-2">
             <FolderIcon className="h-4 w-4" />
             <span>Centros de Custo</span>
+          </TabsTrigger>
+          <TabsTrigger value="suppliers" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span>Fornecedores</span>
+          </TabsTrigger>
+          <TabsTrigger value="customers" className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            <span>Clientes</span>
           </TabsTrigger>
           <TabsTrigger value="invoices" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -52,6 +62,16 @@ const FinanceiroPage: React.FC = () => {
         {/* Cost Centers Tab */}
         <TabsContent value="cost-centers">
           <CostCenterManagement />
+        </TabsContent>
+
+        {/* Suppliers Tab */}
+        <TabsContent value="suppliers">
+          <SupplierManagement />
+        </TabsContent>
+
+        {/* Customers Tab */}
+        <TabsContent value="customers">
+          <CustomerManagement />
         </TabsContent>
 
         {/* Invoices Tab */}

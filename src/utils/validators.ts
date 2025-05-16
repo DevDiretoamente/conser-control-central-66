@@ -36,6 +36,53 @@ export function validateCPF(cpf: string): boolean {
 }
 
 /**
+ * Validates if a CNPJ number is valid
+ * @param cnpj The CNPJ number to validate (can include formatting)
+ * @returns boolean indicating if the CNPJ is valid
+ */
+export function validateCNPJ(cnpj: string): boolean {
+  // Remove non-numeric characters
+  const cleanCNPJ = cnpj.replace(/\D/g, '');
+  
+  // Check if it has 14 digits
+  if (cleanCNPJ.length !== 14) return false;
+  
+  // Check for known invalid CNPJs like all same digits
+  if (/^(\d)\1{13}$/.test(cleanCNPJ)) return false;
+  
+  // Validate first verification digit
+  let size = cleanCNPJ.length - 2;
+  let numbers = cleanCNPJ.substring(0, size);
+  const digits = cleanCNPJ.substring(size);
+  let sum = 0;
+  let pos = size - 7;
+  
+  for (let i = size; i >= 1; i--) {
+    sum += parseInt(numbers.charAt(size - i)) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  
+  let result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+  if (result !== parseInt(digits.charAt(0))) return false;
+  
+  // Validate second verification digit
+  size = size + 1;
+  numbers = cleanCNPJ.substring(0, size);
+  sum = 0;
+  pos = size - 7;
+  
+  for (let i = size; i >= 1; i--) {
+    sum += parseInt(numbers.charAt(size - i)) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  
+  result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+  if (result !== parseInt(digits.charAt(1))) return false;
+  
+  return true;
+}
+
+/**
  * Formats a CPF string with proper punctuation
  * @param cpf The raw CPF number
  * @returns formatted CPF string
@@ -45,4 +92,50 @@ export function formatCPF(cpf: string): string {
   if (cleanCPF.length !== 11) return cleanCPF;
   
   return cleanCPF.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+}
+
+/**
+ * Formats a CNPJ string with proper punctuation
+ * @param cnpj The raw CNPJ number
+ * @returns formatted CNPJ string
+ */
+export function formatCNPJ(cnpj: string): string {
+  const cleanCNPJ = cnpj.replace(/\D/g, '');
+  if (cleanCNPJ.length !== 14) return cleanCNPJ;
+  
+  return cleanCNPJ.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+}
+
+/**
+ * Validates a document (CPF or CNPJ) based on its length
+ * @param document The document to validate (can include formatting)
+ * @returns boolean indicating if the document is valid
+ */
+export function validateDocument(document: string): boolean {
+  const cleanDocument = document.replace(/\D/g, '');
+  
+  if (cleanDocument.length === 11) {
+    return validateCPF(cleanDocument);
+  } else if (cleanDocument.length === 14) {
+    return validateCNPJ(cleanDocument);
+  }
+  
+  return false;
+}
+
+/**
+ * Formats a document (CPF or CNPJ) based on its length
+ * @param document The raw document number
+ * @returns formatted document string
+ */
+export function formatDocument(document: string): string {
+  const cleanDocument = document.replace(/\D/g, '');
+  
+  if (cleanDocument.length === 11) {
+    return formatCPF(cleanDocument);
+  } else if (cleanDocument.length === 14) {
+    return formatCNPJ(cleanDocument);
+  }
+  
+  return cleanDocument;
 }
