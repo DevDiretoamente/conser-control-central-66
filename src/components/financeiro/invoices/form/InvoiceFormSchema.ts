@@ -9,8 +9,8 @@ export const invoiceSchema = z.object({
   dueDate: z.date({ required_error: "Data de vencimento é obrigatória" }),
   costCenterId: z.string().min(1, { message: "Centro de custo é obrigatório" }),
   amount: z.coerce.number().min(0.01, { message: "Valor deve ser maior que zero" }),
-  tax: z.coerce.number().optional(),
-  totalAmount: z.coerce.number().min(0.01, { message: "Valor total deve ser maior que zero" }),
+  tax: z.coerce.number().optional().default(0),
+  totalAmount: z.coerce.number(), // This will be calculated automatically
   status: z.enum(['draft', 'pending', 'paid', 'partial', 'cancelled', 'overdue']),
   type: z.enum(['product', 'service']),
   description: z.string().optional(),
