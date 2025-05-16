@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,12 +27,10 @@ import { formatCurrency } from '@/utils/format';
 
 // Schema for payment form validation
 const paymentSchema = z.object({
-  amount: z.string().min(1, { message: "Valor obrigatório" })
-    .transform(val => {
-      // Convert string to number, properly handling commas and dots
-      const cleanedValue = val.replace(/[^\d.,]/g, '').replace(',', '.');
-      return parseFloat(cleanedValue);
-    }),
+  amount: z.coerce.number({
+    required_error: "Valor obrigatório",
+    invalid_type_error: "Valor deve ser um número"
+  }),
   paymentDate: z.date({ required_error: "Data de pagamento obrigatória" }),
   dueDate: z.date({ required_error: "Data de vencimento obrigatória" }),
   method: z.enum(['cash', 'bank_transfer', 'check', 'credit_card', 'debit_card', 'other'], {
@@ -68,7 +67,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   const form = useForm<z.infer<typeof paymentSchema>>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
-      amount: payment ? payment.amount.toString() : remainingAmount.toString(),
+      amount: payment ? payment.amount : remainingAmount,
       paymentDate: payment ? new Date(payment.paymentDate) : new Date(),
       dueDate: payment ? new Date(payment.dueDate) : new Date(invoice.dueDate),
       method: payment ? payment.method : 'bank_transfer',
@@ -83,7 +82,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     onSubmit({
       ...data,
       invoiceId: invoice.id,
-      // amount is already converted to number in the schema transformation
     });
   };
 
@@ -131,10 +129,15 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
                   <FormControl>
                     <Input 
                       placeholder="0,00" 
-                      {...field} 
+                      value={field.value?.toString() || ''} 
                       onChange={(e) => {
                         let value = e.target.value.replace(/[^\d.,]/g, '');
-                        field.onChange(value);
+                        if (value === '') {
+                          field.onChange(0);
+                        } else {
+                          const numValue = parseFloat(value.replace(',', '.'));
+                          field.onChange(isNaN(numValue) ? 0 : numValue);
+                        }
                       }}
                     />
                   </FormControl>
@@ -293,7 +296,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
                           min="1" 
                           placeholder="1" 
                           {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          value={field.value ?? ''}
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -313,7 +317,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
                           min="1" 
                           placeholder="1" 
                           {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          value={field.value ?? ''}
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
                         />
                       </FormControl>
                       <FormMessage />

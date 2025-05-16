@@ -23,8 +23,7 @@ import { toast } from 'sonner';
 const costCenterSchema = z.object({
   name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
   description: z.string().optional(),
-  budget: z.string().optional()
-    .transform(val => val && val !== '' ? Number(val) : undefined),
+  budget: z.coerce.number().optional(),
   parentId: z.string().optional(),
   obraId: z.string().optional(),
   status: z.enum(['active', 'inactive', 'archived'])
@@ -53,7 +52,7 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({
     defaultValues: {
       name: costCenter?.name || '',
       description: costCenter?.description || '',
-      budget: costCenter?.budget ? String(costCenter.budget) : '',
+      budget: costCenter?.budget || undefined,
       parentId: costCenter?.parentId || '',
       obraId: costCenter?.obraId || '',
       status: costCenter?.status || 'active'
@@ -62,7 +61,6 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({
 
   const handleSubmit = (data: z.infer<typeof costCenterSchema>) => {
     try {
-      // No need for explicit conversion since it's done in the schema
       onSubmit(data);
     } catch (error) {
       console.error('Error submitting cost center:', error);
@@ -117,12 +115,10 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({
                       type="number" 
                       placeholder="0,00" 
                       {...field} 
+                      value={field.value ?? ''}
                       onChange={(e) => {
-                        if (e.target.value === '') {
-                          field.onChange('');
-                        } else if (!isNaN(parseFloat(e.target.value))) {
-                          field.onChange(e.target.value);
-                        }
+                        const value = e.target.value;
+                        field.onChange(value === '' ? undefined : Number(value));
                       }}
                     />
                   </FormControl>
