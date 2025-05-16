@@ -78,7 +78,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   const handleSubmit = (data: z.infer<typeof paymentSchema>) => {
     onSubmit({
       ...data,
-      amount: Number(data.amount)
+      invoiceId: invoice.id,
+      amount: Number(data.amount) // Explicitly convert to number
     });
   };
 

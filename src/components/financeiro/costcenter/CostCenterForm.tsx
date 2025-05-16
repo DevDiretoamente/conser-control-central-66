@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -62,6 +61,7 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({
 
   const handleSubmit = (data: z.infer<typeof costCenterSchema>) => {
     try {
+      // Convert budget to number before submitting
       onSubmit({
         ...data,
         budget: data.budget ? Number(data.budget) : undefined
