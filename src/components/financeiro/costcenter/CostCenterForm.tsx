@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -144,7 +145,7 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Nenhum</SelectItem>
+                        <SelectItem value="none">Nenhum</SelectItem>
                         {parentCostCenters.map((parent) => (
                           <SelectItem key={parent.id} value={parent.id}>
                             {parent.name}
@@ -178,7 +179,7 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Nenhuma</SelectItem>
+                        <SelectItem value="none">Nenhuma</SelectItem>
                         {obras.map((obra) => (
                           <SelectItem key={obra.id} value={obra.id}>
                             {obra.name}
