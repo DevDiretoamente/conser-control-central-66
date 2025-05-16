@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -79,7 +78,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   const handleSubmit = (data: z.infer<typeof paymentSchema>) => {
     onSubmit({
       ...data,
-      invoiceId: invoice.id
+      amount: Number(data.amount)
     });
   };
 

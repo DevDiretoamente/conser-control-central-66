@@ -62,7 +62,10 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({
 
   const handleSubmit = (data: z.infer<typeof costCenterSchema>) => {
     try {
-      onSubmit(data);
+      onSubmit({
+        ...data,
+        budget: data.budget ? Number(data.budget) : undefined
+      });
     } catch (error) {
       console.error('Error submitting cost center:', error);
       toast.error('Erro ao salvar centro de custo');
