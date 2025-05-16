@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CostCenter } from '@/types/financeiro';
+import { CostCenter, CostCenterStatus } from '@/types/financeiro';
 import { Plus, Search } from 'lucide-react';
 import CostCenterList from './CostCenterList';
 import CostCenterForm from './CostCenterForm';

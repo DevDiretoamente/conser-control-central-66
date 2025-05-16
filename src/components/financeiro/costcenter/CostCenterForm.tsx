@@ -3,7 +3,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { CostCenter } from '@/types/financeiro';
+import { CostCenter, CostCenterStatus } from '@/types/financeiro';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -53,7 +53,7 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({
     defaultValues: {
       name: costCenter?.name || '',
       description: costCenter?.description || '',
-      budget: costCenter?.budget?.toString() || '',
+      budget: costCenter?.budget ? costCenter.budget.toString() : '',
       parentId: costCenter?.parentId || '',
       obraId: costCenter?.obraId || '',
       status: costCenter?.status || 'active'
