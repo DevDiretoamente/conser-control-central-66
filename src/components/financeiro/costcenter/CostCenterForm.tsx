@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,7 +23,8 @@ import { toast } from 'sonner';
 const costCenterSchema = z.object({
   name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
   description: z.string().optional(),
-  budget: z.string().optional().transform(val => val ? Number(val) : undefined),
+  budget: z.string().optional()
+    .transform(val => val && val !== '' ? Number(val) : undefined),
   parentId: z.string().optional(),
   obraId: z.string().optional(),
   status: z.enum(['active', 'inactive', 'archived'])
@@ -62,11 +62,8 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({
 
   const handleSubmit = (data: z.infer<typeof costCenterSchema>) => {
     try {
-      // Convert budget to number before submitting
-      onSubmit({
-        ...data,
-        budget: data.budget ? Number(data.budget) : undefined
-      });
+      // No need for explicit conversion since it's done in the schema
+      onSubmit(data);
     } catch (error) {
       console.error('Error submitting cost center:', error);
       toast.error('Erro ao salvar centro de custo');

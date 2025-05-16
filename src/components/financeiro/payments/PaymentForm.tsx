@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,7 +27,11 @@ import { formatCurrency } from '@/utils/format';
 // Schema for payment form validation
 const paymentSchema = z.object({
   amount: z.string().min(1, { message: "Valor obrigatório" })
-    .transform(val => parseFloat(val.replace(/[^\d.,]/g, '').replace(',', '.'))),
+    .transform(val => {
+      // Convert string to number, properly handling commas and dots
+      const cleanedValue = val.replace(/[^\d.,]/g, '').replace(',', '.');
+      return parseFloat(cleanedValue);
+    }),
   paymentDate: z.date({ required_error: "Data de pagamento obrigatória" }),
   dueDate: z.date({ required_error: "Data de vencimento obrigatória" }),
   method: z.enum(['cash', 'bank_transfer', 'check', 'credit_card', 'debit_card', 'other'], {
@@ -84,6 +87,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     });
   };
 
+  // Payment methods for the select dropdown
   const paymentMethods: { value: PaymentMethod, label: string }[] = [
     { value: 'cash', label: 'Dinheiro' },
     { value: 'bank_transfer', label: 'Transferência Bancária' },
