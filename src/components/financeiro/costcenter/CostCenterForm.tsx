@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -52,7 +53,7 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({
     defaultValues: {
       name: costCenter?.name || '',
       description: costCenter?.description || '',
-      budget: costCenter?.budget ? costCenter.budget.toString() : '',
+      budget: costCenter?.budget ? String(costCenter.budget) : '',
       parentId: costCenter?.parentId || '',
       obraId: costCenter?.obraId || '',
       status: costCenter?.status || 'active'

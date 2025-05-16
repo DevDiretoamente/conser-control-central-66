@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -79,7 +80,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     onSubmit({
       ...data,
       invoiceId: invoice.id,
-      amount: Number(data.amount) // Explicitly convert to number
+      // amount is already converted to number in the schema transformation
     });
   };
 
