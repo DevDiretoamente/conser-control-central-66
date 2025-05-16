@@ -54,6 +54,9 @@ interface SupplierFormProps {
   isLoading?: boolean;
 }
 
+// Define the allowed field names type to fix the TypeScript error
+type SupplierFormFields = keyof z.infer<typeof supplierSchema>;
+
 const SupplierForm: React.FC<SupplierFormProps> = ({ 
   supplier,
   onSubmit, 
@@ -111,8 +114,8 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     form.setValue('document', formattedValue);
   };
 
-  // Format phone number
-  const formatPhone = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
+  // Format phone number - fixed to use the proper type
+  const formatPhone = (e: React.ChangeEvent<HTMLInputElement>, fieldName: SupplierFormFields) => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length <= 11) {
       value = value

@@ -54,6 +54,9 @@ interface CustomerFormProps {
   isLoading?: boolean;
 }
 
+// Define the allowed field names type to fix the TypeScript error
+type CustomerFormFields = keyof z.infer<typeof customerSchema>;
+
 const CustomerForm: React.FC<CustomerFormProps> = ({ 
   customer,
   onSubmit, 
@@ -112,8 +115,8 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
     form.setValue('document', formattedValue);
   };
 
-  // Format phone number
-  const formatPhone = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
+  // Format phone number - fixed to use the proper type
+  const formatPhone = (e: React.ChangeEvent<HTMLInputElement>, fieldName: CustomerFormFields) => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length <= 11) {
       value = value
