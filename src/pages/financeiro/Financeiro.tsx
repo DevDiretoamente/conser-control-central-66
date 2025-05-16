@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import CostCenterManagement from '@/components/financeiro/costcenter/CostCenterManagement';
-import { Card } from '@/components/ui/card';
+import InvoiceManagement from '@/components/financeiro/invoices/InvoiceManagement';
+import FinancialReports from '@/components/financeiro/reports/FinancialReports';
 import { FileText, BarChart3, FolderIcon } from 'lucide-react';
 
 const FinanceiroPage: React.FC = () => {
@@ -55,20 +56,12 @@ const FinanceiroPage: React.FC = () => {
 
         {/* Invoices Tab */}
         <TabsContent value="invoices">
-          <Card className="p-6">
-            <p className="text-center text-muted-foreground">
-              O módulo de notas fiscais está sendo implementado e estará disponível em breve.
-            </p>
-          </Card>
+          <InvoiceManagement />
         </TabsContent>
 
         {/* Reports Tab */}
         <TabsContent value="reports">
-          <Card className="p-6">
-            <p className="text-center text-muted-foreground">
-              O módulo de relatórios está sendo implementado e estará disponível em breve.
-            </p>
-          </Card>
+          <FinancialReports />
         </TabsContent>
       </Tabs>
     </div>
