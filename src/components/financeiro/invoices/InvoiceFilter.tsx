@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +7,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { CalendarIcon, Search, FilterIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { FinanceFilterOptions } from '@/types/financeiro';
+import { FinanceFilterOptions, InvoiceStatus } from '@/types/financeiro';
 
 interface InvoiceFilterProps {
   onFilterChange: (filters: FinanceFilterOptions) => void;
@@ -17,7 +16,12 @@ interface InvoiceFilterProps {
 }
 
 const InvoiceFilter: React.FC<InvoiceFilterProps> = ({ onFilterChange, costCenters, suppliers }) => {
-  const [filters, setFilters] = useState<FinanceFilterOptions>({
+  // Update the state type to include "none" as a valid status option
+  const [filters, setFilters] = useState<FinanceFilterOptions & {
+    status?: InvoiceStatus | 'none';
+    costCenterId?: string;
+    supplierId?: string;
+  }>({
     searchTerm: '',
     startDate: undefined,
     endDate: undefined,
@@ -26,7 +30,7 @@ const InvoiceFilter: React.FC<InvoiceFilterProps> = ({ onFilterChange, costCente
     status: undefined,
   });
 
-  const handleFilterChange = (key: keyof FinanceFilterOptions, value: any) => {
+  const handleFilterChange = (key: keyof typeof filters, value: any) => {
     const newFilters = {
       ...filters,
       [key]: value,
@@ -41,7 +45,7 @@ const InvoiceFilter: React.FC<InvoiceFilterProps> = ({ onFilterChange, costCente
   };
 
   const handleClear = () => {
-    const clearedFilters: FinanceFilterOptions = {
+    const clearedFilters = {
       searchTerm: '',
       startDate: undefined,
       endDate: undefined,

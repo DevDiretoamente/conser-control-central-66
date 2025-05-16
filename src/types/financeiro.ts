@@ -165,9 +165,9 @@ export interface Vehicle extends Asset {
 export interface FinanceFilterOptions {
   startDate?: string;
   endDate?: string;
-  costCenterId?: string;
-  status?: InvoiceStatus | PaymentStatus;
-  supplierId?: string;
+  costCenterId?: string | 'none';
+  status?: InvoiceStatus | PaymentStatus | 'none';
+  supplierId?: string | 'none';
   minAmount?: number;
   maxAmount?: number;
   searchTerm?: string;

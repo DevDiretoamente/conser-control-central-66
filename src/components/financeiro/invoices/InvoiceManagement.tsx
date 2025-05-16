@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
@@ -134,7 +133,12 @@ const InvoiceManagement: React.FC = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | undefined>(undefined);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  const handleFilter = (filters: FinanceFilterOptions) => {
+  // Update the handleFilter function to properly handle "none" values
+  const handleFilter = (filters: FinanceFilterOptions & {
+    status?: InvoiceStatus | 'none';
+    costCenterId?: string;
+    supplierId?: string;
+  }) => {
     let filtered = [...invoices];
 
     if (filters.searchTerm) {
@@ -158,14 +162,17 @@ const InvoiceManagement: React.FC = () => {
       );
     }
 
+    // Only filter by status if it's a valid InvoiceStatus (not 'none')
     if (filters.status && filters.status !== 'none') {
       filtered = filtered.filter(invoice => invoice.status === filters.status);
     }
 
+    // Only filter by costCenterId if it's not 'none'
     if (filters.costCenterId && filters.costCenterId !== 'none') {
       filtered = filtered.filter(invoice => invoice.costCenterId === filters.costCenterId);
     }
 
+    // Only filter by supplierId if it's not 'none'
     if (filters.supplierId && filters.supplierId !== 'none') {
       filtered = filtered.filter(invoice => invoice.supplierId === filters.supplierId);
     }
