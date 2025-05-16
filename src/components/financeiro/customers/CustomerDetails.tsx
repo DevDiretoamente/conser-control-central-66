@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Customer } from '@/types/financeiro';
+import { Globe, User, Phone, PhoneCall, Mail } from 'lucide-react';
 
 interface CustomerDetailsProps {
   customer: Customer;
@@ -37,29 +38,73 @@ const CustomerDetails: React.FC<CustomerDetailsProps> = ({ customer, onEdit, onC
               <h3 className="text-sm font-medium text-muted-foreground">Documento</h3>
               <p className="mt-1">{customer.document}</p>
             </div>
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
-              <p className="mt-1">{customer.email || 'Não informado'}</p>
+            
+            {customer.website && (
+              <div className="flex items-center space-x-2">
+                <Globe className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">Website</h3>
+                  <a href={customer.website.startsWith('http') ? customer.website : `https://${customer.website}`} 
+                     target="_blank" 
+                     rel="noopener noreferrer"
+                     className="mt-1 text-blue-600 hover:underline">
+                    {customer.website}
+                  </a>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex items-center space-x-2">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Email Principal</h3>
+                <p className="mt-1">{customer.email || 'Não informado'}</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Telefone</h3>
-              <p className="mt-1">{customer.phone || 'Não informado'}</p>
-            </div>
+
+            {customer.alternativeEmail && (
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">Email Alternativo</h3>
+                  <p className="mt-1">{customer.alternativeEmail}</p>
+                </div>
+              </div>
+            )}
           </div>
+          
           <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Phone className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Telefone Principal</h3>
+                <p className="mt-1">{customer.phone || 'Não informado'}</p>
+              </div>
+            </div>
+
+            {customer.landlinePhone && (
+              <div className="flex items-center space-x-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">Telefone Fixo</h3>
+                  <p className="mt-1">{customer.landlinePhone}</p>
+                </div>
+              </div>
+            )}
+
+            {customer.mobilePhone && (
+              <div className="flex items-center space-x-2">
+                <PhoneCall className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">WhatsApp/Celular</h3>
+                  <p className="mt-1">{customer.mobilePhone}</p>
+                </div>
+              </div>
+            )}
+
             <div>
               <h3 className="text-sm font-medium text-muted-foreground">Endereço</h3>
               <p className="mt-1">{customer.address || 'Não informado'}</p>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Cidade/Estado</h3>
-              <p className="mt-1">
-                {customer.city ? `${customer.city}${customer.state ? ` - ${customer.state}` : ''}` : 'Não informado'}
-              </p>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">CEP</h3>
-              <p className="mt-1">{customer.zipCode || 'Não informado'}</p>
             </div>
           </div>
         </div>
@@ -68,11 +113,32 @@ const CustomerDetails: React.FC<CustomerDetailsProps> = ({ customer, onEdit, onC
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground">Contato Principal</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">Localização</h3>
+            <div className="mt-2 space-y-2">
+              <div>
+                <p className="text-xs text-muted-foreground">Cidade</p>
+                <p>{customer.city || 'Não informado'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Estado</p>
+                <p>{customer.state || 'Não informado'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">CEP</p>
+                <p>{customer.zipCode || 'Não informado'}</p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium flex items-center space-x-2">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Contato Principal</span>
+            </h3>
             <div className="mt-2 space-y-2">
               <div>
                 <p className="text-xs text-muted-foreground">Nome</p>
-                <p>{customer.contactName || 'Não informado'}</p>
+                <p>{customer.contactPerson || 'Não informado'}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Telefone</p>
@@ -80,10 +146,13 @@ const CustomerDetails: React.FC<CustomerDetailsProps> = ({ customer, onEdit, onC
               </div>
             </div>
           </div>
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground">Observações</h3>
-            <p className="mt-2 whitespace-pre-line">{customer.notes || 'Nenhuma observação'}</p>
-          </div>
+        </div>
+
+        <Separator />
+
+        <div>
+          <h3 className="text-sm font-medium text-muted-foreground">Observações</h3>
+          <p className="mt-2 whitespace-pre-line">{customer.notes || 'Nenhuma observação'}</p>
         </div>
 
         <Separator />

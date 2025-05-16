@@ -1,4 +1,3 @@
-
 // Financial system data types
 import { User } from '@/types/auth';
 
@@ -33,8 +32,13 @@ export interface Customer {
   city?: string;
   state?: string;
   zipCode?: string;
-  contactName?: string;
+  // New fields
+  contactPerson?: string;
   contactPhone?: string;
+  website?: string;
+  landlinePhone?: string;
+  mobilePhone?: string;
+  alternativeEmail?: string;
   notes?: string;
   isActive: boolean;
   createdAt: string;
@@ -49,10 +53,18 @@ export interface Supplier {
   name: string;
   type: SupplierType;
   document: string; // CPF or CNPJ
+  // New fields
+  businessName?: string; // Razão social
+  tradeName?: string; // Nome fantasia
   email: string;
   phone: string;
   address?: string;
   bankInfo?: string;
+  website?: string;
+  contactPerson?: string;
+  landlinePhone?: string;
+  mobilePhone?: string;
+  alternativeEmail?: string;
   notes?: string;
   isActive: boolean;
   createdAt: string;

@@ -72,7 +72,9 @@ const CustomerManagement: React.FC = () => {
         customer.document.includes(term) ||
         customer.email?.toLowerCase().includes(lowercaseTerm) ||
         customer.city?.toLowerCase().includes(lowercaseTerm) ||
-        customer.state?.toLowerCase().includes(lowercaseTerm)
+        customer.state?.toLowerCase().includes(lowercaseTerm) ||
+        (customer.contactPerson && customer.contactPerson.toLowerCase().includes(lowercaseTerm)) ||
+        (customer.website && customer.website.toLowerCase().includes(lowercaseTerm))
       );
     }
     
@@ -83,23 +85,32 @@ const CustomerManagement: React.FC = () => {
     setFilteredCustomers(filtered);
   };
 
-  const handleCreateCustomer = (data: any) => {
-    setIsLoading(true);
+  const validateCustomerData = (data: any, isUpdate = false, customerId?: string) => {
+    // Check if document is valid
+    if (!validateDocument(data.document)) {
+      toast.error('O documento informado é inválido. Verifique se digitou corretamente.');
+      return false;
+    }
     
     // Check if document already exists
+    const cleanDocument = data.document.replace(/\D/g, '');
     const documentExists = customers.some(
-      cust => cust.document.replace(/\D/g, '') === data.document.replace(/\D/g, '')
+      cust => (isUpdate ? cust.id !== customerId : true) && 
+      cust.document.replace(/\D/g, '') === cleanDocument
     );
     
     if (documentExists) {
-      toast.error('Já existe um cliente com este documento.');
-      setIsLoading(false);
-      return;
+      toast.error('Já existe um cliente cadastrado com este documento. Verifique se não está tentando cadastrar um cliente duplicado.');
+      return false;
     }
     
-    // Validate document
-    if (!validateDocument(data.document)) {
-      toast.error('O documento informado é inválido.');
+    return true;
+  };
+
+  const handleCreateCustomer = (data: any) => {
+    setIsLoading(true);
+    
+    if (!validateCustomerData(data)) {
       setIsLoading(false);
       return;
     }
@@ -118,8 +129,12 @@ const CustomerManagement: React.FC = () => {
           city: data.city || '',
           state: data.state || '',
           zipCode: data.zipCode || '',
-          contactName: data.contactName || '',
+          contactPerson: data.contactPerson || '',
           contactPhone: data.contactPhone || '',
+          website: data.website || '',
+          landlinePhone: data.landlinePhone || '',
+          mobilePhone: data.mobilePhone || '',
+          alternativeEmail: data.alternativeEmail || '',
           notes: data.notes || '',
           isActive: true,
           createdAt: new Date().toISOString(),
@@ -145,21 +160,7 @@ const CustomerManagement: React.FC = () => {
     
     setIsLoading(true);
     
-    // Check if document already exists with another customer
-    const documentExists = customers.some(
-      cust => cust.id !== selectedCustomer.id && 
-      cust.document.replace(/\D/g, '') === data.document.replace(/\D/g, '')
-    );
-    
-    if (documentExists) {
-      toast.error('Já existe um cliente com este documento.');
-      setIsLoading(false);
-      return;
-    }
-    
-    // Validate document
-    if (!validateDocument(data.document)) {
-      toast.error('O documento informado é inválido.');
+    if (!validateCustomerData(data, true, selectedCustomer.id)) {
       setIsLoading(false);
       return;
     }
@@ -178,8 +179,12 @@ const CustomerManagement: React.FC = () => {
           city: data.city || selectedCustomer.city,
           state: data.state || selectedCustomer.state,
           zipCode: data.zipCode || selectedCustomer.zipCode,
-          contactName: data.contactName || selectedCustomer.contactName,
+          contactPerson: data.contactPerson || selectedCustomer.contactPerson,
           contactPhone: data.contactPhone || selectedCustomer.contactPhone,
+          website: data.website || selectedCustomer.website,
+          landlinePhone: data.landlinePhone || selectedCustomer.landlinePhone,
+          mobilePhone: data.mobilePhone || selectedCustomer.mobilePhone,
+          alternativeEmail: data.alternativeEmail || selectedCustomer.alternativeEmail,
           notes: data.notes || selectedCustomer.notes,
           updatedAt: new Date().toISOString()
         };

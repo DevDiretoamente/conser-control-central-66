@@ -18,10 +18,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Globe, User, Phone, PhoneCall, Mail } from 'lucide-react';
 
 // Schema for supplier form validation
 const supplierSchema = z.object({
   name: z.string().min(1, { message: "Nome do fornecedor é obrigatório" }),
+  businessName: z.string().optional().or(z.literal('')),
+  tradeName: z.string().optional().or(z.literal('')),
   type: z.enum(['physical', 'legal'], { 
     required_error: "Tipo de fornecedor é obrigatório" 
   }),
@@ -36,6 +39,11 @@ const supplierSchema = z.object({
   phone: z.string().min(10, { message: "Telefone deve ter pelo menos 10 dígitos" }).optional().or(z.literal('')),
   address: z.string().optional(),
   bankInfo: z.string().optional(),
+  website: z.string().optional().or(z.literal('')),
+  contactPerson: z.string().optional().or(z.literal('')),
+  landlinePhone: z.string().optional().or(z.literal('')),
+  mobilePhone: z.string().optional().or(z.literal('')),
+  alternativeEmail: z.string().email({ message: "Email alternativo inválido" }).optional().or(z.literal('')),
   notes: z.string().optional(),
 });
 
@@ -57,12 +65,19 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     resolver: zodResolver(supplierSchema),
     defaultValues: {
       name: supplier?.name || '',
+      businessName: supplier?.businessName || '',
+      tradeName: supplier?.tradeName || '',
       type: supplier?.type || 'legal',
       document: supplier?.document || '',
       email: supplier?.email || '',
       phone: supplier?.phone || '',
       address: supplier?.address || '',
       bankInfo: supplier?.bankInfo || '',
+      website: supplier?.website || '',
+      contactPerson: supplier?.contactPerson || '',
+      landlinePhone: supplier?.landlinePhone || '',
+      mobilePhone: supplier?.mobilePhone || '',
+      alternativeEmail: supplier?.alternativeEmail || '',
       notes: supplier?.notes || '',
     }
   });
@@ -96,6 +111,17 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     form.setValue('document', formattedValue);
   };
 
+  // Format phone number
+  const formatPhone = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+      value = value
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{4,5})(\d{4})$/, '$1-$2');
+    }
+    form.setValue(fieldName, value);
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -117,6 +143,39 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                 </FormItem>
               )}
             />
+
+            {/* Business and Trade Name fields */}
+            {form.getValues('type') === 'legal' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="businessName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Razão Social</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Razão Social completa" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="tradeName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome Fantasia</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nome Fantasia" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -173,46 +232,153 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="email@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Email Principal</FormLabel>
+                      <FormControl>
+                        <Input placeholder="email@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
+              <div className="flex items-center space-x-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Telefone Principal</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="(11) 98765-4321" 
+                          {...field} 
+                          onChange={(e) => {
+                            field.onChange(e);
+                            formatPhone(e, 'phone');
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Website field */}
+            <div className="flex items-center space-x-2">
+              <Globe className="h-4 w-4 text-muted-foreground" />
               <FormField
                 control={form.control}
-                name="phone"
+                name="website"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Telefone</FormLabel>
+                  <FormItem className="flex-1">
+                    <FormLabel>Website</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="(11) 98765-4321" 
-                        {...field} 
-                        onChange={(e) => {
-                          // Format phone number
-                          let value = e.target.value.replace(/\D/g, '');
-                          if (value.length <= 11) {
-                            value = value
-                              .replace(/(\d{2})(\d)/, '($1) $2')
-                              .replace(/(\d{4,5})(\d{4})$/, '$1-$2');
-                          }
-                          field.onChange(value);
-                        }}
-                      />
+                      <Input placeholder="https://www.example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Alternative Email field */}
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <FormField
+                  control={form.control}
+                  name="alternativeEmail"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Email Alternativo</FormLabel>
+                      <FormControl>
+                        <Input placeholder="alternative@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Landline phone field */}
+              <div className="flex items-center space-x-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <FormField
+                  control={form.control}
+                  name="landlinePhone"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Telefone Fixo</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="(11) 1234-5678" 
+                          {...field} 
+                          onChange={(e) => {
+                            field.onChange(e);
+                            formatPhone(e, 'landlinePhone');
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Mobile phone and Contact Person fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center space-x-2">
+                <PhoneCall className="h-4 w-4 text-muted-foreground" />
+                <FormField
+                  control={form.control}
+                  name="mobilePhone"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>WhatsApp/Celular</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="(11) 98765-4321" 
+                          {...field} 
+                          onChange={(e) => {
+                            field.onChange(e);
+                            formatPhone(e, 'mobilePhone');
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <FormField
+                  control={form.control}
+                  name="contactPerson"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Pessoa de Contato</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nome da pessoa para contato" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <FormField

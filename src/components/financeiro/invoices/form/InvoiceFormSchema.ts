@@ -18,3 +18,24 @@ export const invoiceSchema = z.object({
 });
 
 export type InvoiceFormValues = z.infer<typeof invoiceSchema>;
+
+// Function to check for duplicate invoice numbers by supplier
+export const checkDuplicateInvoice = (
+  invoiceNumber: string, 
+  supplierId: string, 
+  invoiceId?: string, 
+  existingInvoices: { id: string, number: string, supplierId: string }[] = []
+) => {
+  const duplicate = existingInvoices.find(
+    inv => inv.number === invoiceNumber && 
+          inv.supplierId === supplierId && 
+          (invoiceId ? inv.id !== invoiceId : true)
+  );
+  
+  return {
+    isDuplicate: !!duplicate,
+    message: duplicate ? 
+      "Já existe uma nota fiscal com este número para este fornecedor. Verifique se não está tentando cadastrar uma nota duplicada." 
+      : null
+  };
+};

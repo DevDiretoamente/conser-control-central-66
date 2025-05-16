@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Globe, User, Phone, PhoneCall, Mail } from 'lucide-react';
 
 // Schema for customer form validation
 const customerSchema = z.object({
@@ -37,8 +38,12 @@ const customerSchema = z.object({
   city: z.string().optional().or(z.literal('')),
   state: z.string().optional().or(z.literal('')),
   zipCode: z.string().optional().or(z.literal('')),
-  contactName: z.string().optional().or(z.literal('')),
+  contactPerson: z.string().optional().or(z.literal('')),
   contactPhone: z.string().optional().or(z.literal('')),
+  website: z.string().optional().or(z.literal('')),
+  landlinePhone: z.string().optional().or(z.literal('')),
+  mobilePhone: z.string().optional().or(z.literal('')),
+  alternativeEmail: z.string().email({ message: "Email alternativo inválido" }).optional().or(z.literal('')),
   notes: z.string().optional().or(z.literal('')),
 });
 
@@ -68,8 +73,12 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
       city: customer?.city || '',
       state: customer?.state || '',
       zipCode: customer?.zipCode || '',
-      contactName: customer?.contactName || '',
+      contactPerson: customer?.contactPerson || '',
       contactPhone: customer?.contactPhone || '',
+      website: customer?.website || '',
+      landlinePhone: customer?.landlinePhone || '',
+      mobilePhone: customer?.mobilePhone || '',
+      alternativeEmail: customer?.alternativeEmail || '',
       notes: customer?.notes || '',
     }
   });
@@ -101,6 +110,17 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
     }
     
     form.setValue('document', formattedValue);
+  };
+
+  // Format phone number
+  const formatPhone = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+      value = value
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{4,5})(\d{4})$/, '$1-$2');
+    }
+    form.setValue(fieldName, value);
   };
 
   return (
@@ -180,39 +200,127 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Email Principal</FormLabel>
+                      <FormControl>
+                        <Input placeholder="email@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Telefone Principal</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="(11) 98765-4321" 
+                          {...field} 
+                          onChange={(e) => {
+                            field.onChange(e);
+                            formatPhone(e, 'phone');
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Website field */}
+            <div className="flex items-center space-x-2">
+              <Globe className="h-4 w-4 text-muted-foreground" />
               <FormField
                 control={form.control}
-                name="email"
+                name="website"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
+                  <FormItem className="flex-1">
+                    <FormLabel>Website</FormLabel>
                     <FormControl>
-                      <Input placeholder="email@example.com" {...field} />
+                      <Input placeholder="https://www.example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Alternative Email field */}
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <FormField
+                  control={form.control}
+                  name="alternativeEmail"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Email Alternativo</FormLabel>
+                      <FormControl>
+                        <Input placeholder="alternative@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Landline phone field */}
+              <div className="flex items-center space-x-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <FormField
+                  control={form.control}
+                  name="landlinePhone"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Telefone Fixo</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="(11) 1234-5678" 
+                          {...field} 
+                          onChange={(e) => {
+                            field.onChange(e);
+                            formatPhone(e, 'landlinePhone');
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Mobile phone field */}
+            <div className="flex items-center space-x-2">
+              <PhoneCall className="h-4 w-4 text-muted-foreground" />
               <FormField
                 control={form.control}
-                name="phone"
+                name="mobilePhone"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Telefone</FormLabel>
+                  <FormItem className="flex-1">
+                    <FormLabel>WhatsApp/Celular</FormLabel>
                     <FormControl>
                       <Input 
                         placeholder="(11) 98765-4321" 
                         {...field} 
                         onChange={(e) => {
-                          // Format phone number
-                          let value = e.target.value.replace(/\D/g, '');
-                          if (value.length <= 11) {
-                            value = value
-                              .replace(/(\d{2})(\d)/, '($1) $2')
-                              .replace(/(\d{4,5})(\d{4})$/, '$1-$2');
-                          }
-                          field.onChange(value);
+                          field.onChange(e);
+                          formatPhone(e, 'mobilePhone');
                         }}
                       />
                     </FormControl>
@@ -292,46 +400,46 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="contactName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome do Contato</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nome da pessoa para contato" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="flex items-center space-x-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <FormField
+                  control={form.control}
+                  name="contactPerson"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Nome do Contato</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nome da pessoa para contato" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-              <FormField
-                control={form.control}
-                name="contactPhone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Telefone do Contato</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="(11) 98765-4321" 
-                        {...field} 
-                        onChange={(e) => {
-                          // Format phone number
-                          let value = e.target.value.replace(/\D/g, '');
-                          if (value.length <= 11) {
-                            value = value
-                              .replace(/(\d{2})(\d)/, '($1) $2')
-                              .replace(/(\d{4,5})(\d{4})$/, '$1-$2');
-                          }
-                          field.onChange(value);
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="flex items-center space-x-2">
+                <PhoneCall className="h-4 w-4 text-muted-foreground" />
+                <FormField
+                  control={form.control}
+                  name="contactPhone"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Telefone do Contato</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="(11) 98765-4321" 
+                          {...field} 
+                          onChange={(e) => {
+                            field.onChange(e);
+                            formatPhone(e, 'contactPhone');
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <FormField

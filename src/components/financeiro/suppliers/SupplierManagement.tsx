@@ -66,7 +66,11 @@ const SupplierManagement: React.FC = () => {
       filtered = filtered.filter(supplier => 
         supplier.name.toLowerCase().includes(lowercaseTerm) ||
         supplier.document.includes(term) ||
-        supplier.email.toLowerCase().includes(lowercaseTerm)
+        (supplier.email && supplier.email.toLowerCase().includes(lowercaseTerm)) ||
+        (supplier.businessName && supplier.businessName.toLowerCase().includes(lowercaseTerm)) ||
+        (supplier.tradeName && supplier.tradeName.toLowerCase().includes(lowercaseTerm)) ||
+        (supplier.contactPerson && supplier.contactPerson.toLowerCase().includes(lowercaseTerm)) ||
+        (supplier.website && supplier.website.toLowerCase().includes(lowercaseTerm))
       );
     }
     
@@ -77,23 +81,32 @@ const SupplierManagement: React.FC = () => {
     setFilteredSuppliers(filtered);
   };
 
-  const handleCreateSupplier = (data: any) => {
-    setIsLoading(true);
+  const validateSupplierData = (data: any, isUpdate = false, supplierId?: string) => {
+    // Check if document is valid
+    if (!validateDocument(data.document)) {
+      toast.error('O documento informado é inválido. Verifique se digitou corretamente.');
+      return false;
+    }
     
     // Check if document already exists
+    const cleanDocument = data.document.replace(/\D/g, '');
     const documentExists = suppliers.some(
-      sup => sup.document.replace(/\D/g, '') === data.document.replace(/\D/g, '')
+      sup => (isUpdate ? sup.id !== supplierId : true) && 
+      sup.document.replace(/\D/g, '') === cleanDocument
     );
     
     if (documentExists) {
-      toast.error('Já existe um fornecedor com este documento.');
-      setIsLoading(false);
-      return;
+      toast.error('Já existe um fornecedor cadastrado com este documento. Verifique se não está tentando cadastrar um fornecedor duplicado.');
+      return false;
     }
     
-    // Validate document
-    if (!validateDocument(data.document)) {
-      toast.error('O documento informado é inválido.');
+    return true;
+  };
+
+  const handleCreateSupplier = (data: any) => {
+    setIsLoading(true);
+    
+    if (!validateSupplierData(data)) {
       setIsLoading(false);
       return;
     }
@@ -106,10 +119,17 @@ const SupplierManagement: React.FC = () => {
           name: data.name,
           type: data.type,
           document: data.document,
-          email: data.email,
-          phone: data.phone,
+          businessName: data.businessName || '',
+          tradeName: data.tradeName || '',
+          email: data.email || '',
+          phone: data.phone || '',
           address: data.address || '',
           bankInfo: data.bankInfo || '',
+          website: data.website || '',
+          contactPerson: data.contactPerson || '',
+          landlinePhone: data.landlinePhone || '',
+          mobilePhone: data.mobilePhone || '',
+          alternativeEmail: data.alternativeEmail || '',
           notes: data.notes || '',
           isActive: true,
           createdAt: new Date().toISOString(),
@@ -135,21 +155,7 @@ const SupplierManagement: React.FC = () => {
     
     setIsLoading(true);
     
-    // Check if document already exists with another supplier
-    const documentExists = suppliers.some(
-      sup => sup.id !== selectedSupplier.id && 
-      sup.document.replace(/\D/g, '') === data.document.replace(/\D/g, '')
-    );
-    
-    if (documentExists) {
-      toast.error('Já existe um fornecedor com este documento.');
-      setIsLoading(false);
-      return;
-    }
-    
-    // Validate document
-    if (!validateDocument(data.document)) {
-      toast.error('O documento informado é inválido.');
+    if (!validateSupplierData(data, true, selectedSupplier.id)) {
       setIsLoading(false);
       return;
     }
@@ -162,10 +168,17 @@ const SupplierManagement: React.FC = () => {
           name: data.name,
           type: data.type,
           document: data.document,
-          email: data.email,
-          phone: data.phone,
+          businessName: data.businessName || selectedSupplier.businessName,
+          tradeName: data.tradeName || selectedSupplier.tradeName,
+          email: data.email || selectedSupplier.email,
+          phone: data.phone || selectedSupplier.phone,
           address: data.address || selectedSupplier.address,
           bankInfo: data.bankInfo || selectedSupplier.bankInfo,
+          website: data.website || selectedSupplier.website,
+          contactPerson: data.contactPerson || selectedSupplier.contactPerson,
+          landlinePhone: data.landlinePhone || selectedSupplier.landlinePhone,
+          mobilePhone: data.mobilePhone || selectedSupplier.mobilePhone,
+          alternativeEmail: data.alternativeEmail || selectedSupplier.alternativeEmail,
           notes: data.notes || selectedSupplier.notes,
           updatedAt: new Date().toISOString()
         };

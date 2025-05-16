@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Supplier } from '@/types/financeiro';
 import { formatDocument } from '@/utils/validators';
+import { Globe, User, Phone, PhoneCall, Mail } from 'lucide-react';
 
 interface SupplierDetailsProps {
   supplier: Supplier;
@@ -32,30 +33,115 @@ const SupplierDetails: React.FC<SupplierDetailsProps> = ({ supplier, onEdit, onC
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {supplier.type === 'legal' && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Razão Social</h3>
+                <p className="mt-1">{supplier.businessName || 'Não informado'}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Nome Fantasia</h3>
+                <p className="mt-1">{supplier.tradeName || 'Não informado'}</p>
+              </div>
+            </div>
+            <Separator />
+          </>
+        )}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
               <h3 className="text-sm font-medium text-muted-foreground">Documento</h3>
               <p className="mt-1">{supplier.document}</p>
             </div>
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
-              <p className="mt-1">{supplier.email || 'Não informado'}</p>
+
+            {supplier.website && (
+              <div className="flex items-center space-x-2">
+                <Globe className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">Website</h3>
+                  <a href={supplier.website.startsWith('http') ? supplier.website : `https://${supplier.website}`} 
+                     target="_blank" 
+                     rel="noopener noreferrer"
+                     className="mt-1 text-blue-600 hover:underline">
+                    {supplier.website}
+                  </a>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex items-center space-x-2">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Email Principal</h3>
+                <p className="mt-1">{supplier.email || 'Não informado'}</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Telefone</h3>
-              <p className="mt-1">{supplier.phone || 'Não informado'}</p>
-            </div>
+
+            {supplier.alternativeEmail && (
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">Email Alternativo</h3>
+                  <p className="mt-1">{supplier.alternativeEmail}</p>
+                </div>
+              </div>
+            )}
           </div>
+          
           <div className="space-y-4">
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Endereço</h3>
-              <p className="mt-1">{supplier.address || 'Não informado'}</p>
+            <div className="flex items-center space-x-2">
+              <Phone className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Telefone Principal</h3>
+                <p className="mt-1">{supplier.phone || 'Não informado'}</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Informações Bancárias</h3>
-              <p className="mt-1 whitespace-pre-line">{supplier.bankInfo || 'Não informado'}</p>
-            </div>
+
+            {supplier.landlinePhone && (
+              <div className="flex items-center space-x-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">Telefone Fixo</h3>
+                  <p className="mt-1">{supplier.landlinePhone}</p>
+                </div>
+              </div>
+            )}
+
+            {supplier.mobilePhone && (
+              <div className="flex items-center space-x-2">
+                <PhoneCall className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">WhatsApp/Celular</h3>
+                  <p className="mt-1">{supplier.mobilePhone}</p>
+                </div>
+              </div>
+            )}
+
+            {supplier.contactPerson && (
+              <div className="flex items-center space-x-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">Pessoa de Contato</h3>
+                  <p className="mt-1">{supplier.contactPerson}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <Separator />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground">Endereço</h3>
+            <p className="mt-1">{supplier.address || 'Não informado'}</p>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground">Informações Bancárias</h3>
+            <p className="mt-1 whitespace-pre-line">{supplier.bankInfo || 'Não informado'}</p>
           </div>
         </div>
 
