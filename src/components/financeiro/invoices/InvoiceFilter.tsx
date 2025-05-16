@@ -151,7 +151,7 @@ const InvoiceFilter: React.FC<InvoiceFilterProps> = ({ onFilterChange, costCente
                       <SelectValue placeholder="Todos os status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="none">Todos</SelectItem>
                       <SelectItem value="pending">Pendente</SelectItem>
                       <SelectItem value="paid">Paga</SelectItem>
                       <SelectItem value="partial">Pagamento Parcial</SelectItem>
@@ -172,7 +172,7 @@ const InvoiceFilter: React.FC<InvoiceFilterProps> = ({ onFilterChange, costCente
                       <SelectValue placeholder="Todos os centros de custo" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="none">Todos</SelectItem>
                       {costCenters.map((center) => (
                         <SelectItem key={center.id} value={center.id}>
                           {center.name}
@@ -192,7 +192,7 @@ const InvoiceFilter: React.FC<InvoiceFilterProps> = ({ onFilterChange, costCente
                       <SelectValue placeholder="Todos os fornecedores" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="none">Todos</SelectItem>
                       {suppliers.map((supplier) => (
                         <SelectItem key={supplier.id} value={supplier.id}>
                           {supplier.name}
@@ -238,7 +238,7 @@ const InvoiceFilter: React.FC<InvoiceFilterProps> = ({ onFilterChange, costCente
             </div>
           )}
           
-          {filters.status && filters.status !== 'all' && (
+          {filters.status && filters.status !== 'none' && (
             <div className="bg-secondary text-secondary-foreground px-3 py-1 text-xs rounded-full flex items-center gap-1">
               <span>Status: {
                 filters.status === 'pending' ? 'Pendente' :
@@ -257,7 +257,7 @@ const InvoiceFilter: React.FC<InvoiceFilterProps> = ({ onFilterChange, costCente
             </div>
           )}
           
-          {filters.costCenterId && filters.costCenterId !== 'all' && (
+          {filters.costCenterId && filters.costCenterId !== 'none' && (
             <div className="bg-secondary text-secondary-foreground px-3 py-1 text-xs rounded-full flex items-center gap-1">
               <span>Centro de Custo: {
                 costCenters.find(c => c.id === filters.costCenterId)?.name || filters.costCenterId
@@ -271,7 +271,7 @@ const InvoiceFilter: React.FC<InvoiceFilterProps> = ({ onFilterChange, costCente
             </div>
           )}
           
-          {filters.supplierId && filters.supplierId !== 'all' && (
+          {filters.supplierId && filters.supplierId !== 'none' && (
             <div className="bg-secondary text-secondary-foreground px-3 py-1 text-xs rounded-full flex items-center gap-1">
               <span>Fornecedor: {
                 suppliers.find(s => s.id === filters.supplierId)?.name || filters.supplierId

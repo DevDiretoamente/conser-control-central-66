@@ -158,15 +158,15 @@ const InvoiceManagement: React.FC = () => {
       );
     }
 
-    if (filters.status && filters.status !== 'all') {
+    if (filters.status && filters.status !== 'none') {
       filtered = filtered.filter(invoice => invoice.status === filters.status);
     }
 
-    if (filters.costCenterId && filters.costCenterId !== 'all') {
+    if (filters.costCenterId && filters.costCenterId !== 'none') {
       filtered = filtered.filter(invoice => invoice.costCenterId === filters.costCenterId);
     }
 
-    if (filters.supplierId && filters.supplierId !== 'all') {
+    if (filters.supplierId && filters.supplierId !== 'none') {
       filtered = filtered.filter(invoice => invoice.supplierId === filters.supplierId);
     }
 
