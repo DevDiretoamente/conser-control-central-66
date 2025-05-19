@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +10,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
-import { CostCenter, Supplier, FinanceFilterOptions, Work, ExpenseCategoryType } from '@/types/financeiro';
+import { CostCenter, Supplier, FinanceFilterOptions, Work, ExpenseCategoryType, InvoiceStatus } from '@/types/financeiro';
 import { Search, Filter, X } from 'lucide-react';
 import { mockWorks } from './form/WorkProjectSection';
 
@@ -25,7 +24,7 @@ const InvoiceFilter: React.FC<InvoiceFilterProps> = ({ onFilterChange, costCente
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [status, setStatus] = useState<string>('none');
+  const [status, setStatus] = useState<InvoiceStatus | 'none'>('none');
   const [costCenterId, setCostCenterId] = useState<string>('none');
   const [supplierId, setSupplierId] = useState<string>('none');
   const [workId, setWorkId] = useState<string>('none');
@@ -115,7 +114,7 @@ const InvoiceFilter: React.FC<InvoiceFilterProps> = ({ onFilterChange, costCente
             </div>
             <div>
               <Label>Status</Label>
-              <Select value={status} onValueChange={setStatus}>
+              <Select value={status} onValueChange={(value: InvoiceStatus | 'none') => setStatus(value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
