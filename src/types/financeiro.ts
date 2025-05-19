@@ -1,3 +1,4 @@
+
 // Financial system data types
 import { User } from '@/types/auth';
 
@@ -9,8 +10,6 @@ export interface CostCenter {
   name: string;
   description: string;
   parentId?: string; // For hierarchical cost centers
-  budget?: number;
-  spent?: number;
   status: CostCenterStatus;
   obraId?: string; // Associated construction project
   createdAt: string;
@@ -50,12 +49,10 @@ export type SupplierType = 'physical' | 'legal'; // Physical person or legal ent
 
 export interface Supplier {
   id: string;
-  name: string;
+  businessName: string; // Razão social (primary name field)
+  tradeName?: string; // Nome fantasia
   type: SupplierType;
   document: string; // CPF or CNPJ
-  // New fields
-  businessName?: string; // Razão social
-  tradeName?: string; // Nome fantasia
   email: string;
   phone: string;
   address?: string;

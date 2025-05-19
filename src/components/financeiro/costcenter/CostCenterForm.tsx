@@ -24,7 +24,6 @@ import { toast } from 'sonner';
 const costCenterSchema = z.object({
   name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
   description: z.string().optional(),
-  budget: z.coerce.number().optional(),
   parentId: z.string().optional(),
   obraId: z.string().optional(),
   status: z.enum(['active', 'inactive', 'archived'])
@@ -53,7 +52,6 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({
     defaultValues: {
       name: costCenter?.name || '',
       description: costCenter?.description || '',
-      budget: costCenter?.budget || undefined,
       parentId: costCenter?.parentId || '',
       obraId: costCenter?.obraId || '',
       status: costCenter?.status || 'active'
@@ -99,29 +97,6 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
                     <Textarea placeholder="Descrição detalhada" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="budget"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Orçamento (R$)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      placeholder="0,00" 
-                      {...field} 
-                      value={field.value ?? ''}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        field.onChange(value === '' ? undefined : Number(value));
-                      }}
-                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

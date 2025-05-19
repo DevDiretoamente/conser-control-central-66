@@ -32,7 +32,7 @@ const CostCenterSection: React.FC<CostCenterSectionProps> = ({ form, costCenters
         <FormItem>
           <FormLabel>Centro de Custo</FormLabel>
           <FormDescription>
-            Selecione um centro de custo para agrupar esta despesa
+            Selecione um tipo para agrupar esta despesa
           </FormDescription>
           <Select 
             onValueChange={field.onChange} 

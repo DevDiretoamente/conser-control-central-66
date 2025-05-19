@@ -14,6 +14,7 @@ import { Pencil, Trash2, FileText, CheckCircle, AlertCircle, Clock, Ban } from '
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface InvoiceListProps {
   invoices: Invoice[];
@@ -86,71 +87,73 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
 
   return (
     <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Número</TableHead>
-            <TableHead>Fornecedor</TableHead>
-            <TableHead>Centro de Custo</TableHead>
-            <TableHead>Emissão</TableHead>
-            <TableHead>Vencimento</TableHead>
-            <TableHead>Valor</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {invoices.length > 0 ? (
-            invoices.map((invoice) => (
-              <TableRow key={invoice.id}>
-                <TableCell className="font-medium">
-                  <Button 
-                    variant="link" 
-                    onClick={() => onViewDetails(invoice)}
-                    className="p-0 h-auto font-medium"
-                  >
-                    {invoice.number}
-                  </Button>
-                </TableCell>
-                <TableCell>{invoice.supplierName}</TableCell>
-                <TableCell>{invoice.costCenterName}</TableCell>
-                <TableCell>
-                  {format(new Date(invoice.issueDate), 'dd/MM/yyyy', { locale: ptBR })}
-                </TableCell>
-                <TableCell>
-                  {format(new Date(invoice.dueDate), 'dd/MM/yyyy', { locale: ptBR })}
-                </TableCell>
-                <TableCell>{formatCurrency(invoice.totalAmount)}</TableCell>
-                <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                <TableCell className="text-right space-x-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEdit(invoice)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                    <span className="sr-only">Editar</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onDelete(invoice)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Excluir</span>
-                  </Button>
+      <ScrollArea className="h-[60vh]">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Número</TableHead>
+              <TableHead>Fornecedor</TableHead>
+              <TableHead>Centro de Custo</TableHead>
+              <TableHead>Emissão</TableHead>
+              <TableHead>Vencimento</TableHead>
+              <TableHead>Valor</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {invoices.length > 0 ? (
+              invoices.map((invoice) => (
+                <TableRow key={invoice.id}>
+                  <TableCell className="font-medium">
+                    <Button 
+                      variant="link" 
+                      onClick={() => onViewDetails(invoice)}
+                      className="p-0 h-auto font-medium"
+                    >
+                      {invoice.number}
+                    </Button>
+                  </TableCell>
+                  <TableCell>{invoice.supplierName}</TableCell>
+                  <TableCell>{invoice.costCenterName}</TableCell>
+                  <TableCell>
+                    {format(new Date(invoice.issueDate), 'dd/MM/yyyy', { locale: ptBR })}
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(invoice.dueDate), 'dd/MM/yyyy', { locale: ptBR })}
+                  </TableCell>
+                  <TableCell>{formatCurrency(invoice.totalAmount)}</TableCell>
+                  <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                  <TableCell className="text-right space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEdit(invoice)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                      <span className="sr-only">Editar</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDelete(invoice)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Excluir</span>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  Nenhuma nota fiscal cadastrada
                 </TableCell>
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                Nenhuma nota fiscal cadastrada
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            )}
+          </TableBody>
+        </Table>
+      </ScrollArea>
     </div>
   );
 };

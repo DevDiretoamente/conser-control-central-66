@@ -46,8 +46,8 @@ const SupplierList: React.FC<SupplierListProps> = ({
           <TableBody>
             {suppliers.map((supplier) => (
               <TableRow key={supplier.id}>
-                <TableCell className="font-medium">{supplier.businessName || supplier.name}</TableCell>
-                <TableCell>{supplier.tradeName}</TableCell>
+                <TableCell className="font-medium">{supplier.businessName}</TableCell>
+                <TableCell>{supplier.tradeName || '-'}</TableCell>
                 <TableCell>
                   <Badge variant={supplier.type === 'physical' ? 'outline' : 'default'}>
                     {supplier.type === 'physical' ? 'Pessoa Física' : 'Pessoa Jurídica'}
