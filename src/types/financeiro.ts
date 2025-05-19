@@ -1,3 +1,4 @@
+
 // Financial system data types
 import { User } from '@/types/auth';
 
@@ -67,8 +68,50 @@ export interface Supplier {
   updatedAt: string;
 }
 
+// Work/Project Types
+export interface Work {
+  id: string;
+  name: string;
+  description: string;
+  clientId?: string;
+  clientName?: string;
+  status: 'planning' | 'in_progress' | 'completed' | 'cancelled';
+  startDate: string;
+  endDate?: string;
+  budget?: number;
+  location?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+}
+
+// Expense Category Types
+export type ExpenseCategoryType = 
+  'administration' | 
+  'fuel' | 
+  'hotel' | 
+  'food' | 
+  'maintenance' | 
+  'supplies' | 
+  'transportation' | 
+  'utilities' | 
+  'other';
+
+export type FuelType = 'diesel' | 'gasoline' | 'ethanol' | 'other';
+
+export interface ExpenseCategory {
+  id: string;
+  name: string;
+  type: ExpenseCategoryType;
+  parentId?: string; // For subcategories
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Invoice Types
-export type InvoiceStatus = 'draft' | 'pending' | 'paid' | 'partial' | 'cancelled' | 'overdue';
+export type InvoiceStatus = 'draft' | 'pending' | 'paid' | 'partial' | 'cancelled' | 'overdue' | 'released';
 export type InvoiceType = 'product' | 'service';
 export type PaymentMethod = 'cash' | 'bank_transfer' | 'check' | 'credit_card' | 'debit_card' | 'other';
 
@@ -81,6 +124,8 @@ export interface Invoice {
   dueDate: string;
   costCenterId: string;
   costCenterName: string; // Denormalized
+  workId?: string; // Associated work/project
+  workName?: string; // Denormalized
   amount: number;
   tax?: number;
   totalAmount: number;
@@ -105,6 +150,11 @@ export interface InvoiceItem {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
+  categoryId?: string;
+  categoryType?: ExpenseCategoryType;
+  categoryName?: string;
+  subcategoryId?: string;
+  subcategoryName?: string;
   notes?: string;
 }
 
@@ -198,6 +248,8 @@ export interface FinanceFilterOptions {
   costCenterId?: string | 'none';
   status?: InvoiceStatus | PaymentStatus | 'none';
   supplierId?: string | 'none';
+  workId?: string | 'none';
+  categoryType?: ExpenseCategoryType | 'none';
   minAmount?: number;
   maxAmount?: number;
   searchTerm?: string;

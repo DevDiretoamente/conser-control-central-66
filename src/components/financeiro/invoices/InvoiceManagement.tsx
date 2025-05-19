@@ -1,15 +1,21 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Send, BarChart4 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Invoice, InvoiceStatus, CostCenter, Supplier, FinanceFilterOptions } from '@/types/financeiro';
+import { 
+  Invoice, InvoiceStatus, CostCenter, Supplier, 
+  FinanceFilterOptions, InvoiceItem, Work 
+} from '@/types/financeiro';
 import { toast } from 'sonner';
 import InvoiceForm from './InvoiceForm';
 import InvoiceList from './InvoiceList';
 import InvoiceFilter from './InvoiceFilter';
 import InvoiceDetails from './InvoiceDetails';
+import ExpenseAnalytics from './ExpenseAnalytics';
+import { mockWorks } from './form/WorkProjectSection';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Mock data for initial development
 const mockCostCenters: CostCenter[] = [
@@ -69,6 +75,72 @@ const mockSuppliers: Supplier[] = [
   }
 ];
 
+// Sample invoice items
+const mockInvoiceItems: InvoiceItem[] = [
+  {
+    id: 'item1',
+    invoiceId: 'inv1',
+    description: 'Serviço de consultoria administrativa',
+    quantity: 1,
+    unitPrice: 1000,
+    totalPrice: 1000,
+    categoryId: 'cat1',
+    categoryName: 'Administração',
+    categoryType: 'administration',
+    notes: ''
+  },
+  {
+    id: 'item2',
+    invoiceId: 'inv2',
+    description: 'Diesel para gerador',
+    quantity: 100,
+    unitPrice: 5,
+    totalPrice: 500,
+    categoryId: 'cat2',
+    categoryName: 'Combustível',
+    categoryType: 'fuel',
+    subcategoryId: 'diesel',
+    subcategoryName: 'Diesel',
+    notes: ''
+  },
+  {
+    id: 'item3',
+    invoiceId: 'inv2',
+    description: 'Hospedagem para equipe técnica',
+    quantity: 10,
+    unitPrice: 200,
+    totalPrice: 2000,
+    categoryId: 'cat3',
+    categoryName: 'Hospedagem',
+    categoryType: 'hotel',
+    notes: 'Hospedagem para 5 técnicos por 2 dias'
+  },
+  {
+    id: 'item4',
+    invoiceId: 'inv2',
+    description: 'Refeições para equipe',
+    quantity: 20,
+    unitPrice: 50,
+    totalPrice: 1000,
+    categoryId: 'cat4',
+    categoryName: 'Alimentação',
+    categoryType: 'food',
+    notes: ''
+  },
+  {
+    id: 'item5',
+    invoiceId: 'inv2',
+    description: 'Peças para manutenção',
+    quantity: 10,
+    unitPrice: 200,
+    totalPrice: 2000,
+    categoryId: 'cat5',
+    categoryName: 'Manutenção',
+    categoryType: 'maintenance',
+    notes: ''
+  }
+];
+
 const mockInvoices: Invoice[] = [
   {
     id: 'inv1',
@@ -79,13 +151,15 @@ const mockInvoices: Invoice[] = [
     dueDate: '2023-07-10',
     costCenterId: 'cc1',
     costCenterName: 'Administrativo',
+    workId: 'work1',
+    workName: 'Construção Residencial Vila Verde',
     amount: 1000,
     tax: 100,
     totalAmount: 1100,
     status: 'paid',
     type: 'service',
     description: 'Serviços administrativos',
-    items: [],
+    items: [mockInvoiceItems[0]],
     payments: [
       {
         id: 'pay1',
@@ -112,13 +186,20 @@ const mockInvoices: Invoice[] = [
     dueDate: '2023-08-15',
     costCenterId: 'cc2',
     costCenterName: 'Obra A',
+    workId: 'work2',
+    workName: 'Reforma Comercial Centro',
     amount: 5000,
     tax: 500,
     totalAmount: 5500,
     status: 'pending',
     type: 'product',
     description: 'Materiais para Obra A',
-    items: [],
+    items: [
+      mockInvoiceItems[1],
+      mockInvoiceItems[2],
+      mockInvoiceItems[3],
+      mockInvoiceItems[4]
+    ],
     payments: [],
     createdAt: '2023-07-15',
     createdBy: 'user1',
@@ -133,12 +214,14 @@ const InvoiceManagement: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | undefined>(undefined);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [currentTab, setCurrentTab] = useState<string>('list');
 
-  // Update the handleFilter function to properly handle "none" values
+  // Update the handleFilter function to properly handle additional filters
   const handleFilter = (filters: FinanceFilterOptions & {
     status?: InvoiceStatus | 'none';
     costCenterId?: string;
     supplierId?: string;
+    workId?: string;
   }) => {
     let filtered = [...invoices];
 
@@ -147,7 +230,8 @@ const InvoiceManagement: React.FC = () => {
       filtered = filtered.filter(invoice => 
         invoice.number.toLowerCase().includes(term) ||
         invoice.supplierName.toLowerCase().includes(term) ||
-        invoice.costCenterName.toLowerCase().includes(term)
+        invoice.costCenterName.toLowerCase().includes(term) ||
+        (invoice.workName && invoice.workName.toLowerCase().includes(term))
       );
     }
 
@@ -176,6 +260,18 @@ const InvoiceManagement: React.FC = () => {
     // Only filter by supplierId if it's not 'none'
     if (filters.supplierId && filters.supplierId !== 'none') {
       filtered = filtered.filter(invoice => invoice.supplierId === filters.supplierId);
+    }
+
+    // Only filter by workId if it's not 'none'
+    if (filters.workId && filters.workId !== 'none') {
+      filtered = filtered.filter(invoice => invoice.workId === filters.workId);
+    }
+
+    // Filter by expense category if specified
+    if (filters.categoryType && filters.categoryType !== 'none') {
+      filtered = filtered.filter(invoice => 
+        invoice.items && invoice.items.some(item => item.categoryType === filters.categoryType)
+      );
     }
 
     setFilteredInvoices(filtered);
@@ -213,6 +309,8 @@ const InvoiceManagement: React.FC = () => {
           dueDate: data.dueDate.toISOString(),
           costCenterId: data.costCenterId,
           costCenterName: mockCostCenters.find(c => c.id === data.costCenterId)?.name || '',
+          workId: data.workId || undefined,
+          workName: data.workName || undefined,
           amount: data.amount,
           tax: data.tax || 0,
           totalAmount: data.totalAmount,
@@ -220,7 +318,11 @@ const InvoiceManagement: React.FC = () => {
           type: data.type,
           description: data.description || '',
           notes: data.notes || '',
-          items: [],
+          items: data.items?.map((item: any, index: number) => ({
+            ...item,
+            id: `item-${Date.now()}-${index}`,
+            invoiceId: `inv${invoices.length + 1}`
+          })) || [],
           payments: [],
           createdAt: new Date().toISOString(),
           createdBy: 'user1',
@@ -265,6 +367,8 @@ const InvoiceManagement: React.FC = () => {
           dueDate: data.dueDate.toISOString(),
           costCenterId: data.costCenterId,
           costCenterName: mockCostCenters.find(c => c.id === data.costCenterId)?.name || selectedInvoice.costCenterName,
+          workId: data.workId || undefined,
+          workName: data.workName || undefined,
           amount: data.amount,
           tax: data.tax || 0,
           totalAmount: data.totalAmount,
@@ -272,6 +376,11 @@ const InvoiceManagement: React.FC = () => {
           type: data.type,
           description: data.description || '',
           notes: data.notes || '',
+          items: data.items?.map((item: any, index: number) => ({
+            ...item,
+            id: item.id || `item-${Date.now()}-${index}`,
+            invoiceId: selectedInvoice.id
+          })) || [],
           updatedAt: new Date().toISOString()
         };
 
@@ -317,6 +426,28 @@ const InvoiceManagement: React.FC = () => {
     toast.info('Funcionalidade de pagamento será implementada em breve.');
   };
 
+  const handleReleaseInvoice = (invoice: Invoice) => {
+    try {
+      const updatedInvoice: Invoice = {
+        ...invoice,
+        status: 'released',
+        updatedAt: new Date().toISOString()
+      };
+
+      const updatedInvoices = invoices.map(item => 
+        item.id === invoice.id ? updatedInvoice : item
+      );
+      
+      setInvoices(updatedInvoices);
+      setFilteredInvoices(updatedInvoices);
+      setIsDetailsOpen(false);
+      toast.success(`Nota fiscal #${invoice.number} liberada para a obra ${invoice.workName || ''}`);
+    } catch (error) {
+      console.error('Error releasing invoice:', error);
+      toast.error('Erro ao liberar nota fiscal.');
+    }
+  };
+
   // Transform suppliers for compatibility with the InvoiceForm component
   const suppliersForForm = mockSuppliers.map(supplier => ({
     id: supplier.id,
@@ -332,13 +463,22 @@ const InvoiceManagement: React.FC = () => {
             Gerencie todas as notas fiscais da sua empresa
           </p>
         </div>
-        <Button onClick={() => {
-          setSelectedInvoice(undefined);
-          setIsFormOpen(true);
-        }} className="shrink-0">
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Nova Nota Fiscal
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant={currentTab === 'analytics' ? 'default' : 'outline'}
+            onClick={() => setCurrentTab(currentTab === 'analytics' ? 'list' : 'analytics')}
+          >
+            <BarChart4 className="h-4 w-4 mr-2" />
+            {currentTab === 'analytics' ? 'Ver Lista' : 'Análise'}
+          </Button>
+          <Button onClick={() => {
+            setSelectedInvoice(undefined);
+            setIsFormOpen(true);
+          }}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Nova Nota Fiscal
+          </Button>
+        </div>
       </div>
 
       <InvoiceFilter 
@@ -347,27 +487,33 @@ const InvoiceManagement: React.FC = () => {
         suppliers={mockSuppliers}
       />
 
-      {filteredInvoices.length === 0 ? (
-        <Alert>
-          <AlertDescription>
-            Nenhuma nota fiscal encontrada. Altere os filtros ou adicione uma nova nota fiscal.
-          </AlertDescription>
-        </Alert>
+      {currentTab === 'analytics' ? (
+        <ExpenseAnalytics invoices={filteredInvoices} />
       ) : (
-        <InvoiceList
-          invoices={filteredInvoices}
-          onEdit={handleEditInvoice}
-          onDelete={handleDeleteInvoice}
-          onViewDetails={(invoice) => {
-            setSelectedInvoice(invoice);
-            setIsDetailsOpen(true);
-          }}
-        />
+        <>
+          {filteredInvoices.length === 0 ? (
+            <Alert>
+              <AlertDescription>
+                Nenhuma nota fiscal encontrada. Altere os filtros ou adicione uma nova nota fiscal.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <InvoiceList
+              invoices={filteredInvoices}
+              onEdit={handleEditInvoice}
+              onDelete={handleDeleteInvoice}
+              onViewDetails={(invoice) => {
+                setSelectedInvoice(invoice);
+                setIsDetailsOpen(true);
+              }}
+            />
+          )}
+        </>
       )}
 
       {/* Invoice Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-4xl">
           <InvoiceForm
             invoice={selectedInvoice}
             suppliers={suppliersForForm}
@@ -393,6 +539,7 @@ const InvoiceManagement: React.FC = () => {
               }}
               onClose={() => setIsDetailsOpen(false)}
               onAddPayment={handleAddPayment}
+              onRelease={handleReleaseInvoice}
             />
           )}
         </DialogContent>

@@ -1,295 +1,205 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { CalendarIcon, Search, FilterIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { FinanceFilterOptions, InvoiceStatus } from '@/types/financeiro';
+import { Label } from '@/components/ui/label';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
+import { CostCenter, Supplier, FinanceFilterOptions, Work, ExpenseCategoryType } from '@/types/financeiro';
+import { Search, Filter, X } from 'lucide-react';
+import { mockWorks } from './form/WorkProjectSection';
 
 interface InvoiceFilterProps {
   onFilterChange: (filters: FinanceFilterOptions) => void;
-  costCenters: { id: string; name: string }[];
-  suppliers: { id: string; name: string }[];
+  costCenters: CostCenter[];
+  suppliers: Supplier[];
 }
 
 const InvoiceFilter: React.FC<InvoiceFilterProps> = ({ onFilterChange, costCenters, suppliers }) => {
-  // Update the state type to include "none" as a valid status option
-  const [filters, setFilters] = useState<FinanceFilterOptions & {
-    status?: InvoiceStatus | 'none';
-    costCenterId?: string;
-    supplierId?: string;
-  }>({
-    searchTerm: '',
-    startDate: undefined,
-    endDate: undefined,
-    costCenterId: undefined,
-    supplierId: undefined,
-    status: undefined,
-  });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [status, setStatus] = useState<string>('none');
+  const [costCenterId, setCostCenterId] = useState<string>('none');
+  const [supplierId, setSupplierId] = useState<string>('none');
+  const [workId, setWorkId] = useState<string>('none');
+  const [categoryType, setCategoryType] = useState<string>('none');
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  const handleFilterChange = (key: keyof typeof filters, value: any) => {
-    const newFilters = {
-      ...filters,
-      [key]: value,
-    };
+  // Array of expense categories for filter
+  const expenseCategories = [
+    { id: 'administration', name: 'Administração' },
+    { id: 'fuel', name: 'Combustível' },
+    { id: 'hotel', name: 'Hospedagem' },
+    { id: 'food', name: 'Alimentação' },
+    { id: 'maintenance', name: 'Manutenção' },
+    { id: 'supplies', name: 'Materiais' },
+    { id: 'transportation', name: 'Transporte' },
+    { id: 'utilities', name: 'Utilidades' },
+    { id: 'other', name: 'Outros' }
+  ];
+
+  const handleApplyFilters = () => {
+    onFilterChange({
+      searchTerm,
+      startDate: startDate ? startDate.toISOString() : undefined,
+      endDate: endDate ? endDate.toISOString() : undefined,
+      status: status === 'none' ? undefined : status,
+      costCenterId: costCenterId === 'none' ? undefined : costCenterId,
+      supplierId: supplierId === 'none' ? undefined : supplierId,
+      workId: workId === 'none' ? undefined : workId,
+      categoryType: categoryType === 'none' ? undefined : categoryType as ExpenseCategoryType,
+    });
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setStatus('none');
+    setCostCenterId('none');
+    setSupplierId('none');
+    setWorkId('none');
+    setCategoryType('none');
     
-    setFilters(newFilters);
-    onFilterChange(newFilters);
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleFilterChange('searchTerm', e.target.value);
-  };
-
-  const handleClear = () => {
-    const clearedFilters = {
-      searchTerm: '',
-      startDate: undefined,
-      endDate: undefined,
-      costCenterId: undefined,
-      supplierId: undefined,
-      status: undefined,
-    };
-
-    setFilters(clearedFilters);
-    onFilterChange(clearedFilters);
+    onFilterChange({});
   };
 
   return (
-    <div className="bg-background border rounded-md p-4">
-      <div className="space-y-4">
-        <div className="flex flex-wrap gap-2">
-          <div className="flex-1 min-w-[240px]">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por número, fornecedor..."
-                value={filters.searchTerm || ''}
-                onChange={handleSearchChange}
-                className="pl-8"
+    <div className="space-y-4 border p-4 rounded-lg">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex-1 relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Pesquisar por número, fornecedor ou centro de custo"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setIsExpanded(!isExpanded)}>
+            <Filter className="h-4 w-4 mr-2" />
+            Filtros
+          </Button>
+          <Button onClick={handleApplyFilters}>Aplicar</Button>
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className="pt-2 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <Label>Data Inicial</Label>
+              <DatePicker
+                date={startDate}
+                setDate={setStartDate}
+                placeholder="Selecione"
+                className="w-full"
               />
+            </div>
+            <div>
+              <Label>Data Final</Label>
+              <DatePicker
+                date={endDate}
+                setDate={setEndDate}
+                placeholder="Selecione"
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Label>Status</Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Todos</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="paid">Pago</SelectItem>
+                  <SelectItem value="partial">Parcial</SelectItem>
+                  <SelectItem value="overdue">Vencida</SelectItem>
+                  <SelectItem value="cancelled">Cancelada</SelectItem>
+                  <SelectItem value="draft">Rascunho</SelectItem>
+                  <SelectItem value="released">Liberada</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Centro de Custo</Label>
+              <Select value={costCenterId} onValueChange={setCostCenterId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Todos</SelectItem>
+                  {costCenters.map((cc) => (
+                    <SelectItem key={cc.id} value={cc.id}>{cc.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <FilterIcon className="h-4 w-4" />
-                <span>Filtros</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80" align="end">
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Data Inicial</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !filters.startDate && "text-muted-foreground"
-                          )}
-                        >
-                          {filters.startDate ? (
-                            format(new Date(filters.startDate), "dd/MM/yyyy")
-                          ) : (
-                            <span>Escolha uma data</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={filters.startDate ? new Date(filters.startDate) : undefined}
-                          onSelect={(date) => handleFilterChange('startDate', date?.toISOString())}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Data Final</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !filters.endDate && "text-muted-foreground"
-                          )}
-                        >
-                          {filters.endDate ? (
-                            format(new Date(filters.endDate), "dd/MM/yyyy")
-                          ) : (
-                            <span>Escolha uma data</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={filters.endDate ? new Date(filters.endDate) : undefined}
-                          onSelect={(date) => handleFilterChange('endDate', date?.toISOString())}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Status</label>
-                  <Select
-                    value={filters.status}
-                    onValueChange={(value) => handleFilterChange('status', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos os status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Todos</SelectItem>
-                      <SelectItem value="pending">Pendente</SelectItem>
-                      <SelectItem value="paid">Paga</SelectItem>
-                      <SelectItem value="partial">Pagamento Parcial</SelectItem>
-                      <SelectItem value="overdue">Vencida</SelectItem>
-                      <SelectItem value="cancelled">Cancelada</SelectItem>
-                      <SelectItem value="draft">Rascunho</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Centro de Custo</label>
-                  <Select
-                    value={filters.costCenterId}
-                    onValueChange={(value) => handleFilterChange('costCenterId', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos os centros de custo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Todos</SelectItem>
-                      {costCenters.map((center) => (
-                        <SelectItem key={center.id} value={center.id}>
-                          {center.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Fornecedor</label>
-                  <Select
-                    value={filters.supplierId}
-                    onValueChange={(value) => handleFilterChange('supplierId', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos os fornecedores" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Todos</SelectItem>
-                      {suppliers.map((supplier) => (
-                        <SelectItem key={supplier.id} value={supplier.id}>
-                          {supplier.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="flex justify-end">
-                  <Button variant="outline" size="sm" onClick={handleClear}>
-                    Limpar Filtros
-                  </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div>
+              <Label>Fornecedor</Label>
+              <Select value={supplierId} onValueChange={setSupplierId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Todos</SelectItem>
+                  {suppliers.map((supplier) => (
+                    <SelectItem key={supplier.id} value={supplier.id}>{supplier.businessName}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Obra/Projeto</Label>
+              <Select value={workId} onValueChange={setWorkId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Todos</SelectItem>
+                  {mockWorks.map((work) => (
+                    <SelectItem key={work.id} value={work.id}>{work.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Categoria de Despesa</Label>
+              <Select value={categoryType} onValueChange={setCategoryType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Todas</SelectItem>
+                  {expenseCategories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="flex justify-end">
+            <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+              <X className="h-4 w-4 mr-1" />
+              Limpar filtros
+            </Button>
+          </div>
         </div>
-        
-        {/* Active filters display */}
-        <div className="flex flex-wrap gap-2">
-          {filters.startDate && (
-            <div className="bg-secondary text-secondary-foreground px-3 py-1 text-xs rounded-full flex items-center gap-1">
-              <span>A partir de: {format(new Date(filters.startDate), "dd/MM/yyyy")}</span>
-              <button 
-                onClick={() => handleFilterChange('startDate', undefined)}
-                className="ml-1 hover:text-primary"
-              >
-                ×
-              </button>
-            </div>
-          )}
-          
-          {filters.endDate && (
-            <div className="bg-secondary text-secondary-foreground px-3 py-1 text-xs rounded-full flex items-center gap-1">
-              <span>Até: {format(new Date(filters.endDate), "dd/MM/yyyy")}</span>
-              <button 
-                onClick={() => handleFilterChange('endDate', undefined)}
-                className="ml-1 hover:text-primary"
-              >
-                ×
-              </button>
-            </div>
-          )}
-          
-          {filters.status && filters.status !== 'none' && (
-            <div className="bg-secondary text-secondary-foreground px-3 py-1 text-xs rounded-full flex items-center gap-1">
-              <span>Status: {
-                filters.status === 'pending' ? 'Pendente' :
-                filters.status === 'paid' ? 'Paga' :
-                filters.status === 'partial' ? 'Parcial' :
-                filters.status === 'overdue' ? 'Vencida' :
-                filters.status === 'cancelled' ? 'Cancelada' :
-                filters.status === 'draft' ? 'Rascunho' : filters.status
-              }</span>
-              <button 
-                onClick={() => handleFilterChange('status', undefined)}
-                className="ml-1 hover:text-primary"
-              >
-                ×
-              </button>
-            </div>
-          )}
-          
-          {filters.costCenterId && filters.costCenterId !== 'none' && (
-            <div className="bg-secondary text-secondary-foreground px-3 py-1 text-xs rounded-full flex items-center gap-1">
-              <span>Centro de Custo: {
-                costCenters.find(c => c.id === filters.costCenterId)?.name || filters.costCenterId
-              }</span>
-              <button 
-                onClick={() => handleFilterChange('costCenterId', undefined)}
-                className="ml-1 hover:text-primary"
-              >
-                ×
-              </button>
-            </div>
-          )}
-          
-          {filters.supplierId && filters.supplierId !== 'none' && (
-            <div className="bg-secondary text-secondary-foreground px-3 py-1 text-xs rounded-full flex items-center gap-1">
-              <span>Fornecedor: {
-                suppliers.find(s => s.id === filters.supplierId)?.name || filters.supplierId
-              }</span>
-              <button 
-                onClick={() => handleFilterChange('supplierId', undefined)}
-                className="ml-1 hover:text-primary"
-              >
-                ×
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 };

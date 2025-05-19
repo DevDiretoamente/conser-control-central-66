@@ -12,7 +12,10 @@ import StatusSection from './form/StatusSection';
 import CostCenterSection from './form/CostCenterSection';
 import DescriptionSection from './form/DescriptionSection';
 import AmountSection from './form/AmountSection';
+import InvoiceItemsSection from './form/InvoiceItemsSection';
+import WorkProjectSection from './form/WorkProjectSection';
 import { invoiceSchema } from './form/InvoiceFormSchema';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface SupplierForForm {
   id: string;
@@ -45,13 +48,16 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
       issueDate: invoice?.issueDate ? new Date(invoice.issueDate) : new Date(),
       dueDate: invoice?.dueDate ? new Date(invoice.dueDate) : new Date(),
       costCenterId: invoice?.costCenterId || '',
+      workId: invoice?.workId || '',
+      workName: invoice?.workName || '',
       amount: invoice?.amount || 0,
       tax: invoice?.tax || 0,
       totalAmount: invoice?.totalAmount || 0,
       status: invoice?.status || 'pending',
       type: invoice?.type || 'service',
       description: invoice?.description || '',
-      notes: invoice?.notes || ''
+      notes: invoice?.notes || '',
+      items: invoice?.items || []
     }
   });
 
@@ -67,30 +73,46 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
       <CardContent className="p-0">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            <BasicDetailsSection form={form} suppliers={suppliers} />
+            <Tabs defaultValue="basic" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="basic">Informações Básicas</TabsTrigger>
+                <TabsTrigger value="items">Itens</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="basic" className="space-y-6 pt-4">
+                <BasicDetailsSection form={form} suppliers={suppliers} />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <StatusSection form={form} />
+                  <WorkProjectSection />
+                </div>
+                
+                <CostCenterSection form={form} costCenters={costCenters} />
+                
+                <DescriptionSection form={form} />
+                <AmountSection form={form} />
+              </TabsContent>
+              
+              <TabsContent value="items" className="pt-4">
+                <InvoiceItemsSection />
+              </TabsContent>
+            </Tabs>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <StatusSection form={form} />
-              <CostCenterSection form={form} costCenters={costCenters} />
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" type="button" onClick={onCancel}>
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                onClick={form.handleSubmit(handleSubmit)} 
+                disabled={isLoading}
+              >
+                {isLoading ? 'Salvando...' : (invoice ? 'Atualizar' : 'Criar')}
+              </Button>
             </div>
-            
-            <DescriptionSection form={form} />
-            <AmountSection form={form} />
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="px-0 pb-0">
-        <Button variant="outline" type="button" onClick={onCancel} className="mr-2">
-          Cancelar
-        </Button>
-        <Button 
-          type="submit" 
-          onClick={form.handleSubmit(handleSubmit)} 
-          disabled={isLoading}
-        >
-          {isLoading ? 'Salvando...' : (invoice ? 'Atualizar' : 'Criar')}
-        </Button>
-      </CardFooter>
     </Card>
   );
 };
