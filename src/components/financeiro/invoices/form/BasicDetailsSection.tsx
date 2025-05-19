@@ -22,11 +22,13 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Supplier } from '@/types/financeiro';
 
 interface BasicDetailsSectionProps {
   form: UseFormReturn<any>;
-  suppliers: Supplier[];
+  suppliers: {
+    id: string;
+    name: string;
+  }[];
 }
 
 const BasicDetailsSection: React.FC<BasicDetailsSectionProps> = ({ form, suppliers }) => {
@@ -65,7 +67,7 @@ const BasicDetailsSection: React.FC<BasicDetailsSectionProps> = ({ form, supplie
                 <SelectContent>
                   {suppliers.map((supplier) => (
                     <SelectItem key={supplier.id} value={supplier.id}>
-                      {supplier.businessName}
+                      {supplier.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

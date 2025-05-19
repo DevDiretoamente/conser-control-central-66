@@ -1,32 +1,23 @@
 
 import React from 'react';
+import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Invoice, Supplier, CostCenter } from '@/types/financeiro';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from '@/components/ui/form';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { invoiceSchema, InvoiceFormValues } from './form/InvoiceFormSchema';
-
-// Import the refactored form sections
+import { Form } from '@/components/ui/form';
+import { Invoice, InvoiceStatus, InvoiceType, CostCenter, Supplier } from '@/types/financeiro';
 import BasicDetailsSection from './form/BasicDetailsSection';
-import CostCenterSection from './form/CostCenterSection';
-import AmountSection from './form/AmountSection';
 import StatusSection from './form/StatusSection';
+import CostCenterSection from './form/CostCenterSection';
 import DescriptionSection from './form/DescriptionSection';
+import AmountSection from './form/AmountSection';
+import { invoiceFormSchema } from './form/InvoiceFormSchema';
 
 interface InvoiceFormProps {
   invoice?: Invoice;
-  suppliers?: Supplier[];
-  costCenters?: CostCenter[];
+  suppliers: Supplier[];
+  costCenters: CostCenter[];
   onSubmit: (data: any) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -34,15 +25,15 @@ interface InvoiceFormProps {
 
 const InvoiceForm: React.FC<InvoiceFormProps> = ({ 
   invoice, 
-  suppliers = [], 
-  costCenters = [],
+  suppliers, 
+  costCenters, 
   onSubmit, 
   onCancel,
   isLoading = false
 }) => {
-  // Initialize the form with default values or existing invoice data
-  const form = useForm<InvoiceFormValues>({
-    resolver: zodResolver(invoiceSchema),
+  // Initialize form with default values or existing invoice data
+  const form = useForm<z.infer<typeof invoiceFormSchema>>({
+    resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
       number: invoice?.number || '',
       supplierId: invoice?.supplierId || '',
@@ -52,64 +43,55 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
       amount: invoice?.amount || 0,
       tax: invoice?.tax || 0,
       totalAmount: invoice?.totalAmount || 0,
-      status: invoice?.status || 'draft',
-      type: invoice?.type || 'product',
+      status: invoice?.status || 'pending',
+      type: invoice?.type || 'service',
       description: invoice?.description || '',
-      notes: invoice?.notes || '',
+      notes: invoice?.notes || ''
     }
   });
 
-  // Update total amount when amount or tax changes
-  React.useEffect(() => {
-    const amount = form.watch('amount') || 0;
-    const tax = form.watch('tax') || 0;
-    const total = amount + tax;
-    form.setValue('totalAmount', total);
-  }, [form.watch('amount'), form.watch('tax')]);
+  // Create a supplier list that maps businessName to name for compatibility
+  const suppliersList = suppliers.map(supplier => ({
+    id: supplier.id,
+    name: supplier.businessName // Use businessName as name for compatibility
+  }));
 
-  const handleSubmit = (data: InvoiceFormValues) => {
-    try {
-      onSubmit(data);
-    } catch (error) {
-      console.error('Error submitting invoice:', error);
-      toast.error('Erro ao salvar nota fiscal');
-    }
+  const handleSubmit = (data: z.infer<typeof invoiceFormSchema>) => {
+    onSubmit(data);
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
+    <Card className="border-none shadow-none">
+      <CardHeader className="pb-4">
         <CardTitle>{invoice ? 'Editar' : 'Nova'} Nota Fiscal</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            {/* Basic details section: invoice number, supplier, dates */}
-            <BasicDetailsSection form={form} suppliers={suppliers} />
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <BasicDetailsSection form={form} suppliers={suppliersList} />
             
-            {/* Cost center section */}
-            <CostCenterSection form={form} costCenters={costCenters} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <StatusSection form={form} />
+              <CostCenterSection form={form} costCenters={costCenters} />
+            </div>
             
-            {/* Amount section: amount, tax, total */}
-            <AmountSection form={form} />
-            
-            {/* Status section: status, type */}
-            <StatusSection form={form} />
-            
-            {/* Description section: description, notes */}
             <DescriptionSection form={form} />
-
-            <CardFooter className="px-0 pb-0 pt-6">
-              <Button variant="outline" type="button" onClick={onCancel} className="mr-2">
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Salvando...' : (invoice ? 'Atualizar' : 'Criar')}
-              </Button>
-            </CardFooter>
+            <AmountSection form={form} />
           </form>
         </Form>
       </CardContent>
+      <CardFooter className="px-0 pb-0">
+        <Button variant="outline" type="button" onClick={onCancel} className="mr-2">
+          Cancelar
+        </Button>
+        <Button 
+          type="submit" 
+          onClick={form.handleSubmit(handleSubmit)} 
+          disabled={isLoading}
+        >
+          {isLoading ? 'Salvando...' : (invoice ? 'Atualizar' : 'Criar')}
+        </Button>
+      </CardFooter>
     </Card>
   );
 };
