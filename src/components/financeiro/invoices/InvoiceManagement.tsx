@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
@@ -317,7 +316,7 @@ const InvoiceManagement: React.FC = () => {
     toast.info('Funcionalidade de pagamento será implementada em breve.');
   };
 
-  // Transform suppliers for compatibility with BasicDetailsSection
+  // Transform suppliers for compatibility with the InvoiceForm component
   const suppliersForForm = mockSuppliers.map(supplier => ({
     id: supplier.id,
     name: supplier.businessName // Use businessName as name for compatibility
