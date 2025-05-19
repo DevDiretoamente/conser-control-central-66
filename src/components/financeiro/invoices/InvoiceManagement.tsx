@@ -320,7 +320,7 @@ const InvoiceManagement: React.FC = () => {
   // Transform suppliers for compatibility with the InvoiceForm component
   const suppliersForForm = mockSuppliers.map(supplier => ({
     id: supplier.id,
-    name: supplier.businessName // Use businessName as name for compatibility
+    name: supplier.businessName // Map businessName to name for compatibility
   }));
 
   return (
@@ -370,7 +370,7 @@ const InvoiceManagement: React.FC = () => {
         <DialogContent className="max-w-3xl">
           <InvoiceForm
             invoice={selectedInvoice}
-            suppliers={suppliersForForm} 
+            suppliers={suppliersForForm}
             costCenters={mockCostCenters}
             onSubmit={selectedInvoice ? handleUpdateInvoice : handleCreateInvoice}
             onCancel={() => setIsFormOpen(false)}
