@@ -6,7 +6,8 @@ import {
   FormItem, 
   FormLabel, 
   FormControl, 
-  FormMessage 
+  FormMessage,
+  FormDescription 
 } from '@/components/ui/form';
 import { 
   Select, 
@@ -30,6 +31,9 @@ const CostCenterSection: React.FC<CostCenterSectionProps> = ({ form, costCenters
       render={({ field }) => (
         <FormItem>
           <FormLabel>Centro de Custo</FormLabel>
+          <FormDescription>
+            Selecione um centro de custo para agrupar esta despesa
+          </FormDescription>
           <Select 
             onValueChange={field.onChange} 
             defaultValue={field.value}

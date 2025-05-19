@@ -11,12 +11,15 @@ import SupplierList from './SupplierList';
 import SupplierFilter from './SupplierFilter';
 import SupplierDetails from './SupplierDetails';
 import { validateDocument } from '@/utils/validators';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Mock data for initial development
 const mockSuppliers: Supplier[] = [
   {
     id: 'sup1',
     name: 'Fornecedor A',
+    businessName: 'Fornecedor A Razão Social LTDA',
+    tradeName: 'Fornecedor A Nome Fantasia',
     type: 'legal',
     document: '12.345.678/0001-90',
     email: 'fornecedor.a@example.com',
@@ -28,6 +31,8 @@ const mockSuppliers: Supplier[] = [
   {
     id: 'sup2',
     name: 'Fornecedor B',
+    businessName: 'Fornecedor B Razão Social LTDA',
+    tradeName: 'Fornecedor B Nome Fantasia',
     type: 'legal',
     document: '98.765.432/0001-10',
     email: 'fornecedor.b@example.com',
@@ -116,11 +121,11 @@ const SupplierManagement: React.FC = () => {
       try {
         const newSupplier: Supplier = {
           id: `sup${suppliers.length + 1}`,
-          name: data.name,
+          name: data.businessName, // Set name field to businessName for compatibility
+          businessName: data.businessName,
+          tradeName: data.tradeName || '',
           type: data.type,
           document: data.document,
-          businessName: data.businessName || '',
-          tradeName: data.tradeName || '',
           email: data.email || '',
           phone: data.phone || '',
           address: data.address || '',
@@ -165,11 +170,11 @@ const SupplierManagement: React.FC = () => {
       try {
         const updatedSupplier: Supplier = {
           ...selectedSupplier,
-          name: data.name,
+          name: data.businessName, // Set name field to businessName for compatibility
+          businessName: data.businessName,
+          tradeName: data.tradeName || '',
           type: data.type,
           document: data.document,
-          businessName: data.businessName || selectedSupplier.businessName,
-          tradeName: data.tradeName || selectedSupplier.tradeName,
           email: data.email || selectedSupplier.email,
           phone: data.phone || selectedSupplier.phone,
           address: data.address || selectedSupplier.address,
@@ -262,31 +267,39 @@ const SupplierManagement: React.FC = () => {
 
       {/* Supplier Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-3xl">
-          <SupplierForm
-            supplier={selectedSupplier}
-            onSubmit={selectedSupplier ? handleUpdateSupplier : handleCreateSupplier}
-            onCancel={() => setIsFormOpen(false)}
-            isLoading={isLoading}
-          />
+        <DialogContent className="max-w-3xl max-h-[90vh] p-0">
+          <ScrollArea className="max-h-[90vh]">
+            <div className="p-6">
+              <SupplierForm
+                supplier={selectedSupplier}
+                onSubmit={selectedSupplier ? handleUpdateSupplier : handleCreateSupplier}
+                onCancel={() => setIsFormOpen(false)}
+                isLoading={isLoading}
+              />
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
       {/* Supplier Details Dialog */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-4xl">
-          {selectedSupplier && (
-            <SupplierDetails
-              supplier={selectedSupplier}
-              onEdit={() => {
-                setIsDetailsOpen(false);
-                setTimeout(() => {
-                  setIsFormOpen(true);
-                }, 100);
-              }}
-              onClose={() => setIsDetailsOpen(false)}
-            />
-          )}
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <ScrollArea className="max-h-[90vh]">
+            <div className="p-6">
+              {selectedSupplier && (
+                <SupplierDetails
+                  supplier={selectedSupplier}
+                  onEdit={() => {
+                    setIsDetailsOpen(false);
+                    setTimeout(() => {
+                      setIsFormOpen(true);
+                    }, 100);
+                  }}
+                  onClose={() => setIsDetailsOpen(false)}
+                />
+              )}
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </div>
