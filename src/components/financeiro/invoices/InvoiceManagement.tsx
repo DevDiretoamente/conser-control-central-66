@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
@@ -47,7 +46,7 @@ const mockCostCenters: CostCenter[] = [
 const mockSuppliers: Supplier[] = [
   {
     id: 'sup1',
-    name: 'Fornecedor A',
+    businessName: 'Fornecedor A',
     type: 'legal',
     document: '12.345.678/0001-90',
     email: 'fornecedor.a@example.com',
@@ -58,7 +57,7 @@ const mockSuppliers: Supplier[] = [
   },
   {
     id: 'sup2',
-    name: 'Fornecedor B',
+    businessName: 'Fornecedor B',
     type: 'legal',
     document: '98.765.432/0001-10',
     email: 'fornecedor.b@example.com',
@@ -208,7 +207,7 @@ const InvoiceManagement: React.FC = () => {
           id: `inv${invoices.length + 1}`,
           number: data.number,
           supplierId: data.supplierId,
-          supplierName: mockSuppliers.find(s => s.id === data.supplierId)?.name || '',
+          supplierName: mockSuppliers.find(s => s.id === data.supplierId)?.businessName || '',
           issueDate: data.issueDate.toISOString(),
           dueDate: data.dueDate.toISOString(),
           costCenterId: data.costCenterId,
@@ -260,7 +259,7 @@ const InvoiceManagement: React.FC = () => {
           ...selectedInvoice,
           number: data.number,
           supplierId: data.supplierId,
-          supplierName: mockSuppliers.find(s => s.id === data.supplierId)?.name || selectedInvoice.supplierName,
+          supplierName: mockSuppliers.find(s => s.id === data.supplierId)?.businessName || selectedInvoice.supplierName,
           issueDate: data.issueDate.toISOString(),
           dueDate: data.dueDate.toISOString(),
           costCenterId: data.costCenterId,

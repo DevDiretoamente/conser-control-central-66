@@ -1,4 +1,3 @@
-
 // Financial system data types
 import { User } from '@/types/auth';
 

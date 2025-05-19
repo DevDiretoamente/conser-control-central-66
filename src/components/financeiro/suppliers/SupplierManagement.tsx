@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
@@ -17,7 +16,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 const mockSuppliers: Supplier[] = [
   {
     id: 'sup1',
-    name: 'Fornecedor A',
     businessName: 'Fornecedor A Razão Social LTDA',
     tradeName: 'Fornecedor A Nome Fantasia',
     type: 'legal',
@@ -30,7 +28,6 @@ const mockSuppliers: Supplier[] = [
   },
   {
     id: 'sup2',
-    name: 'Fornecedor B',
     businessName: 'Fornecedor B Razão Social LTDA',
     tradeName: 'Fornecedor B Nome Fantasia',
     type: 'legal',
@@ -69,10 +66,9 @@ const SupplierManagement: React.FC = () => {
     if (term) {
       const lowercaseTerm = term.toLowerCase();
       filtered = filtered.filter(supplier => 
-        supplier.name.toLowerCase().includes(lowercaseTerm) ||
+        supplier.businessName.toLowerCase().includes(lowercaseTerm) ||
         supplier.document.includes(term) ||
         (supplier.email && supplier.email.toLowerCase().includes(lowercaseTerm)) ||
-        (supplier.businessName && supplier.businessName.toLowerCase().includes(lowercaseTerm)) ||
         (supplier.tradeName && supplier.tradeName.toLowerCase().includes(lowercaseTerm)) ||
         (supplier.contactPerson && supplier.contactPerson.toLowerCase().includes(lowercaseTerm)) ||
         (supplier.website && supplier.website.toLowerCase().includes(lowercaseTerm))
@@ -121,7 +117,6 @@ const SupplierManagement: React.FC = () => {
       try {
         const newSupplier: Supplier = {
           id: `sup${suppliers.length + 1}`,
-          name: data.businessName, // Set name field to businessName for compatibility
           businessName: data.businessName,
           tradeName: data.tradeName || '',
           type: data.type,
@@ -170,7 +165,6 @@ const SupplierManagement: React.FC = () => {
       try {
         const updatedSupplier: Supplier = {
           ...selectedSupplier,
-          name: data.businessName, // Set name field to businessName for compatibility
           businessName: data.businessName,
           tradeName: data.tradeName || '',
           type: data.type,

@@ -65,7 +65,7 @@ const BasicDetailsSection: React.FC<BasicDetailsSectionProps> = ({ form, supplie
                 <SelectContent>
                   {suppliers.map((supplier) => (
                     <SelectItem key={supplier.id} value={supplier.id}>
-                      {supplier.name}
+                      {supplier.businessName}
                     </SelectItem>
                   ))}
                 </SelectContent>

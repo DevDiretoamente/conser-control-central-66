@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +19,7 @@ const SupplierDetails: React.FC<SupplierDetailsProps> = ({ supplier, onEdit, onC
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle className="text-2xl">{supplier.name}</CardTitle>
+            <CardTitle className="text-2xl">{supplier.businessName}</CardTitle>
             <CardDescription>
               <Badge className="mt-1" variant={supplier.type === 'physical' ? 'outline' : 'default'}>
                 {supplier.type === 'physical' ? 'Pessoa Física' : 'Pessoa Jurídica'}

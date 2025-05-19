@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FolderIcon, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatCurrency } from '@/utils/format';
 
 interface CostCenterListProps {
   costCenters: CostCenter[];
@@ -48,21 +47,6 @@ const CostCenterList: React.FC<CostCenterListProps> = ({
                 <div className="text-xs text-muted-foreground">
                   {costCenter.description}
                 </div>
-                {costCenter.budget && (
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-xs text-muted-foreground">
-                      Orçamento: {formatCurrency(costCenter.budget)}
-                    </span>
-                    <span className={cn(
-                      "text-xs font-medium",
-                      costCenter.spent && costCenter.spent > costCenter.budget 
-                        ? "text-destructive" 
-                        : "text-primary"
-                    )}>
-                      {formatCurrency(costCenter.spent || 0)}
-                    </span>
-                  </div>
-                )}
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground ml-2" />
             </div>
