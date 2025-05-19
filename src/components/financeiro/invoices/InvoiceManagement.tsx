@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
@@ -317,7 +318,10 @@ const InvoiceManagement: React.FC = () => {
   };
 
   // Transform suppliers for compatibility with BasicDetailsSection
-  const suppliersForForm = mockSuppliers;
+  const suppliersForForm = mockSuppliers.map(supplier => ({
+    id: supplier.id,
+    name: supplier.businessName // Use businessName as name for compatibility
+  }));
 
   return (
     <div className="space-y-6">
