@@ -369,7 +369,7 @@ const InvoiceManagement: React.FC = () => {
         <DialogContent className="max-w-3xl">
           <InvoiceForm
             invoice={selectedInvoice}
-            suppliers={suppliersForForm}
+            suppliers={suppliersForForm} {/* Use the transformed suppliers */}
             costCenters={mockCostCenters}
             onSubmit={selectedInvoice ? handleUpdateInvoice : handleCreateInvoice}
             onCancel={() => setIsFormOpen(false)}
