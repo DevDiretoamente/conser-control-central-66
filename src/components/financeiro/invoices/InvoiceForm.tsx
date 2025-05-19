@@ -12,7 +12,7 @@ import StatusSection from './form/StatusSection';
 import CostCenterSection from './form/CostCenterSection';
 import DescriptionSection from './form/DescriptionSection';
 import AmountSection from './form/AmountSection';
-import { invoiceFormSchema } from './form/InvoiceFormSchema';
+import { invoiceSchema } from './form/InvoiceFormSchema';
 
 interface InvoiceFormProps {
   invoice?: Invoice;
@@ -32,8 +32,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
   isLoading = false
 }) => {
   // Initialize form with default values or existing invoice data
-  const form = useForm<z.infer<typeof invoiceFormSchema>>({
-    resolver: zodResolver(invoiceFormSchema),
+  const form = useForm<z.infer<typeof invoiceSchema>>({
+    resolver: zodResolver(invoiceSchema),
     defaultValues: {
       number: invoice?.number || '',
       supplierId: invoice?.supplierId || '',
@@ -56,7 +56,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
     name: supplier.businessName // Use businessName as name for compatibility
   }));
 
-  const handleSubmit = (data: z.infer<typeof invoiceFormSchema>) => {
+  const handleSubmit = (data: z.infer<typeof invoiceSchema>) => {
     onSubmit(data);
   };
 

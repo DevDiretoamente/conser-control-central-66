@@ -316,6 +316,9 @@ const InvoiceManagement: React.FC = () => {
     toast.info('Funcionalidade de pagamento será implementada em breve.');
   };
 
+  // Transform suppliers for compatibility with BasicDetailsSection
+  const suppliersForForm = mockSuppliers;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start">
@@ -363,7 +366,7 @@ const InvoiceManagement: React.FC = () => {
         <DialogContent className="max-w-3xl">
           <InvoiceForm
             invoice={selectedInvoice}
-            suppliers={mockSuppliers}
+            suppliers={suppliersForForm}
             costCenters={mockCostCenters}
             onSubmit={selectedInvoice ? handleUpdateInvoice : handleCreateInvoice}
             onCancel={() => setIsFormOpen(false)}
