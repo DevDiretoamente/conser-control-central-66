@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
@@ -369,7 +370,7 @@ const InvoiceManagement: React.FC = () => {
         <DialogContent className="max-w-3xl">
           <InvoiceForm
             invoice={selectedInvoice}
-            suppliers={suppliersForForm} {/* Use the transformed suppliers */}
+            suppliers={suppliersForForm} 
             costCenters={mockCostCenters}
             onSubmit={selectedInvoice ? handleUpdateInvoice : handleCreateInvoice}
             onCancel={() => setIsFormOpen(false)}
