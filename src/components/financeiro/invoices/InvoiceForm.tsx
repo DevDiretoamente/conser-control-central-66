@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
-import { Invoice, InvoiceStatus, InvoiceType, CostCenter, Supplier } from '@/types/financeiro';
+import { Invoice, InvoiceStatus, InvoiceType, CostCenter } from '@/types/financeiro';
 import BasicDetailsSection from './form/BasicDetailsSection';
 import StatusSection from './form/StatusSection';
 import CostCenterSection from './form/CostCenterSection';
@@ -14,9 +14,14 @@ import DescriptionSection from './form/DescriptionSection';
 import AmountSection from './form/AmountSection';
 import { invoiceSchema } from './form/InvoiceFormSchema';
 
+interface SupplierForForm {
+  id: string;
+  name: string;
+}
+
 interface InvoiceFormProps {
   invoice?: Invoice;
-  suppliers: Supplier[];
+  suppliers: SupplierForForm[];
   costCenters: CostCenter[];
   onSubmit: (data: any) => void;
   onCancel: () => void;
@@ -50,12 +55,6 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
     }
   });
 
-  // Create a supplier list that maps businessName to name for compatibility
-  const suppliersList = suppliers.map(supplier => ({
-    id: supplier.id,
-    name: supplier.businessName // Use businessName as name for compatibility
-  }));
-
   const handleSubmit = (data: z.infer<typeof invoiceSchema>) => {
     onSubmit(data);
   };
@@ -68,7 +67,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
       <CardContent className="p-0">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            <BasicDetailsSection form={form} suppliers={suppliersList} />
+            <BasicDetailsSection form={form} suppliers={suppliers} />
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <StatusSection form={form} />
