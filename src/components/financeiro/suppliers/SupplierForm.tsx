@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,7 +31,10 @@ const supplierSchema = z.object({
   }),
   document: z.string()
     .min(11, { message: "Documento deve ter pelo menos 11 dígitos (CPF) ou 14 dígitos (CNPJ)" })
-    .refine((val) => validateDocument(val), { 
+    .refine((val) => {
+      const cleanDoc = val.replace(/\D/g, '');
+      return validateDocument(cleanDoc);
+    }, { 
       message: "Documento inválido. Verifique se o CPF ou CNPJ está correto." 
     }),
   email: z.string().email({ message: "Email inválido" }).optional().or(z.literal('')),
@@ -125,6 +129,30 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     }
     
     form.setValue('document', formattedValue);
+    
+    // Trigger validation on change
+    if (formattedValue.length >= 11) {
+      form.trigger('document');
+    }
+  };
+
+  // Check for duplicates on document blur
+  const handleDocumentBlur = () => {
+    const document = form.getValues('document');
+    const cleanDocument = document.replace(/\D/g, '');
+    
+    if (cleanDocument.length >= 11) {
+      const isDuplicate = existingSuppliers.some(
+        s => s.id !== supplier?.id && s.document.replace(/\D/g, '') === cleanDocument
+      );
+      
+      if (isDuplicate) {
+        form.setError('document', {
+          type: 'manual',
+          message: 'Já existe um fornecedor cadastrado com este documento'
+        });
+      }
+    }
   };
 
   // Format phone number - fixed to use the proper type
@@ -187,6 +215,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                           field.onChange(value);
                           // Clear document field when changing type
                           form.setValue('document', '');
+                          form.clearErrors('document');
                         }} 
                         defaultValue={field.value}
                       >
@@ -220,6 +249,10 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                           onChange={(e) => {
                             field.onChange(e);
                             handleDocumentChange(e);
+                          }}
+                          onBlur={(e) => {
+                            field.onBlur(e);
+                            handleDocumentBlur();
                           }}
                         />
                       </FormControl>

@@ -28,7 +28,10 @@ const customerSchema = z.object({
   }),
   document: z.string()
     .min(11, { message: "Documento deve ter pelo menos 11 dígitos (CPF) ou 14 dígitos (CNPJ)" })
-    .refine((val) => validateDocument(val), { 
+    .refine((val) => {
+      const cleanDoc = val.replace(/\D/g, '');
+      return validateDocument(cleanDoc);
+    }, { 
       message: "Documento inválido. Verifique se o CPF ou CNPJ está correto." 
     }),
   email: z.string().email({ message: "Email inválido" }).optional().or(z.literal('')),
@@ -128,6 +131,30 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
     }
     
     form.setValue('document', formattedValue);
+    
+    // Trigger validation on change
+    if (formattedValue.length >= 11) {
+      form.trigger('document');
+    }
+  };
+
+  // Check for duplicates on document blur
+  const handleDocumentBlur = () => {
+    const document = form.getValues('document');
+    const cleanDocument = document.replace(/\D/g, '');
+    
+    if (cleanDocument.length >= 11) {
+      const isDuplicate = existingCustomers.some(
+        c => c.id !== customer?.id && c.document.replace(/\D/g, '') === cleanDocument
+      );
+      
+      if (isDuplicate) {
+        form.setError('document', {
+          type: 'manual',
+          message: 'Já existe um cliente cadastrado com este documento'
+        });
+      }
+    }
   };
 
   // Format phone number - fixed to use the proper type
@@ -176,6 +203,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
                           field.onChange(value);
                           // Clear document field when changing type
                           form.setValue('document', '');
+                          form.clearErrors('document');
                         }} 
                         defaultValue={field.value}
                       >
@@ -209,6 +237,10 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
                           onChange={(e) => {
                             field.onChange(e);
                             handleDocumentChange(e);
+                          }}
+                          onBlur={(e) => {
+                            field.onBlur(e);
+                            handleDocumentBlur();
                           }}
                         />
                       </FormControl>
@@ -491,3 +523,5 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
 };
 
 export default CustomerForm;
+
+</edits_to_apply>
