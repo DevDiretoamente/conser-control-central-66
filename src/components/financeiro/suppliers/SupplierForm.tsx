@@ -503,5 +503,3 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
 };
 
 export default SupplierForm;
-
-</edits_to_apply>
