@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -552,3 +551,5 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
 };
 
 export default SupplierForm;
+
+</edits_to_apply>
