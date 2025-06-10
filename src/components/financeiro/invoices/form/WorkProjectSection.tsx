@@ -58,6 +58,11 @@ const WorkProjectSection: React.FC<WorkProjectSectionProps> = ({ disabled = fals
 
   // Handle work selection and update the workName field
   const handleWorkChange = (workId: string) => {
+    if (workId === 'none') {
+      setValue('workName', '');
+      return;
+    }
+    
     const selectedWork = mockWorks.find(work => work.id === workId);
     if (selectedWork) {
       setValue('workName', selectedWork.name);
@@ -75,9 +80,9 @@ const WorkProjectSection: React.FC<WorkProjectSectionProps> = ({ disabled = fals
           <FormLabel>Obra/Projeto</FormLabel>
           <Select
             disabled={disabled}
-            value={field.value || ''}
+            value={field.value || 'none'}
             onValueChange={(value) => {
-              field.onChange(value);
+              field.onChange(value === 'none' ? '' : value);
               handleWorkChange(value);
             }}
           >
@@ -87,7 +92,7 @@ const WorkProjectSection: React.FC<WorkProjectSectionProps> = ({ disabled = fals
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value="">Nenhum</SelectItem>
+              <SelectItem value="none">Nenhum</SelectItem>
               {mockWorks.map((work) => (
                 <SelectItem key={work.id} value={work.id}>
                   {work.name}

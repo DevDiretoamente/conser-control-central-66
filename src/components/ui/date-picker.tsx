@@ -16,8 +16,8 @@ import {
 interface DatePickerProps {
   date?: Date
   setDate?: (date: Date | undefined) => void
-  mode?: 'single' | 'range' | 'multiple'
-  selected?: Date | Date[] | undefined
+  mode?: 'single'
+  selected?: Date | undefined
   onSelect?: (date: Date | undefined) => void
   disabled?: (date: Date) => boolean
   initialFocus?: boolean
@@ -47,7 +47,7 @@ export function DatePicker({
   return (
     <div className="grid gap-2">
       <Calendar
-        mode={mode}
+        mode="single"
         selected={isControlled ? date : selected}
         onSelect={handleSelect}
         disabled={disabled}

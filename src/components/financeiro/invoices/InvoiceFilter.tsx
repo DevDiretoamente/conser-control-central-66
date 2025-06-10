@@ -45,8 +45,8 @@ const InvoiceFilter: React.FC<InvoiceFilterProps> = ({ onFilterChange, costCente
     defaultValues: {
       searchTerm: '',
       status: 'none',
-      costCenterId: '',
-      supplierId: '',
+      costCenterId: 'all',
+      supplierId: 'all',
       startDate: null,
       endDate: null,
     },
@@ -56,8 +56,8 @@ const InvoiceFilter: React.FC<InvoiceFilterProps> = ({ onFilterChange, costCente
     onFilterChange({
       searchTerm: data.searchTerm,
       status: data.status === 'none' ? undefined : data.status,
-      costCenterId: data.costCenterId || undefined,
-      supplierId: data.supplierId || undefined,
+      costCenterId: data.costCenterId === 'all' ? undefined : data.costCenterId,
+      supplierId: data.supplierId === 'all' ? undefined : data.supplierId,
       startDate: data.startDate ? data.startDate.toISOString() : undefined,
       endDate: data.endDate ? data.endDate.toISOString() : undefined,
     });
@@ -67,8 +67,8 @@ const InvoiceFilter: React.FC<InvoiceFilterProps> = ({ onFilterChange, costCente
     form.reset({
       searchTerm: '',
       status: 'none',
-      costCenterId: '',
-      supplierId: '',
+      costCenterId: 'all',
+      supplierId: 'all',
       startDate: null,
       endDate: null,
     });
@@ -145,7 +145,7 @@ const InvoiceFilter: React.FC<InvoiceFilterProps> = ({ onFilterChange, costCente
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Todos os Centros</SelectItem>
+                      <SelectItem value="all">Todos os Centros</SelectItem>
                       {costCenters.map(costCenter => (
                         <SelectItem key={costCenter.id} value={costCenter.id}>
                           {costCenter.name}
@@ -172,7 +172,7 @@ const InvoiceFilter: React.FC<InvoiceFilterProps> = ({ onFilterChange, costCente
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Todos os Fornecedores</SelectItem>
+                      <SelectItem value="all">Todos os Fornecedores</SelectItem>
                       {suppliers.map(supplier => (
                         <SelectItem key={supplier.id} value={supplier.id}>
                           {supplier.tradeName || supplier.businessName}
