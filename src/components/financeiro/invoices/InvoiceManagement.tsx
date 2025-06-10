@@ -13,14 +13,22 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Invoice, InvoiceStatus } from '@/types/financeiro';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 import InvoiceFilter from './InvoiceFilter';
+import InvoiceForm from './InvoiceForm';
+import InvoiceDetails from './InvoiceDetails';
 import { mockInvoices, mockCostCenters, mockSuppliers } from '@/data/invoiceMockData';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const InvoiceManagement: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
   const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>(mockInvoices);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const getStatusBadgeVariant = (status: InvoiceStatus) => {
     switch (status) {
@@ -92,30 +100,133 @@ const InvoiceManagement: React.FC = () => {
 
   const handleNewInvoice = () => {
     setSelectedInvoice(null);
-    setShowForm(true);
+    setIsFormOpen(true);
   };
 
   const handleEditInvoice = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
-    setShowForm(true);
+    setIsFormOpen(true);
+    if (isDetailsOpen) setIsDetailsOpen(false);
   };
 
   const handleDeleteInvoice = (invoiceId: string) => {
-    if (confirm('Tem certeza que deseja excluir esta nota fiscal?')) {
-      setInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
-      setFilteredInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
+    if (window.confirm('Tem certeza que deseja excluir esta nota fiscal?')) {
+      const updatedInvoices = invoices.filter(inv => inv.id !== invoiceId);
+      setInvoices(updatedInvoices);
+      setFilteredInvoices(updatedInvoices);
+      toast.success('Nota fiscal excluída com sucesso!');
     }
   };
 
   const handleViewInvoice = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
-    // Aqui você pode abrir um modal ou navegar para a página de detalhes
-    console.log('Visualizar nota fiscal:', invoice);
+    setIsDetailsOpen(true);
   };
 
   const handleDownloadInvoice = (invoice: Invoice) => {
-    // Implementar download da nota fiscal
-    console.log('Baixar nota fiscal:', invoice);
+    // Future implementation for download functionality
+    toast.info('Funcionalidade de download será implementada futuramente');
+  };
+
+  const handleCreateInvoice = (data: any) => {
+    setIsLoading(true);
+    
+    // Find supplier name from the selected supplierId
+    const supplier = mockSuppliers.find(s => s.id === data.supplierId);
+    const costCenter = mockCostCenters.find(c => c.id === data.costCenterId);
+    
+    // Simulate API call
+    setTimeout(() => {
+      try {
+        const newInvoice: Invoice = {
+          id: uuidv4(),
+          number: data.number,
+          supplierId: data.supplierId,
+          supplierName: supplier ? (supplier.tradeName || supplier.businessName) : 'Unknown Supplier',
+          issueDate: data.issueDate,
+          dueDate: data.dueDate,
+          costCenterId: data.costCenterId,
+          costCenterName: costCenter ? costCenter.name : 'Unknown Cost Center',
+          workId: data.workId || undefined,
+          workName: data.workName || undefined,
+          amount: data.amount,
+          tax: data.tax,
+          totalAmount: data.totalAmount,
+          status: data.status,
+          type: data.type,
+          description: data.description || '',
+          notes: data.notes || '',
+          items: data.items || [],
+          payments: [],
+          createdAt: new Date().toISOString(),
+          createdBy: 'current-user',
+          updatedAt: new Date().toISOString(),
+        };
+
+        const updatedInvoices = [...invoices, newInvoice];
+        setInvoices(updatedInvoices);
+        setFilteredInvoices(updatedInvoices);
+        setIsFormOpen(false);
+        toast.success('Nota fiscal criada com sucesso!');
+      } catch (error) {
+        console.error('Error creating invoice:', error);
+        toast.error('Erro ao criar nota fiscal.');
+      } finally {
+        setIsLoading(false);
+      }
+    }, 1000);
+  };
+
+  const handleUpdateInvoice = (data: any) => {
+    if (!selectedInvoice) return;
+    
+    setIsLoading(true);
+    
+    // Find supplier name from the selected supplierId
+    const supplier = mockSuppliers.find(s => s.id === data.supplierId);
+    const costCenter = mockCostCenters.find(c => c.id === data.costCenterId);
+    
+    // Simulate API call
+    setTimeout(() => {
+      try {
+        const updatedInvoice: Invoice = {
+          ...selectedInvoice,
+          number: data.number,
+          supplierId: data.supplierId,
+          supplierName: supplier ? (supplier.tradeName || supplier.businessName) : selectedInvoice.supplierName,
+          issueDate: data.issueDate,
+          dueDate: data.dueDate,
+          costCenterId: data.costCenterId,
+          costCenterName: costCenter ? costCenter.name : selectedInvoice.costCenterName,
+          workId: data.workId || selectedInvoice.workId,
+          workName: data.workName || selectedInvoice.workName,
+          amount: data.amount,
+          tax: data.tax,
+          totalAmount: data.totalAmount,
+          status: data.status,
+          type: data.type,
+          description: data.description || selectedInvoice.description,
+          notes: data.notes || selectedInvoice.notes,
+          items: data.items || selectedInvoice.items,
+          updatedAt: new Date().toISOString(),
+        };
+
+        const updatedInvoices = invoices.map(invoice => 
+          invoice.id === selectedInvoice.id ? updatedInvoice : invoice
+        );
+        
+        setInvoices(updatedInvoices);
+        setFilteredInvoices(updatedInvoices);
+        setIsFormOpen(false);
+        setSelectedInvoice(null);
+        toast.success('Nota fiscal atualizada com sucesso!');
+      } catch (error) {
+        console.error('Error updating invoice:', error);
+        toast.error('Erro ao atualizar nota fiscal.');
+      } finally {
+        setIsLoading(false);
+      }
+    }, 1000);
   };
 
   const formatCurrency = (value: number) => {
@@ -242,6 +353,46 @@ const InvoiceManagement: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Invoice Form Dialog */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <ScrollArea className="max-h-[90vh]">
+            <div className="p-6">
+              <InvoiceForm
+                invoice={selectedInvoice || undefined}
+                suppliers={mockSuppliers}
+                costCenters={mockCostCenters}
+                onSubmit={selectedInvoice ? handleUpdateInvoice : handleCreateInvoice}
+                onCancel={() => setIsFormOpen(false)}
+                isLoading={isLoading}
+              />
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invoice Details Dialog */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <ScrollArea className="max-h-[90vh]">
+            <div className="p-6">
+              {selectedInvoice && (
+                <InvoiceDetails
+                  invoice={selectedInvoice}
+                  onEdit={() => {
+                    setIsDetailsOpen(false);
+                    setTimeout(() => {
+                      setIsFormOpen(true);
+                    }, 100);
+                  }}
+                  onClose={() => setIsDetailsOpen(false)}
+                />
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

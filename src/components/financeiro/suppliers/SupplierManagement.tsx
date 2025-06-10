@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
@@ -82,35 +83,8 @@ const SupplierManagement: React.FC = () => {
     setFilteredSuppliers(filtered);
   };
 
-  const validateSupplierData = (data: any, isUpdate = false, supplierId?: string) => {
-    // Check if document is valid
-    if (!validateDocument(data.document)) {
-      toast.error('O documento informado é inválido. Verifique se digitou corretamente.');
-      return false;
-    }
-    
-    // Check if document already exists
-    const cleanDocument = data.document.replace(/\D/g, '');
-    const documentExists = suppliers.some(
-      sup => (isUpdate ? sup.id !== supplierId : true) && 
-      sup.document.replace(/\D/g, '') === cleanDocument
-    );
-    
-    if (documentExists) {
-      toast.error('Já existe um fornecedor cadastrado com este documento. Verifique se não está tentando cadastrar um fornecedor duplicado.');
-      return false;
-    }
-    
-    return true;
-  };
-
   const handleCreateSupplier = (data: any) => {
     setIsLoading(true);
-    
-    if (!validateSupplierData(data)) {
-      setIsLoading(false);
-      return;
-    }
     
     // Simulate API call
     setTimeout(() => {
@@ -154,11 +128,6 @@ const SupplierManagement: React.FC = () => {
     if (!selectedSupplier) return;
     
     setIsLoading(true);
-    
-    if (!validateSupplierData(data, true, selectedSupplier.id)) {
-      setIsLoading(false);
-      return;
-    }
     
     // Simulate API call
     setTimeout(() => {
@@ -269,6 +238,7 @@ const SupplierManagement: React.FC = () => {
                 onSubmit={selectedSupplier ? handleUpdateSupplier : handleCreateSupplier}
                 onCancel={() => setIsFormOpen(false)}
                 isLoading={isLoading}
+                existingSuppliers={suppliers}
               />
             </div>
           </ScrollArea>

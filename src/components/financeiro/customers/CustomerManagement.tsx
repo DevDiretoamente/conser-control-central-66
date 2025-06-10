@@ -85,35 +85,8 @@ const CustomerManagement: React.FC = () => {
     setFilteredCustomers(filtered);
   };
 
-  const validateCustomerData = (data: any, isUpdate = false, customerId?: string) => {
-    // Check if document is valid
-    if (!validateDocument(data.document)) {
-      toast.error('O documento informado é inválido. Verifique se digitou corretamente.');
-      return false;
-    }
-    
-    // Check if document already exists
-    const cleanDocument = data.document.replace(/\D/g, '');
-    const documentExists = customers.some(
-      cust => (isUpdate ? cust.id !== customerId : true) && 
-      cust.document.replace(/\D/g, '') === cleanDocument
-    );
-    
-    if (documentExists) {
-      toast.error('Já existe um cliente cadastrado com este documento. Verifique se não está tentando cadastrar um cliente duplicado.');
-      return false;
-    }
-    
-    return true;
-  };
-
   const handleCreateCustomer = (data: any) => {
     setIsLoading(true);
-    
-    if (!validateCustomerData(data)) {
-      setIsLoading(false);
-      return;
-    }
     
     // Simulate API call
     setTimeout(() => {
@@ -159,11 +132,6 @@ const CustomerManagement: React.FC = () => {
     if (!selectedCustomer) return;
     
     setIsLoading(true);
-    
-    if (!validateCustomerData(data, true, selectedCustomer.id)) {
-      setIsLoading(false);
-      return;
-    }
     
     // Simulate API call
     setTimeout(() => {
@@ -274,6 +242,7 @@ const CustomerManagement: React.FC = () => {
             onSubmit={selectedCustomer ? handleUpdateCustomer : handleCreateCustomer}
             onCancel={() => setIsFormOpen(false)}
             isLoading={isLoading}
+            existingCustomers={customers}
           />
         </DialogContent>
       </Dialog>

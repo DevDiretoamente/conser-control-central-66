@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Globe, User, Phone, PhoneCall, Mail } from 'lucide-react';
+import { validateDocument, formatDocument } from '@/utils/validators';
 
 // Schema for customer form validation
 const customerSchema = z.object({
@@ -27,11 +28,9 @@ const customerSchema = z.object({
   }),
   document: z.string()
     .min(11, { message: "Documento deve ter pelo menos 11 dígitos (CPF) ou 14 dígitos (CNPJ)" })
-    .refine((val) => {
-      // Just basic validation here, the actual validation happens in the submit handler
-      const clean = val.replace(/\D/g, '');
-      return clean.length === 11 || clean.length === 14;
-    }, { message: "Documento deve ser um CPF (11 dígitos) ou CNPJ (14 dígitos)" }),
+    .refine((val) => validateDocument(val), { 
+      message: "Documento inválido. Verifique se o CPF ou CNPJ está correto." 
+    }),
   email: z.string().email({ message: "Email inválido" }).optional().or(z.literal('')),
   phone: z.string().optional().or(z.literal('')),
   address: z.string().optional().or(z.literal('')),
@@ -52,6 +51,7 @@ interface CustomerFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  existingCustomers?: Customer[];
 }
 
 // Define the allowed field names type to fix the TypeScript error
@@ -61,7 +61,8 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
   customer,
   onSubmit, 
   onCancel,
-  isLoading = false
+  isLoading = false,
+  existingCustomers = []
 }) => {
   // Initialize the form with default values or existing customer data
   const form = useForm<z.infer<typeof customerSchema>>({
@@ -87,11 +88,25 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
   });
 
   const handleSubmit = (data: z.infer<typeof customerSchema>) => {
+    // Check for duplicate documents
+    const cleanDocument = data.document.replace(/\D/g, '');
+    const isDuplicate = existingCustomers.some(
+      c => c.id !== customer?.id && c.document.replace(/\D/g, '') === cleanDocument
+    );
+    
+    if (isDuplicate) {
+      form.setError('document', {
+        type: 'manual',
+        message: 'Já existe um cliente cadastrado com este documento'
+      });
+      return;
+    }
+    
     onSubmit(data);
   };
 
   // Handle document format based on customer type
-  const formatDocument = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '');
     const type = form.getValues('type');
     
@@ -193,7 +208,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
-                            formatDocument(e);
+                            handleDocumentChange(e);
                           }}
                         />
                       </FormControl>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Globe, User, Phone, PhoneCall, Mail } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { validateDocument, formatDocument } from '@/utils/validators';
 
 // Schema for supplier form validation
 const supplierSchema = z.object({
@@ -30,11 +30,9 @@ const supplierSchema = z.object({
   }),
   document: z.string()
     .min(11, { message: "Documento deve ter pelo menos 11 dígitos (CPF) ou 14 dígitos (CNPJ)" })
-    .refine((val) => {
-      // Just basic validation here, the actual validation happens in the submit handler
-      const clean = val.replace(/\D/g, '');
-      return clean.length === 11 || clean.length === 14;
-    }, { message: "Documento deve ser um CPF (11 dígitos) ou CNPJ (14 dígitos)" }),
+    .refine((val) => validateDocument(val), { 
+      message: "Documento inválido. Verifique se o CPF ou CNPJ está correto." 
+    }),
   email: z.string().email({ message: "Email inválido" }).optional().or(z.literal('')),
   phone: z.string().min(10, { message: "Telefone deve ter pelo menos 10 dígitos" }).optional().or(z.literal('')),
   address: z.string().optional(),
@@ -52,6 +50,7 @@ interface SupplierFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  existingSuppliers?: Supplier[];
 }
 
 // Define the allowed field names type to fix the TypeScript error
@@ -61,7 +60,8 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
   supplier,
   onSubmit, 
   onCancel,
-  isLoading = false
+  isLoading = false,
+  existingSuppliers = []
 }) => {
   // Initialize the form with default values or existing supplier data
   const form = useForm<z.infer<typeof supplierSchema>>({
@@ -85,11 +85,25 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
   });
 
   const handleSubmit = (data: z.infer<typeof supplierSchema>) => {
+    // Check for duplicate documents
+    const cleanDocument = data.document.replace(/\D/g, '');
+    const isDuplicate = existingSuppliers.some(
+      s => s.id !== supplier?.id && s.document.replace(/\D/g, '') === cleanDocument
+    );
+    
+    if (isDuplicate) {
+      form.setError('document', {
+        type: 'manual',
+        message: 'Já existe um fornecedor cadastrado com este documento'
+      });
+      return;
+    }
+    
     onSubmit(data);
   };
 
   // Handle document format based on supplier type
-  const formatDocument = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '');
     const type = form.getValues('type');
     
@@ -205,7 +219,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
-                            formatDocument(e);
+                            handleDocumentChange(e);
                           }}
                         />
                       </FormControl>
