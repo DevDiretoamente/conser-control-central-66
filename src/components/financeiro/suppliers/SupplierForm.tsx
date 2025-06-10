@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -200,7 +201,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
           message: `${type === 'physical' ? 'CPF' : 'CNPJ'} inválido`
         });
       } else {
-        form.clearErrors('document');
+        form.clearErrors();
       }
     }
   };
@@ -296,7 +297,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                           field.onChange(value);
                           // Clear document field when changing type
                           form.setValue('document', '');
-                          form.clearErrors('document');
+                          form.clearErrors();
                         }} 
                         defaultValue={field.value}
                       >
