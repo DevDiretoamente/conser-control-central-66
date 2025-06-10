@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,7 +19,65 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Globe, User, Phone, PhoneCall, Mail } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { validateDocument, formatDocument } from '@/utils/validators';
+
+// Custom validation functions for CPF and CNPJ
+const validateCPF = (cpf: string): boolean => {
+  const cleanCPF = cpf.replace(/\D/g, '');
+  
+  if (cleanCPF.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cleanCPF)) return false;
+
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(cleanCPF.charAt(i)) * (10 - i);
+  }
+  let remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder !== parseInt(cleanCPF.charAt(9))) return false;
+
+  sum = 0;
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(cleanCPF.charAt(i)) * (11 - i);
+  }
+  remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  return remainder === parseInt(cleanCPF.charAt(10));
+};
+
+const validateCNPJ = (cnpj: string): boolean => {
+  const cleanCNPJ = cnpj.replace(/\D/g, '');
+  
+  if (cleanCNPJ.length !== 14) return false;
+  if (/^(\d)\1{13}$/.test(cleanCNPJ)) return false;
+
+  const weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  const weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+
+  let sum = 0;
+  for (let i = 0; i < 12; i++) {
+    sum += parseInt(cleanCNPJ.charAt(i)) * weights1[i];
+  }
+  let remainder = sum % 11;
+  const digit1 = remainder < 2 ? 0 : 11 - remainder;
+  if (digit1 !== parseInt(cleanCNPJ.charAt(12))) return false;
+
+  sum = 0;
+  for (let i = 0; i < 13; i++) {
+    sum += parseInt(cleanCNPJ.charAt(i)) * weights2[i];
+  }
+  remainder = sum % 11;
+  const digit2 = remainder < 2 ? 0 : 11 - remainder;
+  return digit2 === parseInt(cleanCNPJ.charAt(13));
+};
+
+const validateDocument = (document: string, type: 'physical' | 'legal'): boolean => {
+  const cleanDoc = document.replace(/\D/g, '');
+  if (type === 'physical') {
+    return validateCPF(cleanDoc);
+  } else {
+    return validateCNPJ(cleanDoc);
+  }
+};
 
 // Schema for supplier form validation
 const supplierSchema = z.object({
@@ -30,13 +87,7 @@ const supplierSchema = z.object({
     required_error: "Tipo de fornecedor é obrigatório" 
   }),
   document: z.string()
-    .min(11, { message: "Documento deve ter pelo menos 11 dígitos (CPF) ou 14 dígitos (CNPJ)" })
-    .refine((val) => {
-      const cleanDoc = val.replace(/\D/g, '');
-      return validateDocument(cleanDoc);
-    }, { 
-      message: "Documento inválido. Verifique se o CPF ou CNPJ está correto." 
-    }),
+    .min(11, { message: "Documento deve ter pelo menos 11 dígitos (CPF) ou 14 dígitos (CNPJ)" }),
   email: z.string().email({ message: "Email inválido" }).optional().or(z.literal('')),
   phone: z.string().min(10, { message: "Telefone deve ter pelo menos 10 dígitos" }).optional().or(z.literal('')),
   address: z.string().optional(),
@@ -89,6 +140,16 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
   });
 
   const handleSubmit = (data: z.infer<typeof supplierSchema>) => {
+    // Validate document
+    const isValidDoc = validateDocument(data.document, data.type);
+    if (!isValidDoc) {
+      form.setError('document', {
+        type: 'manual',
+        message: `${data.type === 'physical' ? 'CPF' : 'CNPJ'} inválido`
+      });
+      return;
+    }
+
     // Check for duplicate documents
     const cleanDocument = data.document.replace(/\D/g, '');
     const isDuplicate = existingSuppliers.some(
@@ -132,16 +193,36 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     
     // Trigger validation on change
     if (formattedValue.length >= 11) {
-      form.trigger('document');
+      const isValid = validateDocument(formattedValue, type);
+      if (!isValid) {
+        form.setError('document', {
+          type: 'manual',
+          message: `${type === 'physical' ? 'CPF' : 'CNPJ'} inválido`
+        });
+      } else {
+        form.clearErrors('document');
+      }
     }
   };
 
   // Check for duplicates on document blur
   const handleDocumentBlur = () => {
     const document = form.getValues('document');
+    const type = form.getValues('type');
     const cleanDocument = document.replace(/\D/g, '');
     
     if (cleanDocument.length >= 11) {
+      // Validate document format
+      const isValid = validateDocument(document, type);
+      if (!isValid) {
+        form.setError('document', {
+          type: 'manual',
+          message: `${type === 'physical' ? 'CPF' : 'CNPJ'} inválido`
+        });
+        return;
+      }
+
+      // Check for duplicates
       const isDuplicate = existingSuppliers.some(
         s => s.id !== supplier?.id && s.document.replace(/\D/g, '') === cleanDocument
       );
