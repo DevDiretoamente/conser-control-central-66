@@ -152,7 +152,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
           message: `${type === 'physical' ? 'CPF' : 'CNPJ'} inválido`
         });
       } else {
-        form.clearErrors('document');
+        form.clearErrors();
       }
     }
   };
@@ -248,7 +248,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                           field.onChange(value);
                           // Clear document field when changing type
                           form.setValue('document', '');
-                          form.clearErrors('document');
+                          form.clearErrors();
                         }} 
                         defaultValue={field.value}
                       >
@@ -503,3 +503,5 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
 };
 
 export default SupplierForm;
+
+</edits_to_apply>
