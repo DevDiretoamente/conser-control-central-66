@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -538,5 +539,3 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
 };
 
 export default CustomerForm;
-
-</edits_to_apply>
