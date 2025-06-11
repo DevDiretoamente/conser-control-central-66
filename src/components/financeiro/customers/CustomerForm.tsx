@@ -155,7 +155,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
           message: `${type === 'physical' ? 'CPF' : 'CNPJ'} inválido`
         });
       } else {
-        // Clear document error by clearing all errors and re-triggering validation
+        // Clear errors by re-validating all fields
         form.clearErrors();
         form.trigger();
       }
@@ -539,4 +539,4 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
 
 export default CustomerForm;
 
-</initial_code>
+</edits_to_apply>

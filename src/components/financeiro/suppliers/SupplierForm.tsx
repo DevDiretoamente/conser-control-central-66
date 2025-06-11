@@ -152,7 +152,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
           message: `${type === 'physical' ? 'CPF' : 'CNPJ'} inválido`
         });
       } else {
-        // Clear document error by clearing all errors and re-triggering validation
+        // Clear errors by re-validating all fields
         form.clearErrors();
         form.trigger();
       }
@@ -502,4 +502,4 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
 
 export default SupplierForm;
 
-</initial_code>
+</edits_to_apply>
