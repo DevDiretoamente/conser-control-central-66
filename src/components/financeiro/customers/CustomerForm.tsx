@@ -155,11 +155,9 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
           message: `${type === 'physical' ? 'CPF' : 'CNPJ'} inválido`
         });
       } else {
-        // Clear only the document field error by resetting its value and clearing the error state
-        const currentErrors = form.formState.errors;
-        if (currentErrors.document) {
-          form.trigger('document');
-        }
+        // Clear document error by clearing all errors and re-triggering validation
+        form.clearErrors();
+        form.trigger();
       }
     }
   };
@@ -242,7 +240,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
                           field.onChange(value);
                           // Clear document field when changing type
                           form.setValue('document', '');
-                          form.trigger('document');
+                          form.trigger();
                         }} 
                         defaultValue={field.value}
                       >
@@ -540,3 +538,5 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
 };
 
 export default CustomerForm;
+
+</initial_code>

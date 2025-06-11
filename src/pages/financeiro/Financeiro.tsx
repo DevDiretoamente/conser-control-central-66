@@ -1,85 +1,78 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import CostCenterManagement from '@/components/financeiro/costcenter/CostCenterManagement';
 import InvoiceManagement from '@/components/financeiro/invoices/InvoiceManagement';
 import SupplierManagement from '@/components/financeiro/suppliers/SupplierManagement';
 import CustomerManagement from '@/components/financeiro/customers/CustomerManagement';
+import CostCenterManagement from '@/components/financeiro/costcenter/CostCenterManagement';
 import FinancialReports from '@/components/financeiro/reports/FinancialReports';
-import { FileText, BarChart3, FolderIcon, Users, User } from 'lucide-react';
+import FinancialDashboard from '@/components/financeiro/dashboard/FinancialDashboard';
+import QuickActions from '@/components/financeiro/dashboard/QuickActions';
 
-const FinanceiroPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('cost-centers');
+const Financeiro = () => {
+  const [activeTab, setActiveTab] = useState('dashboard');
+
+  const handleNewInvoice = () => {
+    setActiveTab('invoices');
+  };
+
+  const handleNewSupplier = () => {
+    setActiveTab('suppliers');
+  };
+
+  const handleNewCustomer = () => {
+    setActiveTab('customers');
+  };
+
+  const handleViewReports = () => {
+    setActiveTab('reports');
+  };
 
   return (
-    <div className="w-full">
-      <Breadcrumb className="mb-6">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/financeiro">Financeiro</BreadcrumbLink>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Gestão Financeira</h1>
-          <p className="text-muted-foreground">
-            Gerenciamento de despesas, notas fiscais, fornecedores e clientes
-          </p>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Financeiro</h1>
+        <p className="text-muted-foreground">
+          Gestão financeira completa: faturas, fornecedores, clientes e relatórios
+        </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5 mb-8">
-          <TabsTrigger value="cost-centers" className="flex items-center gap-2">
-            <FolderIcon className="h-4 w-4" />
-            <span>Centros de Custo</span>
-          </TabsTrigger>
-          <TabsTrigger value="suppliers" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            <span>Fornecedores</span>
-          </TabsTrigger>
-          <TabsTrigger value="customers" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            <span>Clientes</span>
-          </TabsTrigger>
-          <TabsTrigger value="invoices" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            <span>Notas Fiscais</span>
-          </TabsTrigger>
-          <TabsTrigger value="reports" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            <span>Relatórios</span>
-          </TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="invoices">Faturas</TabsTrigger>
+          <TabsTrigger value="suppliers">Fornecedores</TabsTrigger>
+          <TabsTrigger value="customers">Clientes</TabsTrigger>
+          <TabsTrigger value="cost-centers">Centros de Custo</TabsTrigger>
+          <TabsTrigger value="reports">Relatórios</TabsTrigger>
         </TabsList>
 
-        {/* Cost Centers Tab */}
-        <TabsContent value="cost-centers">
-          <CostCenterManagement />
+        <TabsContent value="dashboard" className="space-y-6">
+          <FinancialDashboard />
+          <QuickActions 
+            onNewInvoice={handleNewInvoice}
+            onNewSupplier={handleNewSupplier}
+            onNewCustomer={handleNewCustomer}
+            onViewReports={handleViewReports}
+          />
         </TabsContent>
 
-        {/* Suppliers Tab */}
-        <TabsContent value="suppliers">
-          <SupplierManagement />
-        </TabsContent>
-
-        {/* Customers Tab */}
-        <TabsContent value="customers">
-          <CustomerManagement />
-        </TabsContent>
-
-        {/* Invoices Tab */}
         <TabsContent value="invoices">
           <InvoiceManagement />
         </TabsContent>
 
-        {/* Reports Tab */}
+        <TabsContent value="suppliers">
+          <SupplierManagement />
+        </TabsContent>
+
+        <TabsContent value="customers">
+          <CustomerManagement />
+        </TabsContent>
+
+        <TabsContent value="cost-centers">
+          <CostCenterManagement />
+        </TabsContent>
+
         <TabsContent value="reports">
           <FinancialReports />
         </TabsContent>
@@ -88,4 +81,4 @@ const FinanceiroPage: React.FC = () => {
   );
 };
 
-export default FinanceiroPage;
+export default Financeiro;

@@ -152,11 +152,9 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
           message: `${type === 'physical' ? 'CPF' : 'CNPJ'} inválido`
         });
       } else {
-        // Clear only the document field error by triggering validation
-        const currentErrors = form.formState.errors;
-        if (currentErrors.document) {
-          form.trigger('document');
-        }
+        // Clear document error by clearing all errors and re-triggering validation
+        form.clearErrors();
+        form.trigger();
       }
     }
   };
@@ -252,7 +250,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                           field.onChange(value);
                           // Clear document field when changing type
                           form.setValue('document', '');
-                          form.trigger('document');
+                          form.trigger();
                         }} 
                         defaultValue={field.value}
                       >
@@ -503,3 +501,5 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
 };
 
 export default SupplierForm;
+
+</initial_code>
