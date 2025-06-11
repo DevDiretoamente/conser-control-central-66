@@ -155,7 +155,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
           message: `${type === 'physical' ? 'CPF' : 'CNPJ'} inválido`
         });
       } else {
-        form.clearErrors();
+        form.clearErrors('document');
       }
     }
   };
@@ -238,7 +238,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
                           field.onChange(value);
                           // Clear document field when changing type
                           form.setValue('document', '');
-                          form.clearErrors();
+                          form.clearErrors('document');
                         }} 
                         defaultValue={field.value}
                       >
