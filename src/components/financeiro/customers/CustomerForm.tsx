@@ -539,4 +539,4 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
 
 export default CustomerForm;
 
-</initial_code>
+</edits_to_apply>
