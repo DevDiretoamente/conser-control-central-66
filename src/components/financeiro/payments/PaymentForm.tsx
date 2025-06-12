@@ -1,50 +1,42 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Payment, PaymentMethod, Invoice } from '@/types/financeiro';
 import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarIcon } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { formatCurrency } from '@/utils/format';
+import { Invoice, PaymentMethod, PaymentStatus } from '@/types/financeiro';
 
-// Schema for payment form validation
 const paymentSchema = z.object({
-  amount: z.coerce.number({
-    required_error: "Valor obrigatório",
-    invalid_type_error: "Valor deve ser um número"
+  amount: z.number().min(0.01, { message: "Valor deve ser maior que zero" }),
+  paymentDate: z.string().min(1, { message: "Data de pagamento é obrigatória" }),
+  dueDate: z.string().min(1, { message: "Data de vencimento é obrigatória" }),
+  method: z.enum(['cash', 'bank_transfer', 'check', 'credit_card', 'debit_card', 'other'] as const, {
+    required_error: "Método de pagamento é obrigatório"
   }),
-  paymentDate: z.date({ required_error: "Data de pagamento obrigatória" }),
-  dueDate: z.date({ required_error: "Data de vencimento obrigatória" }),
-  method: z.enum(['cash', 'bank_transfer', 'check', 'credit_card', 'debit_card', 'other'], {
-    required_error: "Método de pagamento obrigatório"
+  reference: z.string().optional().or(z.literal('')),
+  status: z.enum(['pending', 'completed', 'failed', 'cancelled'] as const, {
+    required_error: "Status é obrigatório"
   }),
-  reference: z.string().optional(),
   installmentNumber: z.number().optional(),
   totalInstallments: z.number().optional(),
-  notes: z.string().optional()
+  notes: z.string().optional().or(z.literal('')),
 });
 
 interface PaymentFormProps {
   invoice: Invoice;
-  payment?: Payment;
+  remainingAmount: number;
   onSubmit: (data: any) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -52,281 +44,171 @@ interface PaymentFormProps {
 
 const PaymentForm: React.FC<PaymentFormProps> = ({
   invoice,
-  payment,
+  remainingAmount,
   onSubmit,
   onCancel,
   isLoading = false
 }) => {
-  const [showInstallments, setShowInstallments] = useState(false);
-
-  // Determine remaining amount to pay
-  const paidAmount = invoice.payments.reduce((sum, p) => sum + p.amount, 0);
-  const remainingAmount = invoice.totalAmount - paidAmount;
-
-  // Initialize form with default values or existing payment data
   const form = useForm<z.infer<typeof paymentSchema>>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
-      amount: payment ? payment.amount : remainingAmount,
-      paymentDate: payment ? new Date(payment.paymentDate) : new Date(),
-      dueDate: payment ? new Date(payment.dueDate) : new Date(invoice.dueDate),
-      method: payment ? payment.method : 'bank_transfer',
-      reference: payment ? payment.reference : '',
-      installmentNumber: payment ? payment.installmentNumber : undefined,
-      totalInstallments: payment ? payment.totalInstallments : undefined,
-      notes: payment ? payment.notes : ''
+      amount: remainingAmount,
+      paymentDate: new Date().toISOString().split('T')[0],
+      dueDate: new Date().toISOString().split('T')[0],
+      method: 'bank_transfer',
+      status: 'completed',
+      reference: '',
+      notes: '',
     }
   });
 
   const handleSubmit = (data: z.infer<typeof paymentSchema>) => {
-    onSubmit({
-      ...data,
-      invoiceId: invoice.id,
-    });
+    onSubmit(data);
   };
 
-  // Payment methods for the select dropdown
-  const paymentMethods: { value: PaymentMethod, label: string }[] = [
-    { value: 'cash', label: 'Dinheiro' },
-    { value: 'bank_transfer', label: 'Transferência Bancária' },
-    { value: 'check', label: 'Cheque' },
-    { value: 'credit_card', label: 'Cartão de Crédito' },
-    { value: 'debit_card', label: 'Cartão de Débito' },
-    { value: 'other', label: 'Outro' }
-  ];
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  const getMethodLabel = (method: PaymentMethod) => {
+    const labels = {
+      cash: 'Dinheiro',
+      bank_transfer: 'Transferência Bancária',
+      check: 'Cheque',
+      credit_card: 'Cartão de Crédito',
+      debit_card: 'Cartão de Débito',
+      other: 'Outros'
+    };
+    return labels[method];
+  };
+
+  const getStatusLabel = (status: PaymentStatus) => {
+    const labels = {
+      pending: 'Pendente',
+      completed: 'Concluído',
+      failed: 'Falhou',
+      cancelled: 'Cancelado'
+    };
+    return labels[status];
+  };
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>{payment ? 'Editar' : 'Novo'} Pagamento</CardTitle>
+        <CardTitle>Registrar Pagamento</CardTitle>
+        <div className="text-sm text-muted-foreground">
+          <p>Nota Fiscal: {invoice.number}</p>
+          <p>Valor Restante: <span className="font-semibold text-red-600">{formatCurrency(remainingAmount)}</span></p>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="mb-6 p-4 bg-muted rounded-md">
-          <div className="flex flex-col md:flex-row gap-4 justify-between">
-            <div>
-              <p className="text-sm font-medium">Nota Fiscal: {invoice.number}</p>
-              <p className="text-sm text-muted-foreground">
-                Fornecedor: {invoice.supplierName}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium">Valor Total: {formatCurrency(invoice.totalAmount)}</p>
-              <p className="text-sm text-muted-foreground">
-                Valor Restante: {formatCurrency(remainingAmount)}
-              </p>
-            </div>
-          </div>
-        </div>
-
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Valor (R$)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="0,00" 
-                      value={field.value?.toString() || ''} 
-                      onChange={(e) => {
-                        let value = e.target.value.replace(/[^\d.,]/g, '');
-                        if (value === '') {
-                          field.onChange(0);
-                        } else {
-                          const numValue = parseFloat(value.replace(',', '.'));
-                          field.onChange(isNaN(numValue) ? 0 : numValue);
-                        }
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="paymentDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Data de Pagamento</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={
-                            "w-full pl-3 text-left font-normal"
-                          }
-                        >
-                          {field.value ? (
-                            format(field.value, "dd/MM/yyyy", {locale: ptBR})
-                          ) : (
-                            <span>Selecione uma data</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date < new Date("1900-01-01")}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="dueDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Data de Vencimento</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={
-                            "w-full pl-3 text-left font-normal"
-                          }
-                        >
-                          {field.value ? (
-                            format(field.value, "dd/MM/yyyy", {locale: ptBR})
-                          ) : (
-                            <span>Selecione uma data</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date < new Date("1900-01-01")}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="method"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Método de Pagamento</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Valor do Pagamento</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um método de pagamento" />
-                      </SelectTrigger>
+                      <Input 
+                        type="number" 
+                        step="0.01"
+                        placeholder="0,00"
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
                     </FormControl>
-                    <SelectContent>
-                      {paymentMethods.map((method) => (
-                        <SelectItem key={method.value} value={method.value}>
-                          {method.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="method"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Método de Pagamento</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o método" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="cash">{getMethodLabel('cash')}</SelectItem>
+                        <SelectItem value="bank_transfer">{getMethodLabel('bank_transfer')}</SelectItem>
+                        <SelectItem value="check">{getMethodLabel('check')}</SelectItem>
+                        <SelectItem value="credit_card">{getMethodLabel('credit_card')}</SelectItem>
+                        <SelectItem value="debit_card">{getMethodLabel('debit_card')}</SelectItem>
+                        <SelectItem value="other">{getMethodLabel('other')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="paymentDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Data do Pagamento</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="pending">{getStatusLabel('pending')}</SelectItem>
+                        <SelectItem value="completed">{getStatusLabel('completed')}</SelectItem>
+                        <SelectItem value="failed">{getStatusLabel('failed')}</SelectItem>
+                        <SelectItem value="cancelled">{getStatusLabel('cancelled')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
               name="reference"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Referência</FormLabel>
+                  <FormLabel>Referência (opcional)</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Número do cheque, ID da transação, etc." 
-                      {...field} 
-                    />
+                    <Input placeholder="Número do cheque, ID da transferência, etc." {...field} />
                   </FormControl>
-                  <FormDescription>
-                    Opcional: número de referência do pagamento
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <div className="flex items-center space-x-2 my-4">
-              <input
-                type="checkbox"
-                id="installments"
-                checked={showInstallments}
-                onChange={() => setShowInstallments(!showInstallments)}
-                className="rounded border-gray-300"
-              />
-              <label htmlFor="installments" className="text-sm font-medium">
-                Pagamento parcelado?
-              </label>
-            </div>
-
-            {showInstallments && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="installmentNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Número da Parcela</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          min="1" 
-                          placeholder="1" 
-                          {...field}
-                          value={field.value ?? ''}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="totalInstallments"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Total de Parcelas</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          min="1" 
-                          placeholder="1" 
-                          {...field}
-                          value={field.value ?? ''}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
 
             <FormField
               control={form.control}
@@ -335,27 +217,26 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
                 <FormItem>
                   <FormLabel>Observações</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Observações adicionais sobre o pagamento" 
-                      {...field} 
-                    />
+                    <Textarea placeholder="Observações adicionais sobre o pagamento" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <CardFooter className="px-0 pb-0 pt-6">
-              <Button variant="outline" type="button" onClick={onCancel} className="mr-2">
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Salvando...' : (payment ? 'Atualizar' : 'Registrar Pagamento')}
-              </Button>
-            </CardFooter>
           </form>
         </Form>
       </CardContent>
+      <CardFooter className="flex justify-end gap-2">
+        <Button variant="outline" onClick={onCancel}>
+          Cancelar
+        </Button>
+        <Button 
+          onClick={form.handleSubmit(handleSubmit)} 
+          disabled={isLoading}
+        >
+          {isLoading ? 'Salvando...' : 'Registrar Pagamento'}
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

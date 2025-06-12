@@ -8,10 +8,11 @@ import SupplierManagement from '@/components/financeiro/suppliers/SupplierManage
 import CustomerManagement from '@/components/financeiro/customers/CustomerManagement';
 import WorkManagement from '@/components/financeiro/works/WorkManagement';
 import FinancialReports from '@/components/financeiro/reports/FinancialReports';
-import { FileText, BarChart3, FolderIcon, Users, User, Building2 } from 'lucide-react';
+import FinancialDashboard from '@/components/financeiro/dashboard/FinancialDashboard';
+import { FileText, BarChart3, FolderIcon, Users, User, Building2, Home } from 'lucide-react';
 
 const FinanceiroPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('cost-centers');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   return (
     <div className="w-full">
@@ -31,13 +32,17 @@ const FinanceiroPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold">Gestão Financeira</h1>
           <p className="text-muted-foreground">
-            Gerenciamento de despesas, notas fiscais, fornecedores, clientes e obras
+            Gerenciamento completo das finanças da empresa
           </p>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6 mb-8">
+        <TabsList className="grid w-full grid-cols-7 mb-8">
+          <TabsTrigger value="dashboard" className="flex items-center gap-2">
+            <Home className="h-4 w-4" />
+            <span>Dashboard</span>
+          </TabsTrigger>
           <TabsTrigger value="cost-centers" className="flex items-center gap-2">
             <FolderIcon className="h-4 w-4" />
             <span>Centros de Custo</span>
@@ -63,6 +68,11 @@ const FinanceiroPage: React.FC = () => {
             <span>Relatórios</span>
           </TabsTrigger>
         </TabsList>
+
+        {/* Dashboard Tab */}
+        <TabsContent value="dashboard">
+          <FinancialDashboard />
+        </TabsContent>
 
         {/* Cost Centers Tab */}
         <TabsContent value="cost-centers">
