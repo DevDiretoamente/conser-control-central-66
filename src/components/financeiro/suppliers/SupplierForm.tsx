@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -339,7 +338,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                 </div>
               </div>
 
-              {/* Website field */}
               <div className="flex items-center space-x-2">
                 <Globe className="h-4 w-4 text-muted-foreground" />
                 <FormField
@@ -358,7 +356,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Alternative Email field */}
                 <div className="flex items-center space-x-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
                   <FormField
@@ -376,7 +373,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   />
                 </div>
 
-                {/* Landline phone field */}
                 <div className="flex items-center space-x-2">
                   <Phone className="h-4 w-4 text-muted-foreground" />
                   <FormField
@@ -402,7 +398,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                 </div>
               </div>
 
-              {/* Mobile phone and Contact Person fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center space-x-2">
                   <PhoneCall className="h-4 w-4 text-muted-foreground" />

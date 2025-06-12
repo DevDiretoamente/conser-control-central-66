@@ -6,8 +6,9 @@ import CostCenterManagement from '@/components/financeiro/costcenter/CostCenterM
 import InvoiceManagement from '@/components/financeiro/invoices/InvoiceManagement';
 import SupplierManagement from '@/components/financeiro/suppliers/SupplierManagement';
 import CustomerManagement from '@/components/financeiro/customers/CustomerManagement';
+import WorkManagement from '@/components/financeiro/works/WorkManagement';
 import FinancialReports from '@/components/financeiro/reports/FinancialReports';
-import { FileText, BarChart3, FolderIcon, Users, User } from 'lucide-react';
+import { FileText, BarChart3, FolderIcon, Users, User, Building2 } from 'lucide-react';
 
 const FinanceiroPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('cost-centers');
@@ -30,16 +31,20 @@ const FinanceiroPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold">Gestão Financeira</h1>
           <p className="text-muted-foreground">
-            Gerenciamento de despesas, notas fiscais, fornecedores e clientes
+            Gerenciamento de despesas, notas fiscais, fornecedores, clientes e obras
           </p>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5 mb-8">
+        <TabsList className="grid w-full grid-cols-6 mb-8">
           <TabsTrigger value="cost-centers" className="flex items-center gap-2">
             <FolderIcon className="h-4 w-4" />
             <span>Centros de Custo</span>
+          </TabsTrigger>
+          <TabsTrigger value="works" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4" />
+            <span>Obras/Projetos</span>
           </TabsTrigger>
           <TabsTrigger value="suppliers" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
@@ -62,6 +67,11 @@ const FinanceiroPage: React.FC = () => {
         {/* Cost Centers Tab */}
         <TabsContent value="cost-centers">
           <CostCenterManagement />
+        </TabsContent>
+
+        {/* Works/Projects Tab */}
+        <TabsContent value="works">
+          <WorkManagement />
         </TabsContent>
 
         {/* Suppliers Tab */}
