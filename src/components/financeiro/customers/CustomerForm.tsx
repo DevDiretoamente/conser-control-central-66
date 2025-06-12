@@ -274,7 +274,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
                             handleDocumentChange(e);
                           }}
                           onBlur={(e) => {
-                            field.onBlur(e);
+                            onBlur={field.onBlur};
                             handleDocumentBlur();
                           }}
                         />

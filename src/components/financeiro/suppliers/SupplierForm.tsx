@@ -284,7 +284,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                             handleDocumentChange(e);
                           }}
                           onBlur={(e) => {
-                            field.onBlur(e);
+                            field.onBlur();;
                             handleDocumentBlur();
                           }}
                         />
