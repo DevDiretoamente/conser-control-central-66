@@ -155,9 +155,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
           message: `${type === 'physical' ? 'CPF' : 'CNPJ'} inválido`
         });
       } else {
-        // Clear document error by clearing all errors and re-triggering validation
-        form.clearErrors();
-        form.trigger();
+        form.clearErrors('document');
       }
     }
   };
@@ -240,7 +238,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
                           field.onChange(value);
                           // Clear document field when changing type
                           form.setValue('document', '');
-                          form.trigger();
+                          form.clearErrors('document');
                         }} 
                         defaultValue={field.value}
                       >
@@ -328,6 +326,23 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
                     )}
                   />
                 </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Globe className="h-4 w-4 text-muted-foreground" />
+                <FormField
+                  control={form.control}
+                  name="website"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Website</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://www.example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

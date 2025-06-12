@@ -1,3 +1,4 @@
+
 // Financial system data types
 import { User } from '@/types/auth';
 
@@ -55,13 +56,9 @@ export interface Supplier {
   email: string;
   phone: string;
   address?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
   bankInfo?: string;
   website?: string;
   contactPerson?: string;
-  contactPhone?: string;
   landlinePhone?: string;
   mobilePhone?: string;
   alternativeEmail?: string;
