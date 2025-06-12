@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -140,7 +141,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
       formattedValue = value
         .replace(/(\d{2})(\d)/, '$1.$2')
         .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1/$2')
+        .replace /(\d{3})(\d)/, '$1/$2')
         .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
     }
     
@@ -538,5 +539,3 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
 };
 
 export default CustomerForm;
-
-</edits_to_apply>

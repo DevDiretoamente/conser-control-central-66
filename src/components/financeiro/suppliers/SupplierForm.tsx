@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -267,7 +268,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="physical">Pessoa Física</SelectItem>
-                          <SelectItem value="legal">Pessoa Jurídica</SelectItem>
+                          <SelectItem value="legal">Pessoa Jurídica</Select Item>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -356,7 +357,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                       <FormItem className="flex-1">
                         <FormLabel>Email Alternativo</FormLabel>
                         <FormControl>
-                          <Input placeholder="alternative@example.com" {...field} />
+                          <Input placeholder="alternativeive@example.com" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -510,23 +511,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Globe className="h-4 w-4 text-muted-foreground" />
-                <FormField
-                  control={form.control}
-                  name="website"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>Website</FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://www.exemplo.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
               <FormField
                 control={form.control}
                 name="notes"
@@ -557,5 +541,3 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
 };
 
 export default SupplierForm;
-
-</edits_to_apply>
