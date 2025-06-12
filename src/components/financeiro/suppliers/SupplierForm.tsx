@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -305,6 +303,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                 />
               </div>
 
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center space-x-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
@@ -348,6 +347,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                 </div>
               </div>
 
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center space-x-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
@@ -391,6 +391,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                 </div>
               </div>
 
+              
               <div className="flex items-center space-x-2">
                 <PhoneCall className="h-4 w-4 text-muted-foreground" />
                 <FormField
@@ -415,6 +416,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                 />
               </div>
 
+              
               <FormField
                 control={form.control}
                 name="address"
@@ -429,6 +431,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                 )}
               />
 
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
@@ -483,6 +486,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                 />
               </div>
 
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center space-x-2">
                   <User className="h-4 w-4 text-muted-foreground" />
@@ -526,6 +530,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                 </div>
               </div>
 
+              
               <div className="flex items-center space-x-2">
                 <Globe className="h-4 w-4 text-muted-foreground" />
                 <FormField
@@ -543,6 +548,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                 />
               </div>
 
+              
               <FormField
                 control={form.control}
                 name="notes"
