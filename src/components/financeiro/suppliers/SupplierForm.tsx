@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -268,7 +269,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="physical">Pessoa Física</SelectItem>
-                          <SelectItem value="legal">Pessoa Jurídica</Select Item>
+                          <SelectItem value="legal">Pessoa Jurídica</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -357,7 +358,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                       <FormItem className="flex-1">
                         <FormLabel>Email Alternativo</FormLabel>
                         <FormControl>
-                          <Input placeholder="alternativeive@example.com" {...field} />
+                          <Input placeholder="alternative@example.com" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -413,6 +414,20 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Endereço</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Endereço completo" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
@@ -509,6 +524,23 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                     )}
                   />
                 </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Globe className="h-4 w-4 text-muted-foreground" />
+                <FormField
+                  control={form.control}
+                  name="website"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Website</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://www.exemplo.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <FormField
