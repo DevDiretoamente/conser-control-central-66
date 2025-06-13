@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, FileText, Eye, Edit, Trash2, Download } from 'lucide-react';
@@ -15,20 +15,33 @@ import { Badge } from '@/components/ui/badge';
 import { Invoice, InvoiceStatus } from '@/types/financeiro';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { v4 as uuidv4 } from 'uuid';
 import InvoiceFilter from './InvoiceFilter';
 import InvoiceForm from './InvoiceForm';
 import InvoiceDetails from './InvoiceDetails';
-import { mockInvoices, mockCostCenters, mockSuppliers } from '@/data/invoiceMockData';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { InvoiceService } from '@/services/invoiceService';
+import { SupplierService } from '@/services/supplierService';
+import { CostCenterService } from '@/services/costCenterService';
 
 const InvoiceManagement: React.FC = () => {
-  const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
-  const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>(mockInvoices);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [suppliers, setSuppliers] = useState(SupplierService.getAll());
+  const [costCenters, setCostCenters] = useState(CostCenterService.getAll());
+
+  useEffect(() => {
+    loadInvoices();
+  }, []);
+
+  const loadInvoices = () => {
+    const allInvoices = InvoiceService.getAll();
+    setInvoices(allInvoices);
+    setFilteredInvoices(allInvoices);
+  };
 
   const getStatusBadgeVariant = (status: InvoiceStatus) => {
     switch (status) {
@@ -111,10 +124,12 @@ const InvoiceManagement: React.FC = () => {
 
   const handleDeleteInvoice = (invoiceId: string) => {
     if (window.confirm('Tem certeza que deseja excluir esta nota fiscal?')) {
-      const updatedInvoices = invoices.filter(inv => inv.id !== invoiceId);
-      setInvoices(updatedInvoices);
-      setFilteredInvoices(updatedInvoices);
-      toast.success('Nota fiscal excluída com sucesso!');
+      if (InvoiceService.delete(invoiceId)) {
+        loadInvoices();
+        toast.success('Nota fiscal excluída com sucesso!');
+      } else {
+        toast.error('Erro ao excluir nota fiscal.');
+      }
     }
   };
 
@@ -124,57 +139,23 @@ const InvoiceManagement: React.FC = () => {
   };
 
   const handleDownloadInvoice = (invoice: Invoice) => {
-    // Future implementation for download functionality
     toast.info('Funcionalidade de download será implementada futuramente');
   };
 
   const handleCreateInvoice = (data: any) => {
     setIsLoading(true);
     
-    // Find supplier name from the selected supplierId
-    const supplier = mockSuppliers.find(s => s.id === data.supplierId);
-    const costCenter = mockCostCenters.find(c => c.id === data.costCenterId);
-    
-    // Simulate API call
-    setTimeout(() => {
-      try {
-        const newInvoice: Invoice = {
-          id: uuidv4(),
-          number: data.number,
-          supplierId: data.supplierId,
-          supplierName: supplier ? (supplier.tradeName || supplier.businessName) : 'Unknown Supplier',
-          issueDate: data.issueDate,
-          dueDate: data.dueDate,
-          costCenterId: data.costCenterId,
-          costCenterName: costCenter ? costCenter.name : 'Unknown Cost Center',
-          workId: data.workId || undefined,
-          workName: data.workName || undefined,
-          amount: data.amount,
-          tax: data.tax,
-          totalAmount: data.totalAmount,
-          status: data.status,
-          type: data.type,
-          description: data.description || '',
-          notes: data.notes || '',
-          items: data.items || [],
-          payments: [],
-          createdAt: new Date().toISOString(),
-          createdBy: 'current-user',
-          updatedAt: new Date().toISOString(),
-        };
-
-        const updatedInvoices = [...invoices, newInvoice];
-        setInvoices(updatedInvoices);
-        setFilteredInvoices(updatedInvoices);
-        setIsFormOpen(false);
-        toast.success('Nota fiscal criada com sucesso!');
-      } catch (error) {
-        console.error('Error creating invoice:', error);
-        toast.error('Erro ao criar nota fiscal.');
-      } finally {
-        setIsLoading(false);
-      }
-    }, 1000);
+    try {
+      InvoiceService.create(data);
+      loadInvoices();
+      setIsFormOpen(false);
+      toast.success('Nota fiscal criada com sucesso!');
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      toast.error('Erro ao criar nota fiscal.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleUpdateInvoice = (data: any) => {
@@ -182,51 +163,18 @@ const InvoiceManagement: React.FC = () => {
     
     setIsLoading(true);
     
-    // Find supplier name from the selected supplierId
-    const supplier = mockSuppliers.find(s => s.id === data.supplierId);
-    const costCenter = mockCostCenters.find(c => c.id === data.costCenterId);
-    
-    // Simulate API call
-    setTimeout(() => {
-      try {
-        const updatedInvoice: Invoice = {
-          ...selectedInvoice,
-          number: data.number,
-          supplierId: data.supplierId,
-          supplierName: supplier ? (supplier.tradeName || supplier.businessName) : selectedInvoice.supplierName,
-          issueDate: data.issueDate,
-          dueDate: data.dueDate,
-          costCenterId: data.costCenterId,
-          costCenterName: costCenter ? costCenter.name : selectedInvoice.costCenterName,
-          workId: data.workId || selectedInvoice.workId,
-          workName: data.workName || selectedInvoice.workName,
-          amount: data.amount,
-          tax: data.tax,
-          totalAmount: data.totalAmount,
-          status: data.status,
-          type: data.type,
-          description: data.description || selectedInvoice.description,
-          notes: data.notes || selectedInvoice.notes,
-          items: data.items || selectedInvoice.items,
-          updatedAt: new Date().toISOString(),
-        };
-
-        const updatedInvoices = invoices.map(invoice => 
-          invoice.id === selectedInvoice.id ? updatedInvoice : invoice
-        );
-        
-        setInvoices(updatedInvoices);
-        setFilteredInvoices(updatedInvoices);
-        setIsFormOpen(false);
-        setSelectedInvoice(null);
-        toast.success('Nota fiscal atualizada com sucesso!');
-      } catch (error) {
-        console.error('Error updating invoice:', error);
-        toast.error('Erro ao atualizar nota fiscal.');
-      } finally {
-        setIsLoading(false);
-      }
-    }, 1000);
+    try {
+      InvoiceService.update(selectedInvoice.id, data);
+      loadInvoices();
+      setIsFormOpen(false);
+      setSelectedInvoice(null);
+      toast.success('Nota fiscal atualizada com sucesso!');
+    } catch (error) {
+      console.error('Error updating invoice:', error);
+      toast.error('Erro ao atualizar nota fiscal.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const formatCurrency = (value: number) => {
@@ -257,8 +205,8 @@ const InvoiceManagement: React.FC = () => {
 
       <InvoiceFilter
         onFilterChange={handleFilterChange}
-        costCenters={mockCostCenters}
-        suppliers={mockSuppliers}
+        costCenters={costCenters}
+        suppliers={suppliers}
       />
 
       <Card>
@@ -361,8 +309,8 @@ const InvoiceManagement: React.FC = () => {
             <div className="p-6">
               <InvoiceForm
                 invoice={selectedInvoice || undefined}
-                suppliers={mockSuppliers}
-                costCenters={mockCostCenters}
+                suppliers={suppliers}
+                costCenters={costCenters}
                 onSubmit={selectedInvoice ? handleUpdateInvoice : handleCreateInvoice}
                 onCancel={() => setIsFormOpen(false)}
                 isLoading={isLoading}

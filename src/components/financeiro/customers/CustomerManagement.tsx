@@ -1,190 +1,57 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Plus, Users } from 'lucide-react';
 import { Customer } from '@/types/financeiro';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import CustomerFilter from './CustomerFilter';
 import CustomerForm from './CustomerForm';
 import CustomerList from './CustomerList';
-import CustomerFilter from './CustomerFilter';
 import CustomerDetails from './CustomerDetails';
-import { validateDocument } from '@/utils/validators';
-
-// Mock data for initial development
-const mockCustomers: Customer[] = [
-  {
-    id: 'cus1',
-    name: 'Cliente A',
-    type: 'legal',
-    document: '12.345.678/0001-90',
-    email: 'cliente.a@example.com',
-    phone: '(11) 1234-5678',
-    city: 'São Paulo',
-    state: 'SP',
-    isActive: true,
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01'
-  },
-  {
-    id: 'cus2',
-    name: 'Cliente B',
-    type: 'physical',
-    document: '123.456.789-01',
-    email: 'cliente.b@example.com',
-    phone: '(11) 8765-4321',
-    city: 'Rio de Janeiro',
-    state: 'RJ',
-    isActive: true,
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01'
-  }
-];
+import { CustomerService } from '@/services/customerService';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const CustomerManagement: React.FC = () => {
-  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
-  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>(mockCustomers);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | undefined>(undefined);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<'all' | 'physical' | 'legal'>('all');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
-    applyFilters(term, filterType);
+  useEffect(() => {
+    loadCustomers();
+  }, []);
+
+  const loadCustomers = () => {
+    const allCustomers = CustomerService.getAll();
+    setCustomers(allCustomers);
+    setFilteredCustomers(allCustomers);
   };
 
-  const handleTypeFilter = (type: 'all' | 'physical' | 'legal') => {
-    setFilterType(type);
-    applyFilters(searchTerm, type);
-  };
-
-  const applyFilters = (term: string, type: 'all' | 'physical' | 'legal') => {
+  const handleFilterChange = (filters: any) => {
     let filtered = [...customers];
-    
-    if (term) {
-      const lowercaseTerm = term.toLowerCase();
-      filtered = filtered.filter(customer => 
-        customer.name.toLowerCase().includes(lowercaseTerm) ||
-        customer.document.includes(term) ||
-        customer.email?.toLowerCase().includes(lowercaseTerm) ||
-        customer.city?.toLowerCase().includes(lowercaseTerm) ||
-        customer.state?.toLowerCase().includes(lowercaseTerm) ||
-        (customer.contactPerson && customer.contactPerson.toLowerCase().includes(lowercaseTerm)) ||
-        (customer.website && customer.website.toLowerCase().includes(lowercaseTerm))
-      );
+
+    if (filters.searchTerm) {
+      filtered = CustomerService.search(filters.searchTerm);
     }
-    
-    if (type !== 'all') {
-      filtered = filtered.filter(customer => customer.type === type);
+
+    if (filters.type && filters.type !== 'all') {
+      filtered = filtered.filter(customer => customer.type === filters.type);
     }
-    
+
+    if (filters.status !== undefined) {
+      filtered = filtered.filter(customer => customer.isActive === filters.status);
+    }
+
     setFilteredCustomers(filtered);
   };
 
-  const handleCreateCustomer = (data: any) => {
-    setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      try {
-        const newCustomer: Customer = {
-          id: `cus${customers.length + 1}`,
-          name: data.name,
-          type: data.type,
-          document: data.document,
-          email: data.email || '',
-          phone: data.phone || '',
-          address: data.address || '',
-          city: data.city || '',
-          state: data.state || '',
-          zipCode: data.zipCode || '',
-          contactPerson: data.contactPerson || '',
-          contactPhone: data.contactPhone || '',
-          website: data.website || '',
-          landlinePhone: data.landlinePhone || '',
-          mobilePhone: data.mobilePhone || '',
-          alternativeEmail: data.alternativeEmail || '',
-          notes: data.notes || '',
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-
-        const updatedCustomers = [...customers, newCustomer];
-        setCustomers(updatedCustomers);
-        setFilteredCustomers(updatedCustomers);
-        setIsFormOpen(false);
-        toast.success('Cliente criado com sucesso!');
-      } catch (error) {
-        console.error('Error creating customer:', error);
-        toast.error('Erro ao criar cliente.');
-      } finally {
-        setIsLoading(false);
-      }
-    }, 1000);
-  };
-
-  const handleUpdateCustomer = (data: any) => {
-    if (!selectedCustomer) return;
-    
-    setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      try {
-        const updatedCustomer: Customer = {
-          ...selectedCustomer,
-          name: data.name,
-          type: data.type,
-          document: data.document,
-          email: data.email || selectedCustomer.email,
-          phone: data.phone || selectedCustomer.phone,
-          address: data.address || selectedCustomer.address,
-          city: data.city || selectedCustomer.city,
-          state: data.state || selectedCustomer.state,
-          zipCode: data.zipCode || selectedCustomer.zipCode,
-          contactPerson: data.contactPerson || selectedCustomer.contactPerson,
-          contactPhone: data.contactPhone || selectedCustomer.contactPhone,
-          website: data.website || selectedCustomer.website,
-          landlinePhone: data.landlinePhone || selectedCustomer.landlinePhone,
-          mobilePhone: data.mobilePhone || selectedCustomer.mobilePhone,
-          alternativeEmail: data.alternativeEmail || selectedCustomer.alternativeEmail,
-          notes: data.notes || selectedCustomer.notes,
-          updatedAt: new Date().toISOString()
-        };
-
-        const updatedCustomers = customers.map(customer => 
-          customer.id === selectedCustomer.id ? updatedCustomer : customer
-        );
-        
-        setCustomers(updatedCustomers);
-        setFilteredCustomers(updatedCustomers);
-        setIsFormOpen(false);
-        setSelectedCustomer(undefined);
-        toast.success('Cliente atualizado com sucesso!');
-      } catch (error) {
-        console.error('Error updating customer:', error);
-        toast.error('Erro ao atualizar cliente.');
-      } finally {
-        setIsLoading(false);
-      }
-    }, 1000);
-  };
-
-  const handleDeleteCustomer = (customer: Customer) => {
-    try {
-      const updatedCustomers = customers.filter(item => item.id !== customer.id);
-      setCustomers(updatedCustomers);
-      setFilteredCustomers(updatedCustomers);
-      toast.success('Cliente excluído com sucesso!');
-    } catch (error) {
-      console.error('Error deleting customer:', error);
-      toast.error('Erro ao excluir cliente.');
-    }
+  const handleNewCustomer = () => {
+    setSelectedCustomer(null);
+    setIsFormOpen(true);
   };
 
   const handleEditCustomer = (customer: Customer) => {
@@ -193,75 +60,126 @@ const CustomerManagement: React.FC = () => {
     if (isDetailsOpen) setIsDetailsOpen(false);
   };
 
+  const handleDeleteCustomer = (customerId: string) => {
+    if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
+      if (CustomerService.delete(customerId)) {
+        loadCustomers();
+        toast.success('Cliente excluído com sucesso!');
+      } else {
+        toast.error('Erro ao excluir cliente.');
+      }
+    }
+  };
+
+  const handleViewCustomer = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsDetailsOpen(true);
+  };
+
+  const handleCreateCustomer = (data: any) => {
+    setIsLoading(true);
+    
+    try {
+      CustomerService.create(data);
+      loadCustomers();
+      setIsFormOpen(false);
+      toast.success('Cliente criado com sucesso!');
+    } catch (error) {
+      console.error('Error creating customer:', error);
+      toast.error('Erro ao criar cliente.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateCustomer = (data: any) => {
+    if (!selectedCustomer) return;
+    
+    setIsLoading(true);
+    
+    try {
+      CustomerService.update(selectedCustomer.id, data);
+      loadCustomers();
+      setIsFormOpen(false);
+      setSelectedCustomer(null);
+      toast.success('Cliente atualizado com sucesso!');
+    } catch (error) {
+      console.error('Error updating customer:', error);
+      toast.error('Erro ao atualizar cliente.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start">
+      <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-lg font-medium">Clientes</h2>
-          <p className="text-muted-foreground text-sm mt-1">
-            Gerencie todos os clientes da sua empresa
+          <h2 className="text-2xl font-bold">Clientes</h2>
+          <p className="text-muted-foreground">
+            Gerencie os clientes da empresa
           </p>
         </div>
-        <Button onClick={() => {
-          setSelectedCustomer(undefined);
-          setIsFormOpen(true);
-        }} className="shrink-0">
-          <PlusCircle className="h-4 w-4 mr-2" />
+        <Button onClick={handleNewCustomer}>
+          <Plus className="h-4 w-4 mr-2" />
           Novo Cliente
         </Button>
       </div>
 
-      <CustomerFilter 
-        onSearch={handleSearch}
-        onTypeFilter={handleTypeFilter}
-      />
+      <CustomerFilter onFilterChange={handleFilterChange} />
 
-      {filteredCustomers.length === 0 ? (
-        <Alert>
-          <AlertDescription>
-            Nenhum cliente encontrado. Altere os filtros ou adicione um novo cliente.
-          </AlertDescription>
-        </Alert>
-      ) : (
-        <CustomerList
-          customers={filteredCustomers}
-          onEdit={handleEditCustomer}
-          onDelete={handleDeleteCustomer}
-          onViewDetails={(customer) => {
-            setSelectedCustomer(customer);
-            setIsDetailsOpen(true);
-          }}
-        />
-      )}
-
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Lista de Clientes ({filteredCustomers.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CustomerList 
+            customers={filteredCustomers}
+            onEdit={handleEditCustomer}
+            onDelete={handleDeleteCustomer}
+            onView={handleViewCustomer}
+          />
+        </CardContent>
+      </Card>
+      
       {/* Customer Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-3xl">
-          <CustomerForm
-            customer={selectedCustomer}
-            onSubmit={selectedCustomer ? handleUpdateCustomer : handleCreateCustomer}
-            onCancel={() => setIsFormOpen(false)}
-            isLoading={isLoading}
-            existingCustomers={customers}
-          />
+        <DialogContent className="max-w-2xl max-h-[90vh] p-0">
+          <ScrollArea className="max-h-[90vh]">
+            <div className="p-6">
+              <CustomerForm
+                customer={selectedCustomer || undefined}
+                onSubmit={selectedCustomer ? handleUpdateCustomer : handleCreateCustomer}
+                onCancel={() => setIsFormOpen(false)}
+                isLoading={isLoading}
+              />
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
       {/* Customer Details Dialog */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-4xl">
-          {selectedCustomer && (
-            <CustomerDetails
-              customer={selectedCustomer}
-              onEdit={() => {
-                setIsDetailsOpen(false);
-                setTimeout(() => {
-                  setIsFormOpen(true);
-                }, 100);
-              }}
-              onClose={() => setIsDetailsOpen(false)}
-            />
-          )}
+        <DialogContent className="max-w-2xl max-h-[90vh] p-0">
+          <ScrollArea className="max-h-[90vh]">
+            <div className="p-6">
+              {selectedCustomer && (
+                <CustomerDetails
+                  customer={selectedCustomer}
+                  onEdit={() => {
+                    setIsDetailsOpen(false);
+                    setTimeout(() => {
+                      setIsFormOpen(true);
+                    }, 100);
+                  }}
+                  onClose={() => setIsDetailsOpen(false)}
+                />
+              )}
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </div>

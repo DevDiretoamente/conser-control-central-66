@@ -1,43 +1,68 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
+  DollarSign, 
   TrendingUp, 
   TrendingDown, 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock,
-  DollarSign,
+  Clock, 
+  AlertTriangle,
   FileText,
-  Users
+  Users,
+  Building2
 } from 'lucide-react';
 import { InvoiceService } from '@/services/invoiceService';
 import { CustomerService } from '@/services/customerService';
 import { SupplierService } from '@/services/supplierService';
-import { WorkService } from '@/services/workService';
+import { CostCenterService } from '@/services/costCenterService';
+import { Invoice } from '@/types/financeiro';
+import FinancialNotifications from '../notifications/FinancialNotifications';
+import ExpenseAnalytics from '../invoices/ExpenseAnalytics';
 
 const FinancialDashboard: React.FC = () => {
-  // Get data from services
-  const invoices = InvoiceService.getAll();
-  const customers = CustomerService.getAll();
-  const suppliers = SupplierService.getAll();
-  const works = WorkService.getAll();
-  
-  const overdueInvoices = InvoiceService.getOverdueInvoices();
-  const dueSoonInvoices = InvoiceService.getDueSoonInvoices();
+  const [dashboardData, setDashboardData] = useState({
+    totalRevenue: 0,
+    totalExpenses: 0,
+    pendingInvoices: 0,
+    overdueInvoices: 0,
+    totalCustomers: 0,
+    totalSuppliers: 0,
+    activeCostCenters: 0,
+    recentInvoices: [] as Invoice[]
+  });
 
-  // Calculate metrics
-  const totalInvoiceValue = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
-  const paidInvoiceValue = invoices
-    .filter(inv => inv.status === 'paid')
-    .reduce((sum, inv) => sum + inv.totalAmount, 0);
-  
-  const pendingInvoiceValue = invoices
-    .filter(inv => inv.status === 'pending' || inv.status === 'partial')
-    .reduce((sum, inv) => sum + inv.totalAmount, 0);
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
 
-  const overdueValue = overdueInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+  const loadDashboardData = () => {
+    const invoices = InvoiceService.getAll();
+    const customers = CustomerService.getAll();
+    const suppliers = SupplierService.getAll();
+    const costCenters = CostCenterService.getAll();
+    
+    // Calculate totals
+    const totalExpenses = invoices.reduce((sum, invoice) => sum + invoice.totalAmount, 0);
+    const pendingInvoices = invoices.filter(inv => inv.status === 'pending').length;
+    const overdueInvoices = InvoiceService.getOverdueInvoices().length;
+    const activeCostCenters = costCenters.filter(cc => cc.status === 'active').length;
+    const recentInvoices = invoices
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5);
+
+    setDashboardData({
+      totalRevenue: 0, // Will be implemented when revenue tracking is added
+      totalExpenses,
+      pendingInvoices,
+      overdueInvoices,
+      totalCustomers: customers.length,
+      totalSuppliers: suppliers.length,
+      activeCostCenters,
+      recentInvoices
+    });
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -65,188 +90,198 @@ const FinancialDashboard: React.FC = () => {
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    const labels = {
+      pending: 'Pendente',
+      paid: 'Pago',
+      partial: 'Parcial',
+      overdue: 'Vencida',
+      cancelled: 'Cancelada',
+      draft: 'Rascunho',
+      released: 'Liberada'
+    };
+    return labels[status as keyof typeof labels] || status;
+  };
+
+  const allInvoices = InvoiceService.getAll();
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Dashboard Financeiro</h2>
+        <h2 className="text-2xl font-bold mb-2">Dashboard Financeiro</h2>
         <p className="text-muted-foreground">
-          Visão geral das suas finanças e indicadores principais
+          Visão geral das finanças da empresa
         </p>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Key Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total em Notas Fiscais</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Total Despesas</CardTitle>
+            <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalInvoiceValue)}</div>
+            <div className="text-2xl font-bold text-red-600">
+              {formatCurrency(dashboardData.totalExpenses)}
+            </div>
             <p className="text-xs text-muted-foreground">
-              {invoices.length} notas fiscais
+              Valor total das despesas registradas
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Valor Pago</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-sm font-medium">Notas Pendentes</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(paidInvoiceValue)}</div>
+            <div className="text-2xl font-bold text-yellow-600">
+              {dashboardData.pendingInvoices}
+            </div>
             <p className="text-xs text-muted-foreground">
-              {invoices.filter(inv => inv.status === 'paid').length} pagas
+              Notas fiscais aguardando pagamento
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Valor Pendente</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-600" />
+            <CardTitle className="text-sm font-medium">Notas Vencidas</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{formatCurrency(pendingInvoiceValue)}</div>
+            <div className="text-2xl font-bold text-red-600">
+              {dashboardData.overdueInvoices}
+            </div>
             <p className="text-xs text-muted-foreground">
-              {invoices.filter(inv => inv.status === 'pending' || inv.status === 'partial').length} pendentes
+              Notas fiscais com vencimento em atraso
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Valor Vencido</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <CardTitle className="text-sm font-medium">Fornecedores</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{formatCurrency(overdueValue)}</div>
+            <div className="text-2xl font-bold">
+              {dashboardData.totalSuppliers}
+            </div>
             <p className="text-xs text-muted-foreground">
-              {overdueInvoices.length} vencidas
+              Total de fornecedores cadastrados
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Entity Counts */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Clientes Ativos</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Clientes
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{customers.filter(c => c.isActive).length}</div>
-            <p className="text-xs text-muted-foreground">
-              {customers.length} total
+            <div className="text-3xl font-bold mb-2">
+              {dashboardData.totalCustomers}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Total de clientes cadastrados
             </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Fornecedores Ativos</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Centros de Custo
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{suppliers.filter(s => s.isActive).length}</div>
-            <p className="text-xs text-muted-foreground">
-              {suppliers.length} total
+            <div className="text-3xl font-bold mb-2">
+              {dashboardData.activeCostCenters}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Centros de custo ativos
             </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Obras Ativas</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Notas Fiscais
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{works.filter(w => w.status === 'in_progress').length}</div>
-            <p className="text-xs text-muted-foreground">
-              {works.length} total
+            <div className="text-3xl font-bold mb-2">
+              {allInvoices.length}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Total de notas fiscais
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Alerts and Notifications */}
+      {/* Notifications and Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Overdue Invoices */}
+        <FinancialNotifications />
+        
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-600">
-              <AlertTriangle className="h-5 w-5" />
-              Notas Fiscais Vencidas ({overdueInvoices.length})
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Notas Fiscais Recentes
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {overdueInvoices.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">
-                Nenhuma nota fiscal vencida
-              </p>
-            ) : (
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {overdueInvoices.slice(0, 5).map((invoice) => (
-                  <div key={invoice.id} className="flex justify-between items-center p-2 bg-red-50 rounded">
-                    <div>
-                      <p className="text-sm font-medium">{invoice.number}</p>
-                      <p className="text-xs text-muted-foreground">{invoice.supplierName}</p>
+            {dashboardData.recentInvoices.length > 0 ? (
+              <div className="space-y-4">
+                {dashboardData.recentInvoices.map((invoice) => (
+                  <div key={invoice.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <p className="font-medium">{invoice.number}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {invoice.supplierName}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold text-red-600">{formatCurrency(invoice.totalAmount)}</p>
-                      <p className="text-xs text-red-500">Venceu em {formatDate(invoice.dueDate)}</p>
+                      <p className="font-medium">{formatCurrency(invoice.totalAmount)}</p>
+                      <Badge variant={getStatusBadgeVariant(invoice.status)}>
+                        {getStatusLabel(invoice.status)}
+                      </Badge>
                     </div>
                   </div>
                 ))}
-                {overdueInvoices.length > 5 && (
-                  <p className="text-xs text-muted-foreground text-center">
-                    +{overdueInvoices.length - 5} mais...
-                  </p>
-                )}
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Due Soon Invoices */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-yellow-600">
-              <Clock className="h-5 w-5" />
-              Vencendo em 7 dias ({dueSoonInvoices.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {dueSoonInvoices.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">
-                Nenhuma nota fiscal vencendo nos próximos 7 dias
-              </p>
             ) : (
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {dueSoonInvoices.slice(0, 5).map((invoice) => (
-                  <div key={invoice.id} className="flex justify-between items-center p-2 bg-yellow-50 rounded">
-                    <div>
-                      <p className="text-sm font-medium">{invoice.number}</p>
-                      <p className="text-xs text-muted-foreground">{invoice.supplierName}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-yellow-600">{formatCurrency(invoice.totalAmount)}</p>
-                      <p className="text-xs text-yellow-500">Vence em {formatDate(invoice.dueDate)}</p>
-                    </div>
-                  </div>
-                ))}
-                {dueSoonInvoices.length > 5 && (
-                  <p className="text-xs text-muted-foreground text-center">
-                    +{dueSoonInvoices.length - 5} mais...
-                  </p>
-                )}
+              <div className="text-center py-8">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  Nenhuma nota fiscal encontrada
+                </p>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Expense Analytics */}
+      {allInvoices.length > 0 && (
+        <ExpenseAnalytics invoices={allInvoices} />
+      )}
     </div>
   );
 };

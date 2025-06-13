@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,55 +7,27 @@ import { CostCenter, CostCenterStatus } from '@/types/financeiro';
 import { Plus, Search } from 'lucide-react';
 import CostCenterList from './CostCenterList';
 import CostCenterForm from './CostCenterForm';
+import { CostCenterService } from '@/services/costCenterService';
 import { toast } from 'sonner';
 
-// Mock data for development - will be replaced with API calls
-const mockCostCenters: CostCenter[] = [
-  {
-    id: '1',
-    name: 'Obra João 23',
-    description: 'Pavimentação da Rua João XXIII',
-    status: 'active',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    createdBy: 'user-1'
-  },
-  {
-    id: '2',
-    name: 'Obra Rio Branco',
-    description: 'Reparo na Av. Rio Branco',
-    status: 'active',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    createdBy: 'user-1'
-  },
-  {
-    id: '3',
-    name: 'Manutenção da Frota',
-    description: 'Centro de custo para manutenção de veículos',
-    status: 'active',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    createdBy: 'user-1'
-  },
-  {
-    id: '4',
-    name: 'Obras Finalizadas',
-    description: 'Centro de custo para obras concluídas em 2023',
-    status: 'archived',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    createdBy: 'user-1'
-  }
-];
-
 const CostCenterManagement: React.FC = () => {
-  const [costCenters, setCostCenters] = useState<CostCenter[]>(mockCostCenters);
+  const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCostCenter, setSelectedCostCenter] = useState<CostCenter | null>(null);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
-  const [filteredCostCenters, setFilteredCostCenters] = useState<CostCenter[]>(costCenters);
+  const [filteredCostCenters, setFilteredCostCenters] = useState<CostCenter[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Load cost centers on component mount
+  useEffect(() => {
+    loadCostCenters();
+  }, []);
+
+  const loadCostCenters = () => {
+    const centers = CostCenterService.getAll();
+    setCostCenters(centers);
+    setFilteredCostCenters(centers);
+  };
 
   // Handle search functionality
   const handleFilterChange = (term: string) => {
@@ -65,11 +38,7 @@ const CostCenterManagement: React.FC = () => {
       return;
     }
     
-    const results = costCenters.filter(center => 
-      center.name.toLowerCase().includes(term.toLowerCase()) || 
-      center.description?.toLowerCase().includes(term.toLowerCase())
-    );
-    
+    const results = CostCenterService.search(term);
     setFilteredCostCenters(results);
   };
 
@@ -77,27 +46,25 @@ const CostCenterManagement: React.FC = () => {
   const handleCreateCostCenter = (data: Partial<CostCenter>) => {
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      const newCostCenter: CostCenter = {
-        id: `new-${Date.now()}`,
+    try {
+      const newCostCenter = CostCenterService.create({
         name: data.name!,
         description: data.description || '',
         parentId: data.parentId,
         obraId: data.obraId,
         status: data.status as CostCenterStatus,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
         createdBy: 'current-user-id'
-      };
+      });
       
-      const updatedCostCenters = [...costCenters, newCostCenter];
-      setCostCenters(updatedCostCenters);
-      setFilteredCostCenters(updatedCostCenters);
+      loadCostCenters();
       setIsAddFormOpen(false);
-      setIsLoading(false);
       toast.success('Centro de custo criado com sucesso!');
-    }, 1000);
+    } catch (error) {
+      console.error('Error creating cost center:', error);
+      toast.error('Erro ao criar centro de custo.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Handle cost center update
@@ -106,28 +73,24 @@ const CostCenterManagement: React.FC = () => {
     
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      const updatedCostCenters = costCenters.map(center => 
-        center.id === selectedCostCenter.id 
-          ? { 
-              ...center, 
-              name: data.name!, 
-              description: data.description || '',
-              parentId: data.parentId,
-              obraId: data.obraId,
-              status: data.status as CostCenterStatus,
-              updatedAt: new Date().toISOString() 
-            }
-          : center
-      );
+    try {
+      CostCenterService.update(selectedCostCenter.id, {
+        name: data.name,
+        description: data.description,
+        parentId: data.parentId,
+        obraId: data.obraId,
+        status: data.status as CostCenterStatus,
+      });
       
-      setCostCenters(updatedCostCenters);
-      setFilteredCostCenters(updatedCostCenters);
+      loadCostCenters();
       setSelectedCostCenter(null);
-      setIsLoading(false);
       toast.success('Centro de custo atualizado com sucesso!');
-    }, 1000);
+    } catch (error) {
+      console.error('Error updating cost center:', error);
+      toast.error('Erro ao atualizar centro de custo.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Handle form submission (create or update)
