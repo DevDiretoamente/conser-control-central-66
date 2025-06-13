@@ -1,6 +1,5 @@
-
 import { v4 as uuidv4 } from 'uuid';
-import { Vehicle, VehicleDocument, Maintenance, FuelRecord, FleetDashboardData, FleetFilter, MaintenanceFilter } from '@/types/frota';
+import { Vehicle, VehicleDocument, Maintenance, FuelRecord, FleetDashboardData, FleetFilter, MaintenanceFilter, DocumentFilter, DocumentRenewal } from '@/types/frota';
 
 const VEHICLES_STORAGE_KEY = 'frota_vehicles';
 const DOCUMENTS_STORAGE_KEY = 'frota_documents';
@@ -102,9 +101,8 @@ export class FrotaService {
       const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
       
       vehicles = vehicles.filter(v => {
-        return v.ipvaExpiryDate && new Date(v.ipvaExpiryDate) <= thirtyDaysFromNow ||
-               v.insuranceExpiryDate && new Date(v.insuranceExpiryDate) <= thirtyDaysFromNow ||
-               v.licensingExpiryDate && new Date(v.licensingExpiryDate) <= thirtyDaysFromNow;
+        const vehicleDocuments = this.getVehicleDocuments(v.id);
+        return vehicleDocuments.some(doc => new Date(doc.expiryDate) <= thirtyDaysFromNow);
       });
     }
 
@@ -116,23 +114,29 @@ export class FrotaService {
     return vehicles;
   }
 
-  // Documents CRUD
+  // Enhanced Documents CRUD with new features
   static getVehicleDocuments(vehicleId: string): VehicleDocument[] {
     const data = localStorage.getItem(DOCUMENTS_STORAGE_KEY);
     const documents: VehicleDocument[] = data ? JSON.parse(data) : [];
-    return documents.filter(d => d.vehicleId === vehicleId);
+    const vehicleDocuments = documents.filter(d => d.vehicleId === vehicleId);
+    
+    // Update document status based on expiry dates
+    return vehicleDocuments.map(doc => ({
+      ...doc,
+      status: this.calculateDocumentStatus(doc.expiryDate, doc.reminderDays)
+    }));
   }
 
-  static createDocument(document: Omit<VehicleDocument, 'id' | 'createdAt' | 'status'>): VehicleDocument {
+  static createDocument(document: Omit<VehicleDocument, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'renewalHistory'>): VehicleDocument {
     const now = new Date();
-    const expiryDate = new Date(document.expiryDate);
-    const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     
     const newDocument: VehicleDocument = {
       ...document,
       id: uuidv4(),
-      status: daysUntilExpiry < 0 ? 'expired' : daysUntilExpiry <= document.reminderDays ? 'expiring_soon' : 'valid',
-      createdAt: now.toISOString()
+      status: this.calculateDocumentStatus(document.expiryDate, document.reminderDays),
+      renewalHistory: [],
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString()
     };
 
     const documents = this.getAllDocuments();
@@ -147,9 +151,37 @@ export class FrotaService {
     
     if (index === -1) return null;
 
-    documents[index] = { ...documents[index], ...updates };
+    const oldDocument = documents[index];
+    const updatedDocument = {
+      ...oldDocument,
+      ...updates,
+      status: this.calculateDocumentStatus(
+        updates.expiryDate || oldDocument.expiryDate,
+        updates.reminderDays || oldDocument.reminderDays
+      ),
+      updatedAt: new Date().toISOString()
+    };
+
+    // If expiry date changed, add to renewal history
+    if (updates.expiryDate && updates.expiryDate !== oldDocument.expiryDate) {
+      const renewal: DocumentRenewal = {
+        id: uuidv4(),
+        renewalDate: new Date().toISOString(),
+        previousExpiryDate: oldDocument.expiryDate,
+        newExpiryDate: updates.expiryDate,
+        cost: updates.value,
+        notes: updates.description || 'Documento renovado'
+      };
+      
+      updatedDocument.renewalHistory = [
+        ...(oldDocument.renewalHistory || []),
+        renewal
+      ];
+    }
+
+    documents[index] = updatedDocument;
     localStorage.setItem(DOCUMENTS_STORAGE_KEY, JSON.stringify(documents));
-    return documents[index];
+    return updatedDocument;
   }
 
   static deleteDocument(id: string): boolean {
@@ -160,6 +192,37 @@ export class FrotaService {
 
     localStorage.setItem(DOCUMENTS_STORAGE_KEY, JSON.stringify(filteredDocuments));
     return true;
+  }
+
+  static getExpiringDocuments(days: number = 30): VehicleDocument[] {
+    const allDocuments = this.getAllDocuments();
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() + days);
+
+    return allDocuments.filter(doc => {
+      const expiryDate = new Date(doc.expiryDate);
+      return expiryDate <= cutoffDate && expiryDate > new Date();
+    });
+  }
+
+  static getExpiredDocuments(): VehicleDocument[] {
+    const allDocuments = this.getAllDocuments();
+    const today = new Date();
+
+    return allDocuments.filter(doc => {
+      const expiryDate = new Date(doc.expiryDate);
+      return expiryDate < today;
+    });
+  }
+
+  private static calculateDocumentStatus(expiryDate: string, reminderDays: number): VehicleDocument['status'] {
+    const now = new Date();
+    const expiry = new Date(expiryDate);
+    const daysUntilExpiry = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilExpiry < 0) return 'expired';
+    if (daysUntilExpiry <= reminderDays) return 'expiring_soon';
+    return 'valid';
   }
 
   private static getAllDocuments(): VehicleDocument[] {
@@ -325,13 +388,13 @@ export class FrotaService {
     const vehicles = this.getVehicles();
     const maintenances = this.getMaintenances();
     const fuelRecords = this.getFuelRecords();
-    const documents = this.getAllDocuments();
+    const allDocuments = this.getAllDocuments();
 
     const now = new Date();
     const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    const expiringDocuments = documents.filter(d => 
-      new Date(d.expiryDate) <= thirtyDaysFromNow && d.status !== 'expired'
+    const expiringDocuments = allDocuments.filter(d => 
+      new Date(d.expiryDate) <= thirtyDaysFromNow && new Date(d.expiryDate) > now
     ).length;
 
     const pendingMaintenances = maintenances.filter(m => 
@@ -528,6 +591,10 @@ export class FrotaService {
 
   static exportFuelData(): FuelRecord[] {
     return this.getFuelRecords();
+  }
+
+  static exportDocumentsData(): VehicleDocument[] {
+    return this.getAllDocuments();
   }
 
   // Clear all data

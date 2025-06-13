@@ -1,4 +1,3 @@
-
 export interface Vehicle {
   id: string;
   type: 'car' | 'truck' | 'heavy_equipment' | 'motorcycle' | 'van';
@@ -30,15 +29,33 @@ export interface Vehicle {
 export interface VehicleDocument {
   id: string;
   vehicleId: string;
-  type: 'ipva' | 'insurance' | 'licensing' | 'inspection' | 'other';
+  type: 'crlv' | 'ipva' | 'insurance' | 'licensing' | 'inspection' | 'aet' | 'special_permit' | 'certificate' | 'custom' | 'other';
+  title: string;
   description: string;
-  expiryDate: string;
+  documentNumber?: string;
   issueDate: string;
+  expiryDate: string;
+  issuingAuthority?: string;
   value?: number;
+  pdfFile?: string; // Base64 encoded PDF or file reference
+  fileName?: string;
   attachments: string[];
   status: 'valid' | 'expired' | 'expiring_soon';
   reminderDays: number;
+  autoRenew?: boolean;
+  renewalHistory: DocumentRenewal[];
+  customFields?: Record<string, any>;
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface DocumentRenewal {
+  id: string;
+  renewalDate: string;
+  previousExpiryDate: string;
+  newExpiryDate: string;
+  cost?: number;
+  notes?: string;
 }
 
 export interface Maintenance {
@@ -122,4 +139,14 @@ export interface MaintenanceFilter {
   dateTo?: string;
   costFrom?: number;
   costTo?: number;
+}
+
+export interface DocumentFilter {
+  search?: string;
+  vehicleId?: string;
+  type?: VehicleDocument['type'] | 'all';
+  status?: VehicleDocument['status'] | 'all';
+  expiryDateFrom?: string;
+  expiryDateTo?: string;
+  issuingAuthority?: string;
 }
