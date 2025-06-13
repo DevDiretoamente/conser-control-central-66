@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,9 +59,9 @@ const CustomerManagement: React.FC = () => {
     if (isDetailsOpen) setIsDetailsOpen(false);
   };
 
-  const handleDeleteCustomer = (customerId: string) => {
+  const handleDeleteCustomer = (customer: Customer) => {
     if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
-      if (CustomerService.delete(customerId)) {
+      if (CustomerService.delete(customer.id)) {
         loadCustomers();
         toast.success('Cliente excluído com sucesso!');
       } else {

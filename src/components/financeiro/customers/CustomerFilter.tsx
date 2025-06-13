@@ -1,69 +1,148 @@
-// src/components/financeiro/customers/CustomerManagement.tsx
 
-import React, { useState, useEffect } from 'react';
-import CustomerFilter from './CustomerFilter';
-import CustomerTable from './CustomerTable';
-import { Customer } from '@/models/customer';
+import React, { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PersonType } from '@/types/financeiro';
 
-type FilterState = {
-  search: string;
-  type: 'all' | 'physical' | 'legal';
-};
+interface CustomerFilterProps {
+  onFilterChange: (filters: {
+    searchTerm?: string;
+    type?: PersonType | 'all';
+    status?: boolean;
+  }) => void;
+}
 
-const CustomerManagement: React.FC = () => {
-  const [filters, setFilters] = useState<FilterState>({ search: '', type: 'all' });
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+const filterSchema = z.object({
+  searchTerm: z.string().optional(),
+  type: z.enum(['all', 'physical', 'legal']).optional(),
+  status: z.boolean().optional(),
+});
 
-  // Sempre que os filtros mudarem, recarrega a lista
-  useEffect(() => {
-    fetchCustomers(filters);
-  }, [filters]);
+type FilterValues = z.infer<typeof filterSchema>;
 
-  const fetchCustomers = async (filters: FilterState) => {
-    // Exemplo de fetch com filtros
-    // const { data } = await api.get<Customer[]>('/customers', { params: filters });
-    // setCustomers(data);
+const CustomerFilter: React.FC<CustomerFilterProps> = ({ onFilterChange }) => {
+  const form = useForm<FilterValues>({
+    resolver: zodResolver(filterSchema),
+    defaultValues: {
+      searchTerm: '',
+      type: 'all',
+      status: undefined,
+    },
+  });
+
+  const onSubmit = (data: FilterValues) => {
+    onFilterChange({
+      searchTerm: data.searchTerm,
+      type: data.type === 'all' ? undefined : data.type as PersonType,
+      status: data.status,
+    });
   };
 
-  // Handler para campo de busca
-  const handleSearch = (term: string) => {
-    setFilters(prev => ({ ...prev, search: term }));
-  };
-
-  // Handler para filtro de tipo (all / physical / legal)
-  const handleTypeFilter = (type: FilterState['type']) => {
-    setFilters(prev => ({ ...prev, type }));
-  };
-
-  // Agora recebe o objeto Customer inteiro
-  const handleSelectCustomer = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    // faça algo com o cliente selecionado...
+  const handleReset = () => {
+    form.reset({
+      searchTerm: '',
+      type: 'all',
+      status: undefined,
+    });
+    
+    onFilterChange({});
   };
 
   return (
-    <div>
-      <CustomerFilter
-        onSearch={handleSearch}
-        onTypeFilter={handleTypeFilter}
-      />
+    <Card className="p-4">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Search Term */}
+            <FormField
+              control={form.control}
+              name="searchTerm"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <FormControl>
+                      <Input
+                        placeholder="Buscar clientes..."
+                        className="pl-8"
+                        {...field}
+                      />
+                    </FormControl>
+                  </div>
+                </FormItem>
+              )}
+            />
 
-      <CustomerTable
-        customers={customers}
-        onSelectCustomer={handleSelectCustomer}
-      />
+            {/* Type */}
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Tipo de Cliente" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os Tipos</SelectItem>
+                      <SelectItem value="physical">Pessoa Física</SelectItem>
+                      <SelectItem value="legal">Pessoa Jurídica</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
 
-      {selectedCustomer && (
-        <div className="mt-4">
-          <h2>Cliente selecionado:</h2>
-          <p>{selectedCustomer.name}</p>
-          {/* etc */}
-        </div>
-      )}
-    </div>
+            {/* Status */}
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <Select 
+                    onValueChange={(value) => field.onChange(value === 'true')} 
+                    defaultValue={field.value?.toString()}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="undefined">Todos os Status</SelectItem>
+                      <SelectItem value="true">Ativo</SelectItem>
+                      <SelectItem value="false">Inativo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button type="submit">Filtrar</Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleReset}
+            >
+              Limpar Filtros
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </Card>
   );
 };
 
-export default CustomerManagement;
-
+export default CustomerFilter;
