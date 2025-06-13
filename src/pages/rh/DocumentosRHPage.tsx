@@ -114,6 +114,42 @@ const DocumentosRHPage: React.FC = () => {
     setFilteredCertificacoes(filtered);
   };
 
+  const handleDocumentoSubmit = async (data: any) => {
+    try {
+      if (editingDocumento) {
+        await documentosRHService.updateDocumento(editingDocumento.id, data);
+        toast.success('Documento atualizado com sucesso');
+      } else {
+        await documentosRHService.createDocumento(data);
+        toast.success('Documento criado com sucesso');
+      }
+      setIsDocumentoFormOpen(false);
+      setEditingDocumento(null);
+      loadData();
+    } catch (error) {
+      console.error('Erro ao salvar documento:', error);
+      toast.error('Erro ao salvar documento');
+    }
+  };
+
+  const handleCertificacaoSubmit = async (data: any) => {
+    try {
+      if (editingCertificacao) {
+        await documentosRHService.updateCertificacao(editingCertificacao.id, data);
+        toast.success('Certificação atualizada com sucesso');
+      } else {
+        await documentosRHService.createCertificacao(data);
+        toast.success('Certificação criada com sucesso');
+      }
+      setIsCertificacaoFormOpen(false);
+      setEditingCertificacao(null);
+      loadData();
+    } catch (error) {
+      console.error('Erro ao salvar certificação:', error);
+      toast.error('Erro ao salvar certificação');
+    }
+  };
+
   const getDocumentoTypeName = (tipo: DocumentoRH['tipo']) => {
     const typeMap = {
       contrato: 'Contrato',
@@ -331,10 +367,125 @@ const DocumentosRHPage: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent>
-              {/* Similar structure for certificações */}
-              <div className="text-center py-8">
-                <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Sistema de certificações será implementado</p>
+              {/* Filtros para Certificações */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar certificações..."
+                    value={certificacaoFilter.search || ''}
+                    onChange={(e) => setCertificacaoFilter({ ...certificacaoFilter, search: e.target.value })}
+                    className="pl-9"
+                  />
+                </div>
+                <Select
+                  value={certificacaoFilter.categoria || 'all'}
+                  onValueChange={(value) => setCertificacaoFilter({ ...certificacaoFilter, categoria: value === 'all' ? undefined : value as Certificacao['categoria'] })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as categorias</SelectItem>
+                    <SelectItem value="tecnica">Técnica</SelectItem>
+                    <SelectItem value="seguranca">Segurança</SelectItem>
+                    <SelectItem value="qualidade">Qualidade</SelectItem>
+                    <SelectItem value="gestao">Gestão</SelectItem>
+                    <SelectItem value="idioma">Idioma</SelectItem>
+                    <SelectItem value="outros">Outros</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={certificacaoFilter.status || 'all'}
+                  onValueChange={(value) => setCertificacaoFilter({ ...certificacaoFilter, status: value === 'all' ? undefined : value as Certificacao['status'] })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os status</SelectItem>
+                    <SelectItem value="valida">Válida</SelectItem>
+                    <SelectItem value="vencida">Vencida</SelectItem>
+                    <SelectItem value="em_renovacao">Em Renovação</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Lista de Certificações */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredCertificacoes.map((certificacao) => {
+                  const isVencida = checkVencimento(certificacao.dataVencimento);
+                  
+                  return (
+                    <Card key={certificacao.id} className="hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-base">{certificacao.nome}</CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                              {certificacao.entidadeCertificadora}
+                            </p>
+                          </div>
+                          {getStatusBadge(certificacao.status, isVencida)}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Obtida em:</span>
+                            <p className="font-medium">
+                              {new Date(certificacao.dataObtencao).toLocaleDateString('pt-BR')}
+                            </p>
+                          </div>
+                          {certificacao.dataVencimento && (
+                            <div>
+                              <span className="text-muted-foreground">Vencimento:</span>
+                              <p className="font-medium">
+                                {new Date(certificacao.dataVencimento).toLocaleDateString('pt-BR')}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {certificacao.numero && (
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">Número:</span>
+                            <span className="ml-2 font-mono">{certificacao.numero}</span>
+                          </div>
+                        )}
+
+                        {isVencida && (
+                          <div className="flex items-center gap-2 p-2 bg-red-50 rounded-md">
+                            <AlertTriangle className="h-4 w-4 text-red-600" />
+                            <span className="text-sm text-red-800">Certificação vencida</span>
+                          </div>
+                        )}
+
+                        <div className="flex justify-between items-center pt-2 border-t">
+                          <Badge variant="outline">{certificacao.categoria}</Badge>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                setEditingCertificacao(certificacao);
+                                setIsCertificacaoFormOpen(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -349,10 +500,14 @@ const DocumentosRHPage: React.FC = () => {
               {editingDocumento ? 'Editar Documento' : 'Novo Documento RH'}
             </DialogTitle>
           </DialogHeader>
-          {/* DocumentoRHForm será implementado */}
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">Formulário será implementado</p>
-          </div>
+          <DocumentoRHForm
+            documento={editingDocumento || undefined}
+            onSubmit={handleDocumentoSubmit}
+            onCancel={() => {
+              setIsDocumentoFormOpen(false);
+              setEditingDocumento(null);
+            }}
+          />
         </DialogContent>
       </Dialog>
 
@@ -364,10 +519,14 @@ const DocumentosRHPage: React.FC = () => {
               {editingCertificacao ? 'Editar Certificação' : 'Nova Certificação'}
             </DialogTitle>
           </DialogHeader>
-          {/* CertificacaoForm será implementado */}
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">Formulário será implementado</p>
-          </div>
+          <CertificacaoForm
+            certificacao={editingCertificacao || undefined}
+            onSubmit={handleCertificacaoSubmit}
+            onCancel={() => {
+              setIsCertificacaoFormOpen(false);
+              setEditingCertificacao(null);
+            }}
+          />
         </DialogContent>
       </Dialog>
     </div>
