@@ -9,7 +9,9 @@ import CustomerManagement from '@/components/financeiro/customers/CustomerManage
 import WorkManagement from '@/components/financeiro/works/WorkManagement';
 import FinancialReports from '@/components/financeiro/reports/FinancialReports';
 import FinancialDashboard from '@/components/financeiro/dashboard/FinancialDashboard';
-import { FileText, BarChart3, FolderIcon, Users, User, Building2, Home } from 'lucide-react';
+import BudgetManagement from '@/components/financeiro/budget/BudgetManagement';
+import AuditHistory from '@/components/financeiro/audit/AuditHistory';
+import { FileText, BarChart3, FolderIcon, Users, User, Building2, Home, DollarSign, History } from 'lucide-react';
 
 const FinanceiroPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -38,7 +40,7 @@ const FinanceiroPage: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-7 mb-8">
+        <TabsList className="grid w-full grid-cols-9 mb-8">
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
             <Home className="h-4 w-4" />
             <span>Dashboard</span>
@@ -63,9 +65,17 @@ const FinanceiroPage: React.FC = () => {
             <FileText className="h-4 w-4" />
             <span>Notas Fiscais</span>
           </TabsTrigger>
+          <TabsTrigger value="budget" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            <span>Orçamentos</span>
+          </TabsTrigger>
           <TabsTrigger value="reports" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             <span>Relatórios</span>
+          </TabsTrigger>
+          <TabsTrigger value="audit" className="flex items-center gap-2">
+            <History className="h-4 w-4" />
+            <span>Histórico</span>
           </TabsTrigger>
         </TabsList>
 
@@ -99,9 +109,19 @@ const FinanceiroPage: React.FC = () => {
           <InvoiceManagement />
         </TabsContent>
 
+        {/* Budget Tab */}
+        <TabsContent value="budget">
+          <BudgetManagement />
+        </TabsContent>
+
         {/* Reports Tab */}
         <TabsContent value="reports">
           <FinancialReports />
+        </TabsContent>
+
+        {/* Audit History Tab */}
+        <TabsContent value="audit">
+          <AuditHistory />
         </TabsContent>
       </Tabs>
     </div>

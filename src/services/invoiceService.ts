@@ -1,6 +1,7 @@
-
 import { Invoice, Payment } from '@/types/financeiro';
 import { v4 as uuidv4 } from 'uuid';
+import { AuditService } from '@/services/auditService';
+import { BudgetService } from '@/services/budgetService';
 
 const STORAGE_KEY = 'financeiro_invoices';
 const PAYMENTS_STORAGE_KEY = 'financeiro_payments';
@@ -30,6 +31,14 @@ export class InvoiceService {
     invoices.push(invoice);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(invoices));
     
+    // Log audit
+    AuditService.logCreate('invoice', invoice.id, invoice.number, invoice);
+    
+    // Update budget if applicable
+    if (invoice.status === 'paid' || invoice.status === 'released') {
+      BudgetService.updateSpentAmount(invoice.costCenterId, invoice.totalAmount);
+    }
+    
     return invoice;
   }
 
@@ -39,23 +48,42 @@ export class InvoiceService {
     
     if (index === -1) return null;
     
-    invoices[index] = {
+    const oldInvoice = { ...invoices[index] };
+    const updatedInvoice = {
       ...invoices[index],
       ...invoiceData,
       updatedAt: new Date().toISOString(),
     };
     
+    invoices[index] = updatedInvoice;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(invoices));
-    return invoices[index];
+    
+    // Log audit
+    AuditService.logUpdate('invoice', id, updatedInvoice.number, oldInvoice, updatedInvoice);
+    
+    // Update budget if status changed to paid/released
+    if ((invoiceData.status === 'paid' || invoiceData.status === 'released') && 
+        oldInvoice.status !== 'paid' && oldInvoice.status !== 'released') {
+      BudgetService.updateSpentAmount(updatedInvoice.costCenterId, updatedInvoice.totalAmount);
+    }
+    
+    return updatedInvoice;
   }
 
   static delete(id: string): boolean {
     const invoices = this.getAll();
+    const invoice = invoices.find(inv => inv.id === id);
     const filteredInvoices = invoices.filter(invoice => invoice.id !== id);
     
     if (filteredInvoices.length === invoices.length) return false;
     
     localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredInvoices));
+    
+    // Log audit
+    if (invoice) {
+      AuditService.logDelete('invoice', id, invoice.number);
+    }
+    
     return true;
   }
 

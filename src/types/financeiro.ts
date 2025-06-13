@@ -133,6 +133,7 @@ export interface Invoice {
   type: InvoiceType;
   description: string;
   attachment?: string; // URL to uploaded file
+  attachments?: string[]; // Multiple attachments support
   notes?: string;
   items: InvoiceItem[];
   payments: Payment[];
