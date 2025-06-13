@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Stethoscope, FileText, BadgeCheck, Clock } from 'lucide-react';
+import { Users, Stethoscope, FileText, BadgeCheck, Clock, Award } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const RHPage: React.FC = () => {
@@ -100,13 +100,13 @@ const RHPage: React.FC = () => {
           </Card>
         )}
 
-        {/* Cartão de Documentos */}
+        {/* Cartão de Documentos RH */}
         {mostraTelas.documentos && (
           <Card className="overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 pb-4">
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                Documentos
+                Documentos RH
               </CardTitle>
               <CardDescription>
                 Gestão de documentos e contratos
@@ -118,8 +118,8 @@ const RHPage: React.FC = () => {
               </p>
             </CardContent>
             <CardFooter>
-              <Button className="w-full" variant="outline" onClick={() => navigate('/rh/documentos')}>
-                Em breve
+              <Button className="w-full" onClick={() => navigate('/rh/documentos')}>
+                Acessar Documentos
               </Button>
             </CardFooter>
           </Card>
@@ -130,7 +130,7 @@ const RHPage: React.FC = () => {
           <Card className="overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 pb-4">
               <CardTitle className="flex items-center gap-2">
-                <BadgeCheck className="h-6 w-6 text-red-600 dark:text-red-400" />
+                <Award className="h-6 w-6 text-red-600 dark:text-red-400" />
                 Certificações
               </CardTitle>
               <CardDescription>
@@ -143,12 +143,35 @@ const RHPage: React.FC = () => {
               </p>
             </CardContent>
             <CardFooter>
-              <Button className="w-full" variant="outline" onClick={() => navigate('/rh/certificacoes')}>
-                Em breve
+              <Button className="w-full" onClick={() => navigate('/rh/certificacoes')}>
+                Acessar Certificações
               </Button>
             </CardFooter>
           </Card>
         )}
+
+        {/* Cartão de Relatórios */}
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 pb-4">
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+              Relatórios
+            </CardTitle>
+            <CardDescription>
+              Relatórios para contabilidade
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <p className="mb-2 text-sm text-muted-foreground">
+              Gere relatórios de horas trabalhadas, vale refeição e outros.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button className="w-full" onClick={() => navigate('/rh/relatorios')}>
+              Acessar Relatórios
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );
