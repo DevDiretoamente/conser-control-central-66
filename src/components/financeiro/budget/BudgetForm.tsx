@@ -148,7 +148,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
                     <SelectContent>
                       {costCenters.map((costCenter) => (
                         <SelectItem
-                          key={costCenter.id}         // corrigido aqui
+                          key={costCenter.id}
                           value={costCenter.id}
                         >
                           {costCenter.name}
