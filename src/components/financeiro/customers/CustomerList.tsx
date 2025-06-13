@@ -1,92 +1,70 @@
 
-import React from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react';
+// src/components/financeiro/customers/CustomerManagement.tsx
+
+import React, { useState, useEffect } from 'react';
+import CustomerFilter from './CustomerFilter';
+import CustomerList from './CustomerList';
 import { Customer } from '@/types/financeiro';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
-interface CustomerListProps {
-  customers: Customer[];
-  onEdit: (customer: Customer) => void;
-  onDelete: (customer: Customer) => void;
-  onViewDetails: (customer: Customer) => void;
-}
+type FilterState = {
+  search: string;
+  type: 'all' | 'physical' | 'legal';
+};
 
-const CustomerList: React.FC<CustomerListProps> = ({ 
-  customers, 
-  onEdit, 
-  onDelete,
-  onViewDetails
-}) => {
+const CustomerManagement: React.FC = () => {
+  const [filters, setFilters] = useState<FilterState>({ search: '', type: 'all' });
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+
+  useEffect(() => {
+    // TODO: buscar lista de clientes passando `filters` como parâmetros
+  }, [filters]);
+
+  const handleSearch = (term: string) => {
+    setFilters(prev => ({ ...prev, search: term }));
+  };
+
+  const handleTypeFilter = (type: FilterState['type']) => {
+    setFilters(prev => ({ ...prev, type }));
+  };
+
+  const handleViewDetails = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    // TODO: abrir modal ou rota de detalhe
+  };
+
+  const handleEdit = (customer: Customer) => {
+    // TODO: navegar para form de edição, ex: router.push(`/customers/edit/${customer.id}`)
+  };
+
+  const handleDelete = (customer: Customer) => {
+    // TODO: chamar API de deleção e recarregar lista
+  };
+
   return (
-    <div className="rounded-md border">
-      <ScrollArea className="h-[60vh]">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Documento</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Cidade/UF</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {customers.map((customer) => (
-              <TableRow key={customer.id}>
-                <TableCell className="font-medium">{customer.name}</TableCell>
-                <TableCell>
-                  <Badge variant={customer.type === 'physical' ? 'outline' : 'default'}>
-                    {customer.type === 'physical' ? 'Pessoa Física' : 'Pessoa Jurídica'}
-                  </Badge>
-                </TableCell>
-                <TableCell>{customer.document}</TableCell>
-                <TableCell>{customer.email}</TableCell>
-                <TableCell>
-                  {customer.city ? `${customer.city}${customer.state ? `/${customer.state}` : ''}` : '-'}
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Abrir menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onViewDetails(customer)}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        Detalhes
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onEdit(customer)}>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Editar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onDelete(customer)}>
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Excluir
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </ScrollArea>
+    <div>
+      <CustomerFilter
+        onSearch={handleSearch}
+        onTypeFilter={handleTypeFilter}
+      />
+
+      <CustomerList
+        customers={customers}
+        onViewDetails={handleViewDetails}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+
+      {selectedCustomer && (
+        <div className="mt-4 p-4 border rounded">
+          <h3>Detalhes do Cliente:</h3>
+          <p><strong>Nome:</strong> {selectedCustomer.name}</p>
+          <p><strong>Documento:</strong> {selectedCustomer.document}</p>
+          {/* etc */}
+        </div>
+      )}
     </div>
   );
 };
 
-export default CustomerList;
+export default CustomerManagement;
