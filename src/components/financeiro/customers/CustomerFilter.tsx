@@ -1,85 +1,69 @@
+// src/components/financeiro/customers/CustomerManagement.tsx
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, FilterIcon } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import CustomerFilter from './CustomerFilter';
+import CustomerTable from './CustomerTable';
+import { Customer } from '@/models/customer';
 
-interface CustomerFilterProps {
-  onSearch: (term: string) => void;
-  onTypeFilter: (type: 'all' | 'physical' | 'legal') => void;
-}
+type FilterState = {
+  search: string;
+  type: 'all' | 'physical' | 'legal';
+};
 
-const CustomerFilter: React.FC<CustomerFilterProps> = ({ onSearch, onTypeFilter }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isExpanded, setIsExpanded] = useState(false);
+const CustomerManagement: React.FC = () => {
+  const [filters, setFilters] = useState<FilterState>({ search: '', type: 'all' });
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    onSearch(e.target.value);
+  // Sempre que os filtros mudarem, recarrega a lista
+  useEffect(() => {
+    fetchCustomers(filters);
+  }, [filters]);
+
+  const fetchCustomers = async (filters: FilterState) => {
+    // Exemplo de fetch com filtros
+    // const { data } = await api.get<Customer[]>('/customers', { params: filters });
+    // setCustomers(data);
   };
 
-  const handleTypeChange = (value: string) => {
-    onTypeFilter(value as 'all' | 'physical' | 'legal');
+  // Handler para campo de busca
+  const handleSearch = (term: string) => {
+    setFilters(prev => ({ ...prev, search: term }));
   };
 
-  const handleClear = () => {
-    setSearchTerm('');
-    onSearch('');
-    onTypeFilter('all');
+  // Handler para filtro de tipo (all / physical / legal)
+  const handleTypeFilter = (type: FilterState['type']) => {
+    setFilters(prev => ({ ...prev, type }));
+  };
+
+  // Agora recebe o objeto Customer inteiro
+  const handleSelectCustomer = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    // faça algo com o cliente selecionado...
   };
 
   return (
-    <div className="mb-4">
-      <div className="flex flex-col sm:flex-row gap-4 mb-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Buscar cliente..."
-            className="pl-8"
-            value={searchTerm}
-            onChange={handleSearchChange}
-          />
+    <div>
+      <CustomerFilter
+        onSearch={handleSearch}
+        onTypeFilter={handleTypeFilter}
+      />
+
+      <CustomerTable
+        customers={customers}
+        onSelectCustomer={handleSelectCustomer}
+      />
+
+      {selectedCustomer && (
+        <div className="mt-4">
+          <h2>Cliente selecionado:</h2>
+          <p>{selectedCustomer.name}</p>
+          {/* etc */}
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            <FilterIcon className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" onClick={handleClear}>
-            Limpar filtros
-          </Button>
-        </div>
-      </div>
-      
-      {isExpanded && (
-        <Card className="mt-2">
-          <CardContent className="pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-1 block">Tipo</label>
-                <Select defaultValue="all" onValueChange={handleTypeChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos os tipos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="physical">Pessoa Física</SelectItem>
-                    <SelectItem value="legal">Pessoa Jurídica</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       )}
     </div>
   );
 };
 
-export default CustomerFilter;
+export default CustomerManagement;
+
