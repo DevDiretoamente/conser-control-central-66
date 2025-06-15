@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -82,15 +81,6 @@ const CertificacaoForm: React.FC<CertificacaoFormProps> = ({
     onSubmit(submitData);
   };
 
-  const categorias = [
-    { value: 'tecnica', label: 'Técnica' },
-    { value: 'seguranca', label: 'Segurança' },
-    { value: 'qualidade', label: 'Qualidade' },
-    { value: 'gestao', label: 'Gestão' },
-    { value: 'idioma', label: 'Idioma' },
-    { value: 'outros', label: 'Outros' }
-  ];
-
   if (loading) {
     return <div className="flex justify-center p-4">Carregando...</div>;
   }
@@ -100,7 +90,6 @@ const CertificacaoForm: React.FC<CertificacaoFormProps> = ({
       <CertificacaoBasicSection
         form={form}
         funcionarios={funcionarios}
-        categorias={categorias}
       />
 
       <CertificacaoDetailsSection form={form} />

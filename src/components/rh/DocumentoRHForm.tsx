@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -109,7 +108,6 @@ const DocumentoRHForm: React.FC<DocumentoRHFormProps> = ({
       <DocumentoRHBasicSection
         form={form}
         funcionarios={funcionarios}
-        tiposDocumento={tiposDocumento}
       />
 
       <DocumentoRHDatesSection form={form} />
