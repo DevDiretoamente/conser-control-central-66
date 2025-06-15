@@ -30,6 +30,19 @@ const CertificacaoCard: React.FC<CertificacaoCardProps> = ({
     return config ? <Badge className={config.className}>{config.label}</Badge> : null;
   };
 
+  const getCategoriaLabel = (categoria: string) => {
+    const categoriaMap = {
+      tecnica: 'Técnica',
+      seguranca: 'Segurança',
+      qualidade: 'Qualidade',
+      gestao: 'Gestão',
+      idioma: 'Idioma',
+      outros: 'Outros'
+    } as const;
+    
+    return categoriaMap[categoria as keyof typeof categoriaMap] || categoria;
+  };
+
   const checkVencimento = (dataVencimento?: string) => {
     if (!dataVencimento) return false;
     const hoje = new Date();
@@ -85,7 +98,7 @@ const CertificacaoCard: React.FC<CertificacaoCardProps> = ({
         )}
 
         <div className="flex justify-between items-center pt-2 border-t">
-          <Badge variant="outline">{certificacao.categoria}</Badge>
+          <Badge variant="outline">{getCategoriaLabel(certificacao.categoria)}</Badge>
           <div className="flex gap-1">
             <Button variant="ghost" size="sm">
               <Eye className="h-4 w-4" />
