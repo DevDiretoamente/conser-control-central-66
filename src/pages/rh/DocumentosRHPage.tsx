@@ -10,6 +10,9 @@ import CertificacaoForm from '@/components/rh/CertificacaoForm';
 import DocumentosTab from '@/components/rh/tabs/DocumentosTab';
 import CertificacoesTab from '@/components/rh/tabs/CertificacoesTab';
 import RelatoriosRH from '@/components/rh/RelatoriosRH';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+
+const PAGE_SIZE = 20;
 
 const DocumentosRHPage: React.FC = () => {
   const [documentos, setDocumentos] = useState<DocumentoRH[]>([]);
@@ -25,6 +28,11 @@ const DocumentosRHPage: React.FC = () => {
   const [editingCertificacao, setEditingCertificacao] = useState<Certificacao | null>(null);
   
   const [loading, setLoading] = useState(true);
+  const [docPage, setDocPage] = useState(1);
+  const [certPage, setCertPage] = useState(1);
+
+  const debouncedDocumentoSearch = useDebouncedValue(documentoFilter?.search || '', 300);
+  const debouncedCertificacaoSearch = useDebouncedValue(certificacaoFilter?.search || '', 300);
 
   useEffect(() => {
     loadData();
@@ -32,11 +40,14 @@ const DocumentosRHPage: React.FC = () => {
 
   useEffect(() => {
     applyDocumentoFilters();
-  }, [documentos, documentoFilter]);
+  }, [documentos, debouncedDocumentoSearch, documentoFilter.tipo, documentoFilter.status]);
 
   useEffect(() => {
     applyCertificacaoFilters();
-  }, [certificacoes, certificacaoFilter]);
+  }, [certificacoes, debouncedCertificacaoSearch, certificacaoFilter.categoria, certificacaoFilter.status]);
+
+  useEffect(() => { setDocPage(1); }, [debouncedDocumentoSearch, documentoFilter.tipo, documentoFilter.status]);
+  useEffect(() => { setCertPage(1); }, [debouncedCertificacaoSearch, certificacaoFilter.categoria, certificacaoFilter.status]);
 
   const loadData = async () => {
     try {
@@ -58,8 +69,8 @@ const DocumentosRHPage: React.FC = () => {
   const applyDocumentoFilters = () => {
     let filtered = [...documentos];
 
-    if (documentoFilter.search) {
-      const search = documentoFilter.search.toLowerCase();
+    if (debouncedDocumentoSearch) {
+      const search = debouncedDocumentoSearch.toLowerCase();
       filtered = filtered.filter(d => 
         d.titulo.toLowerCase().includes(search) ||
         d.descricao.toLowerCase().includes(search)
@@ -80,8 +91,8 @@ const DocumentosRHPage: React.FC = () => {
   const applyCertificacaoFilters = () => {
     let filtered = [...certificacoes];
 
-    if (certificacaoFilter.search) {
-      const search = certificacaoFilter.search.toLowerCase();
+    if (debouncedCertificacaoSearch) {
+      const search = debouncedCertificacaoSearch.toLowerCase();
       filtered = filtered.filter(c => 
         c.nome.toLowerCase().includes(search) ||
         c.entidadeCertificadora.toLowerCase().includes(search)
@@ -145,6 +156,11 @@ const DocumentosRHPage: React.FC = () => {
     setIsCertificacaoFormOpen(true);
   };
 
+  const paginatedDocumentos = filteredDocumentos.slice((docPage - 1) * PAGE_SIZE, docPage * PAGE_SIZE);
+  const totalDocPages = Math.ceil(filteredDocumentos.length / PAGE_SIZE);
+  const paginatedCertificacoes = filteredCertificacoes.slice((certPage - 1) * PAGE_SIZE, certPage * PAGE_SIZE);
+  const totalCertPages = Math.ceil(filteredCertificacoes.length / PAGE_SIZE);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -175,23 +191,55 @@ const DocumentosRHPage: React.FC = () => {
         <TabsContent value="documentos">
           <DocumentosTab
             documentos={documentos}
-            filteredDocumentos={filteredDocumentos}
+            filteredDocumentos={paginatedDocumentos}
             documentoFilter={documentoFilter}
             setDocumentoFilter={setDocumentoFilter}
             onNewDocument={() => setIsDocumentoFormOpen(true)}
             onEditDocument={handleEditDocument}
           />
+          {/* Paginação Documentos */}
+          {totalDocPages > 1 && (
+            <div className="flex justify-center mt-4">
+              <button
+                className="px-3 py-1 mx-1 rounded bg-gray-100 hover:bg-gray-200"
+                onClick={() => setDocPage(p => Math.max(1, p - 1))}
+                disabled={docPage === 1}
+              >Anterior</button>
+              <span className="mx-2 text-sm">{docPage} / {totalDocPages}</span>
+              <button
+                className="px-3 py-1 mx-1 rounded bg-gray-100 hover:bg-gray-200"
+                onClick={() => setDocPage(p => Math.min(totalDocPages, p + 1))}
+                disabled={docPage === totalDocPages}
+              >Próxima</button>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="certificacoes">
           <CertificacoesTab
             certificacoes={certificacoes}
-            filteredCertificacoes={filteredCertificacoes}
+            filteredCertificacoes={paginatedCertificacoes}
             certificacaoFilter={certificacaoFilter}
             setCertificacaoFilter={setCertificacaoFilter}
             onNewCertification={() => setIsCertificacaoFormOpen(true)}
             onEditCertification={handleEditCertification}
           />
+          {/* Paginação Certificações */}
+          {totalCertPages > 1 && (
+            <div className="flex justify-center mt-4">
+              <button
+                className="px-3 py-1 mx-1 rounded bg-gray-100 hover:bg-gray-200"
+                onClick={() => setCertPage(p => Math.max(1, p - 1))}
+                disabled={certPage === 1}
+              >Anterior</button>
+              <span className="mx-2 text-sm">{certPage} / {totalCertPages}</span>
+              <button
+                className="px-3 py-1 mx-1 rounded bg-gray-100 hover:bg-gray-200"
+                onClick={() => setCertPage(p => Math.min(totalCertPages, p + 1))}
+                disabled={certPage === totalCertPages}
+              >Próxima</button>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="relatorios">
