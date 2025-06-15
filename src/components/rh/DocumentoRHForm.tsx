@@ -1,32 +1,16 @@
+
 import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { DocumentoRH } from '@/types/documentosRH';
 import { Funcionario } from '@/types/funcionario';
 import { funcionariosService } from '@/services/funcionariosService';
 import { toast } from 'sonner';
+import { useFormValidation } from '@/hooks/useFormValidation';
+import { documentoRHSchema, DocumentoRHFormData } from './forms/validation/documentoRHSchema';
 import DocumentUploader from '../funcionarios/DocumentUploader';
 import DocumentoRHBasicSection from './forms/sections/DocumentoRHBasicSection';
 import DocumentoRHDatesSection from './forms/sections/DocumentoRHDatesSection';
 import DocumentoRHObservationsSection from './forms/sections/DocumentoRHObservationsSection';
-
-const documentoRHSchema = z.object({
-  funcionarioId: z.string().min(1, 'Funcionário é obrigatório'),
-  tipo: z.enum(['contrato', 'termo_confidencialidade', 'acordo_horario', 'advertencia', 'elogio', 'avaliacao', 'ferias', 'atestado', 'licenca', 'rescisao', 'outros']),
-  titulo: z.string().min(1, 'Título é obrigatório'),
-  descricao: z.string().min(1, 'Descrição é obrigatória'),
-  dataDocumento: z.string().min(1, 'Data do documento é obrigatória'),
-  dataVencimento: z.string().optional(),
-  status: z.enum(['ativo', 'vencido', 'arquivado']),
-  assinado: z.boolean(),
-  dataAssinatura: z.string().optional(),
-  observacoes: z.string().optional(),
-  criadoPor: z.string().min(1, 'Criado por é obrigatório')
-});
-
-type DocumentoRHFormData = z.infer<typeof documentoRHSchema>;
 
 interface DocumentoRHFormProps {
   documento?: DocumentoRH;
@@ -43,21 +27,18 @@ const DocumentoRHForm: React.FC<DocumentoRHFormProps> = ({
   const [loading, setLoading] = React.useState(true);
   const [arquivo, setArquivo] = React.useState<File | null>(null);
 
-  const form = useForm<DocumentoRHFormData>({
-    resolver: zodResolver(documentoRHSchema),
-    defaultValues: {
-      funcionarioId: documento?.funcionarioId || '',
-      tipo: documento?.tipo || 'contrato',
-      titulo: documento?.titulo || '',
-      descricao: documento?.descricao || '',
-      dataDocumento: documento?.dataDocumento || new Date().toISOString().split('T')[0],
-      dataVencimento: documento?.dataVencimento || '',
-      status: documento?.status || 'ativo',
-      assinado: documento?.assinado || false,
-      dataAssinatura: documento?.dataAssinatura || '',
-      observacoes: documento?.observacoes || '',
-      criadoPor: 'Admin' // Substituir pela sessão do usuário
-    }
+  const form = useFormValidation(documentoRHSchema, {
+    funcionarioId: documento?.funcionarioId || '',
+    tipo: documento?.tipo || 'contrato',
+    titulo: documento?.titulo || '',
+    descricao: documento?.descricao || '',
+    dataDocumento: documento?.dataDocumento || new Date().toISOString().split('T')[0],
+    dataVencimento: documento?.dataVencimento || '',
+    status: documento?.status || 'ativo',
+    assinado: documento?.assinado || false,
+    dataAssinatura: documento?.dataAssinatura || '',
+    observacoes: documento?.observacoes || '',
+    criadoPor: 'Admin' // Substituir pela sessão do usuário
   });
 
   React.useEffect(() => {
@@ -84,20 +65,6 @@ const DocumentoRHForm: React.FC<DocumentoRHFormProps> = ({
     };
     onSubmit(submitData);
   };
-
-  const tiposDocumento = [
-    { value: 'contrato', label: 'Contrato' },
-    { value: 'termo_confidencialidade', label: 'Termo de Confidencialidade' },
-    { value: 'acordo_horario', label: 'Acordo de Horário' },
-    { value: 'advertencia', label: 'Advertência' },
-    { value: 'elogio', label: 'Elogio' },
-    { value: 'avaliacao', label: 'Avaliação' },
-    { value: 'ferias', label: 'Férias' },
-    { value: 'atestado', label: 'Atestado' },
-    { value: 'licenca', label: 'Licença' },
-    { value: 'rescisao', label: 'Rescisão' },
-    { value: 'outros', label: 'Outros' }
-  ];
 
   if (loading) {
     return <div className="flex justify-center p-4">Carregando...</div>;

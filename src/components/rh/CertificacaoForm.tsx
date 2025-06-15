@@ -1,30 +1,16 @@
+
 import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Certificacao } from '@/types/documentosRH';
 import { Funcionario } from '@/types/funcionario';
 import { funcionariosService } from '@/services/funcionariosService';
 import { toast } from 'sonner';
+import { useFormValidation } from '@/hooks/useFormValidation';
+import { certificacaoSchema, CertificacaoFormData } from './forms/validation/certificacaoSchema';
 import DocumentUploader from '../funcionarios/DocumentUploader';
 import CertificacaoBasicSection from './forms/sections/CertificacaoBasicSection';
 import CertificacaoDetailsSection from './forms/sections/CertificacaoDetailsSection';
 import CertificacaoDatesSection from './forms/sections/CertificacaoDatesSection';
-
-const certificacaoSchema = z.object({
-  funcionarioId: z.string().min(1, 'Funcionário é obrigatório'),
-  nome: z.string().min(1, 'Nome da certificação é obrigatório'),
-  entidadeCertificadora: z.string().min(1, 'Entidade certificadora é obrigatória'),
-  dataObtencao: z.string().min(1, 'Data de obtenção é obrigatória'),
-  dataVencimento: z.string().optional(),
-  numero: z.string().optional(),
-  categoria: z.enum(['tecnica', 'seguranca', 'qualidade', 'gestao', 'idioma', 'outros']),
-  status: z.enum(['valida', 'vencida', 'em_renovacao']),
-  observacoes: z.string().optional()
-});
-
-type CertificacaoFormData = z.infer<typeof certificacaoSchema>;
 
 interface CertificacaoFormProps {
   certificacao?: Certificacao;
@@ -41,19 +27,16 @@ const CertificacaoForm: React.FC<CertificacaoFormProps> = ({
   const [loading, setLoading] = React.useState(true);
   const [arquivo, setArquivo] = React.useState<File | null>(null);
 
-  const form = useForm<CertificacaoFormData>({
-    resolver: zodResolver(certificacaoSchema),
-    defaultValues: {
-      funcionarioId: certificacao?.funcionarioId || '',
-      nome: certificacao?.nome || '',
-      entidadeCertificadora: certificacao?.entidadeCertificadora || '',
-      dataObtencao: certificacao?.dataObtencao || new Date().toISOString().split('T')[0],
-      dataVencimento: certificacao?.dataVencimento || '',
-      numero: certificacao?.numero || '',
-      categoria: certificacao?.categoria || 'tecnica',
-      status: certificacao?.status || 'valida',
-      observacoes: certificacao?.observacoes || ''
-    }
+  const form = useFormValidation(certificacaoSchema, {
+    funcionarioId: certificacao?.funcionarioId || '',
+    nome: certificacao?.nome || '',
+    entidadeCertificadora: certificacao?.entidadeCertificadora || '',
+    dataObtencao: certificacao?.dataObtencao || new Date().toISOString().split('T')[0],
+    dataVencimento: certificacao?.dataVencimento || '',
+    numero: certificacao?.numero || '',
+    categoria: certificacao?.categoria || 'tecnica',
+    status: certificacao?.status || 'valida',
+    observacoes: certificacao?.observacoes || ''
   });
 
   React.useEffect(() => {

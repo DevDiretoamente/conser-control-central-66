@@ -1,15 +1,15 @@
 
-import { useForm } from 'react-hook-form';
+import { useForm, UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
 export function useFormValidation<T extends z.ZodType>(
   schema: T,
-  defaultValues?: z.infer<T>
-) {
+  defaultValues?: Partial<z.infer<T>>
+): UseFormReturn<z.infer<T>> {
   return useForm<z.infer<T>>({
     resolver: zodResolver(schema),
-    defaultValues: defaultValues as z.infer<T>,
+    defaultValues: defaultValues as any,
     mode: 'onChange'
   });
 }
