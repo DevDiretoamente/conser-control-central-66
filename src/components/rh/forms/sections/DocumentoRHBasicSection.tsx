@@ -41,7 +41,7 @@ const DocumentoRHBasicSection: React.FC<DocumentoRHBasicSectionProps> = ({
             </SelectContent>
           </Select>
           {errors.funcionarioId && (
-            <p className="text-sm text-red-500">{errors.funcionarioId.message}</p>
+            <p className="text-sm text-red-500">{String(errors.funcionarioId.message || 'Campo obrigatório')}</p>
           )}
         </div>
 
@@ -63,7 +63,7 @@ const DocumentoRHBasicSection: React.FC<DocumentoRHBasicSectionProps> = ({
             </SelectContent>
           </Select>
           {errors.tipo && (
-            <p className="text-sm text-red-500">{errors.tipo.message}</p>
+            <p className="text-sm text-red-500">{String(errors.tipo.message || 'Campo obrigatório')}</p>
           )}
         </div>
       </div>
@@ -76,7 +76,7 @@ const DocumentoRHBasicSection: React.FC<DocumentoRHBasicSectionProps> = ({
           placeholder="Digite o título do documento"
         />
         {errors.titulo && (
-          <p className="text-sm text-red-500">{errors.titulo.message}</p>
+          <p className="text-sm text-red-500">{String(errors.titulo.message || 'Campo obrigatório')}</p>
         )}
       </div>
 
@@ -89,7 +89,7 @@ const DocumentoRHBasicSection: React.FC<DocumentoRHBasicSectionProps> = ({
           rows={3}
         />
         {errors.descricao && (
-          <p className="text-sm text-red-500">{errors.descricao.message}</p>
+          <p className="text-sm text-red-500">{String(errors.descricao.message || 'Campo obrigatório')}</p>
         )}
       </div>
     </>

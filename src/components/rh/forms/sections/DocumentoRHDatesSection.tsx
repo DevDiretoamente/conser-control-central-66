@@ -25,7 +25,7 @@ const DocumentoRHDatesSection: React.FC<DocumentoRHDatesSectionProps> = ({ form 
             {...register('dataDocumento')}
           />
           {errors.dataDocumento && (
-            <p className="text-sm text-red-500">{errors.dataDocumento.message}</p>
+            <p className="text-sm text-red-500">{String(errors.dataDocumento.message || 'Campo obrigatório')}</p>
           )}
         </div>
 

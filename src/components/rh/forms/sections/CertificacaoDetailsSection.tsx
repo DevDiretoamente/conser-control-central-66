@@ -22,7 +22,7 @@ const CertificacaoDetailsSection: React.FC<CertificacaoDetailsSectionProps> = ({
           placeholder="Digite o nome da certificação"
         />
         {errors.nome && (
-          <p className="text-sm text-red-500">{errors.nome.message}</p>
+          <p className="text-sm text-red-500">{String(errors.nome.message || 'Campo obrigatório')}</p>
         )}
       </div>
 
@@ -34,7 +34,7 @@ const CertificacaoDetailsSection: React.FC<CertificacaoDetailsSectionProps> = ({
           placeholder="Digite a entidade certificadora"
         />
         {errors.entidadeCertificadora && (
-          <p className="text-sm text-red-500">{errors.entidadeCertificadora.message}</p>
+          <p className="text-sm text-red-500">{String(errors.entidadeCertificadora.message || 'Campo obrigatório')}</p>
         )}
       </div>
 

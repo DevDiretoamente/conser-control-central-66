@@ -39,7 +39,7 @@ const CertificacaoBasicSection: React.FC<CertificacaoBasicSectionProps> = ({
           </SelectContent>
         </Select>
         {errors.funcionarioId && (
-          <p className="text-sm text-red-500">{errors.funcionarioId.message}</p>
+          <p className="text-sm text-red-500">{String(errors.funcionarioId.message || 'Campo obrigatório')}</p>
         )}
       </div>
 
@@ -61,7 +61,7 @@ const CertificacaoBasicSection: React.FC<CertificacaoBasicSectionProps> = ({
           </SelectContent>
         </Select>
         {errors.categoria && (
-          <p className="text-sm text-red-500">{errors.categoria.message}</p>
+          <p className="text-sm text-red-500">{String(errors.categoria.message || 'Campo obrigatório')}</p>
         )}
       </div>
     </div>

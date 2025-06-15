@@ -23,7 +23,7 @@ const CertificacaoDatesSection: React.FC<CertificacaoDatesSectionProps> = ({ for
             {...register('dataObtencao')}
           />
           {errors.dataObtencao && (
-            <p className="text-sm text-red-500">{errors.dataObtencao.message}</p>
+            <p className="text-sm text-red-500">{String(errors.dataObtencao.message || 'Campo obrigatório')}</p>
           )}
         </div>
 
