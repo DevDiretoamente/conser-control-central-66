@@ -2,10 +2,11 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import CertificacaoFilters from '../CertificacaoFilters';
+import { CertificacaoFilter } from '@/types/documentosRH';
 
 describe('CertificacaoFilters', () => {
   it('atualiza o filtro ao digitar no campo de busca', () => {
-    const filter = { search: '', categoria: 'all', status: 'all' };
+    const filter: CertificacaoFilter = { search: '', categoria: 'all', status: 'all' };
     const onFilterChange = jest.fn();
     render(<CertificacaoFilters filter={filter} onFilterChange={onFilterChange} />);
 
