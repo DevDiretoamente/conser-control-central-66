@@ -6,11 +6,11 @@ import CertificacaoFilters from '../CertificacaoFilters';
 describe('CertificacaoFilters', () => {
   it('atualiza o filtro ao digitar no campo de busca', () => {
     const filter = { search: '', categoria: 'all', status: 'all' };
-    const setFilter = jest.fn();
-    render(<CertificacaoFilters certificacaoFilter={filter} setCertificacaoFilter={setFilter} />);
+    const onFilterChange = jest.fn();
+    render(<CertificacaoFilters filter={filter} onFilterChange={onFilterChange} />);
 
-    const input = screen.getByPlaceholderText(/buscar por certificação/i);
+    const input = screen.getByPlaceholderText(/buscar certificações/i);
     fireEvent.change(input, { target: { value: 'NR10' } });
-    expect(setFilter).toHaveBeenCalledWith(expect.objectContaining({ search: 'NR10' }));
+    expect(onFilterChange).toHaveBeenCalledWith(expect.objectContaining({ search: 'NR10' }));
   });
 });
