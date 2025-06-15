@@ -5,11 +5,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { DocumentoRH } from '@/types/documentosRH';
+import { Funcionario } from '@/types/funcionario';
+import { funcionariosService } from '@/services/funcionariosService';
+import { toast } from 'sonner';
+import DocumentUploader from '../funcionarios/DocumentUploader';
 
 const documentoRHSchema = z.object({
   funcionarioId: z.string().min(1, 'Funcionário é obrigatório'),
@@ -19,9 +23,9 @@ const documentoRHSchema = z.object({
   dataDocumento: z.string().min(1, 'Data do documento é obrigatória'),
   dataVencimento: z.string().optional(),
   status: z.enum(['ativo', 'vencido', 'arquivado']),
-  observacoes: z.string().optional(),
   assinado: z.boolean(),
   dataAssinatura: z.string().optional(),
+  observacoes: z.string().optional(),
   criadoPor: z.string().min(1, 'Criado por é obrigatório')
 });
 
@@ -29,215 +33,253 @@ type DocumentoRHFormData = z.infer<typeof documentoRHSchema>;
 
 interface DocumentoRHFormProps {
   documento?: DocumentoRH;
-  onSubmit: (data: DocumentoRHFormData) => void;
+  onSubmit: (data: any) => void;
   onCancel: () => void;
 }
 
-const DocumentoRHForm: React.FC<DocumentoRHFormProps> = ({ documento, onSubmit, onCancel }) => {
-  const form = useForm<DocumentoRHFormData>({
+const DocumentoRHForm: React.FC<DocumentoRHFormProps> = ({
+  documento,
+  onSubmit,
+  onCancel
+}) => {
+  const [funcionarios, setFuncionarios] = React.useState<Funcionario[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [arquivo, setArquivo] = React.useState<File | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors }
+  } = useForm<DocumentoRHFormData>({
     resolver: zodResolver(documentoRHSchema),
-    defaultValues: documento ? {
-      funcionarioId: documento.funcionarioId,
-      tipo: documento.tipo,
-      titulo: documento.titulo,
-      descricao: documento.descricao,
-      dataDocumento: documento.dataDocumento.split('T')[0],
-      dataVencimento: documento.dataVencimento?.split('T')[0] || '',
-      status: documento.status,
-      observacoes: documento.observacoes || '',
-      assinado: documento.assinado,
-      dataAssinatura: documento.dataAssinatura?.split('T')[0] || '',
-      criadoPor: documento.criadoPor
-    } : {
-      funcionarioId: '',
-      tipo: 'contrato',
-      titulo: '',
-      descricao: '',
-      dataDocumento: new Date().toISOString().split('T')[0],
-      dataVencimento: '',
-      status: 'ativo',
-      observacoes: '',
-      assinado: false,
-      dataAssinatura: '',
-      criadoPor: 'Usuário Atual'
+    defaultValues: {
+      funcionarioId: documento?.funcionarioId || '',
+      tipo: documento?.tipo || 'contrato',
+      titulo: documento?.titulo || '',
+      descricao: documento?.descricao || '',
+      dataDocumento: documento?.dataDocumento || new Date().toISOString().split('T')[0],
+      dataVencimento: documento?.dataVencimento || '',
+      status: documento?.status || 'ativo',
+      assinado: documento?.assinado || false,
+      dataAssinatura: documento?.dataAssinatura || '',
+      observacoes: documento?.observacoes || '',
+      criadoPor: 'Admin' // Substituir pela sessão do usuário
     }
   });
 
-  const handleSubmit = (data: DocumentoRHFormData) => {
-    onSubmit(data);
+  const watchAssinado = watch('assinado');
+
+  React.useEffect(() => {
+    loadFuncionarios();
+  }, []);
+
+  const loadFuncionarios = async () => {
+    try {
+      const data = await funcionariosService.getAll();
+      setFuncionarios(data);
+    } catch (error) {
+      console.error('Erro ao carregar funcionários:', error);
+      toast.error('Erro ao carregar funcionários');
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const onFormSubmit = (data: DocumentoRHFormData) => {
+    const submitData = {
+      ...data,
+      arquivo: arquivo ? 'base64-placeholder' : undefined,
+      nomeArquivo: arquivo?.name
+    };
+    onSubmit(submitData);
+  };
+
+  const tiposDocumento = [
+    { value: 'contrato', label: 'Contrato' },
+    { value: 'termo_confidencialidade', label: 'Termo de Confidencialidade' },
+    { value: 'acordo_horario', label: 'Acordo de Horário' },
+    { value: 'advertencia', label: 'Advertência' },
+    { value: 'elogio', label: 'Elogio' },
+    { value: 'avaliacao', label: 'Avaliação' },
+    { value: 'ferias', label: 'Férias' },
+    { value: 'atestado', label: 'Atestado' },
+    { value: 'licenca', label: 'Licença' },
+    { value: 'rescisao', label: 'Rescisão' },
+    { value: 'outros', label: 'Outros' }
+  ];
+
+  if (loading) {
+    return <div className="flex justify-center p-4">Carregando...</div>;
+  }
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="funcionarioId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Funcionário</FormLabel>
-              <FormControl>
-                <Input placeholder="ID do funcionário" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="funcionarioId">Funcionário *</Label>
+          <Select
+            value={watch('funcionarioId')}
+            onValueChange={(value) => setValue('funcionarioId', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione um funcionário" />
+            </SelectTrigger>
+            <SelectContent>
+              {funcionarios.map((funcionario) => (
+                <SelectItem key={funcionario.id} value={funcionario.id!}>
+                  {funcionario.dadosPessoais.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.funcionarioId && (
+            <p className="text-sm text-red-500">{errors.funcionarioId.message}</p>
           )}
-        />
-
-        <FormField
-          control={form.control}
-          name="tipo"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tipo de Documento</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="contrato">Contrato</SelectItem>
-                  <SelectItem value="termo_confidencialidade">Termo de Confidencialidade</SelectItem>
-                  <SelectItem value="acordo_horario">Acordo de Horário</SelectItem>
-                  <SelectItem value="advertencia">Advertência</SelectItem>
-                  <SelectItem value="elogio">Elogio</SelectItem>
-                  <SelectItem value="avaliacao">Avaliação</SelectItem>
-                  <SelectItem value="ferias">Férias</SelectItem>
-                  <SelectItem value="atestado">Atestado</SelectItem>
-                  <SelectItem value="licenca">Licença</SelectItem>
-                  <SelectItem value="rescisao">Rescisão</SelectItem>
-                  <SelectItem value="outros">Outros</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="titulo"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Título</FormLabel>
-              <FormControl>
-                <Input placeholder="Título do documento" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="descricao"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Descrição</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Descrição do documento" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="dataDocumento"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Data do Documento</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="dataVencimento"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Data de Vencimento</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
 
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="ativo">Ativo</SelectItem>
-                  <SelectItem value="vencido">Vencido</SelectItem>
-                  <SelectItem value="arquivado">Arquivado</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
+        <div className="space-y-2">
+          <Label htmlFor="tipo">Tipo de Documento *</Label>
+          <Select
+            value={watch('tipo')}
+            onValueChange={(value) => setValue('tipo', value as any)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione o tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              {tiposDocumento.map((tipo) => (
+                <SelectItem key={tipo.value} value={tipo.value}>
+                  {tipo.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.tipo && (
+            <p className="text-sm text-red-500">{errors.tipo.message}</p>
           )}
-        />
-
-        <FormField
-          control={form.control}
-          name="assinado"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">Documento Assinado</FormLabel>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="observacoes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Observações</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Observações adicionais" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancelar
-          </Button>
-          <Button type="submit">
-            {documento ? 'Atualizar' : 'Criar'} Documento
-          </Button>
         </div>
-      </form>
-    </Form>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="titulo">Título *</Label>
+        <Input
+          id="titulo"
+          {...register('titulo')}
+          placeholder="Digite o título do documento"
+        />
+        {errors.titulo && (
+          <p className="text-sm text-red-500">{errors.titulo.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="descricao">Descrição *</Label>
+        <Textarea
+          id="descricao"
+          {...register('descricao')}
+          placeholder="Digite a descrição do documento"
+          rows={3}
+        />
+        {errors.descricao && (
+          <p className="text-sm text-red-500">{errors.descricao.message}</p>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="dataDocumento">Data do Documento *</Label>
+          <Input
+            id="dataDocumento"
+            type="date"
+            {...register('dataDocumento')}
+          />
+          {errors.dataDocumento && (
+            <p className="text-sm text-red-500">{errors.dataDocumento.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="dataVencimento">Data de Vencimento</Label>
+          <Input
+            id="dataVencimento"
+            type="date"
+            {...register('dataVencimento')}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="status">Status</Label>
+          <Select
+            value={watch('status')}
+            onValueChange={(value) => setValue('status', value as any)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ativo">Ativo</SelectItem>
+              <SelectItem value="vencido">Vencido</SelectItem>
+              <SelectItem value="arquivado">Arquivado</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="assinado"
+              checked={watchAssinado}
+              onCheckedChange={(checked) => setValue('assinado', checked)}
+            />
+            <Label htmlFor="assinado">Documento Assinado</Label>
+          </div>
+        </div>
+      </div>
+
+      {watchAssinado && (
+        <div className="space-y-2">
+          <Label htmlFor="dataAssinatura">Data da Assinatura</Label>
+          <Input
+            id="dataAssinatura"
+            type="date"
+            {...register('dataAssinatura')}
+          />
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <DocumentUploader
+          label="Arquivo do Documento"
+          description="PDF até 10MB"
+          allowedTypes=".pdf"
+          maxSize={10}
+          onFileChange={setArquivo}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="observacoes">Observações</Label>
+        <Textarea
+          id="observacoes"
+          {...register('observacoes')}
+          placeholder="Observações adicionais"
+          rows={2}
+        />
+      </div>
+
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancelar
+        </Button>
+        <Button type="submit">
+          {documento ? 'Atualizar' : 'Criar'} Documento
+        </Button>
+      </div>
+    </form>
   );
 };
 

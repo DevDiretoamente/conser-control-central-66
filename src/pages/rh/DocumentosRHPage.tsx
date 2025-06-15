@@ -1,15 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { FileText, Award } from 'lucide-react';
+import { FileText, Award, BarChart3 } from 'lucide-react';
 import { DocumentoRH, Certificacao, DocumentoRHFilter, CertificacaoFilter } from '@/types/documentosRH';
 import { documentosRHService } from '@/services/documentosRHService';
 import DocumentoRHForm from '@/components/rh/DocumentoRHForm';
 import CertificacaoForm from '@/components/rh/CertificacaoForm';
 import DocumentosTab from '@/components/rh/tabs/DocumentosTab';
 import CertificacoesTab from '@/components/rh/tabs/CertificacoesTab';
+import RelatoriosRH from '@/components/rh/RelatoriosRH';
 
 const DocumentosRHPage: React.FC = () => {
   const [documentos, setDocumentos] = useState<DocumentoRH[]>([]);
@@ -166,6 +166,10 @@ const DocumentosRHPage: React.FC = () => {
             <Award className="mr-2 h-4 w-4" />
             Certificações
           </TabsTrigger>
+          <TabsTrigger value="relatorios">
+            <BarChart3 className="mr-2 h-4 w-4" />
+            Relatórios
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="documentos">
@@ -188,6 +192,10 @@ const DocumentosRHPage: React.FC = () => {
             onNewCertification={() => setIsCertificacaoFormOpen(true)}
             onEditCertification={handleEditCertification}
           />
+        </TabsContent>
+
+        <TabsContent value="relatorios">
+          <RelatoriosRH />
         </TabsContent>
       </Tabs>
 
