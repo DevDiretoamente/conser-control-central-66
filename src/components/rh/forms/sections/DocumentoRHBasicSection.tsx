@@ -6,17 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Funcionario } from '@/types/funcionario';
+import { TIPOS_DOCUMENTO } from '../../constants/documentosRHConstants';
 
 interface DocumentoRHBasicSectionProps {
   form: UseFormReturn<any>;
   funcionarios: Funcionario[];
-  tiposDocumento: Array<{ value: string; label: string }>;
 }
 
 const DocumentoRHBasicSection: React.FC<DocumentoRHBasicSectionProps> = ({
   form,
-  funcionarios,
-  tiposDocumento
+  funcionarios
 }) => {
   const { register, setValue, watch, formState: { errors } } = form;
 
@@ -41,7 +40,9 @@ const DocumentoRHBasicSection: React.FC<DocumentoRHBasicSectionProps> = ({
             </SelectContent>
           </Select>
           {errors.funcionarioId && (
-            <p className="text-sm text-red-500">{String(errors.funcionarioId.message || 'Campo obrigatório')}</p>
+            <p className="text-sm text-red-500">
+              {errors.funcionarioId?.message?.toString() || 'Campo obrigatório'}
+            </p>
           )}
         </div>
 
@@ -55,7 +56,7 @@ const DocumentoRHBasicSection: React.FC<DocumentoRHBasicSectionProps> = ({
               <SelectValue placeholder="Selecione o tipo" />
             </SelectTrigger>
             <SelectContent>
-              {tiposDocumento.map((tipo) => (
+              {TIPOS_DOCUMENTO.map((tipo) => (
                 <SelectItem key={tipo.value} value={tipo.value}>
                   {tipo.label}
                 </SelectItem>
@@ -63,7 +64,9 @@ const DocumentoRHBasicSection: React.FC<DocumentoRHBasicSectionProps> = ({
             </SelectContent>
           </Select>
           {errors.tipo && (
-            <p className="text-sm text-red-500">{String(errors.tipo.message || 'Campo obrigatório')}</p>
+            <p className="text-sm text-red-500">
+              {errors.tipo?.message?.toString() || 'Campo obrigatório'}
+            </p>
           )}
         </div>
       </div>
@@ -76,7 +79,9 @@ const DocumentoRHBasicSection: React.FC<DocumentoRHBasicSectionProps> = ({
           placeholder="Digite o título do documento"
         />
         {errors.titulo && (
-          <p className="text-sm text-red-500">{String(errors.titulo.message || 'Campo obrigatório')}</p>
+          <p className="text-sm text-red-500">
+            {errors.titulo?.message?.toString() || 'Campo obrigatório'}
+          </p>
         )}
       </div>
 
@@ -89,7 +94,9 @@ const DocumentoRHBasicSection: React.FC<DocumentoRHBasicSectionProps> = ({
           rows={3}
         />
         {errors.descricao && (
-          <p className="text-sm text-red-500">{String(errors.descricao.message || 'Campo obrigatório')}</p>
+          <p className="text-sm text-red-500">
+            {errors.descricao?.message?.toString() || 'Campo obrigatório'}
+          </p>
         )}
       </div>
     </>

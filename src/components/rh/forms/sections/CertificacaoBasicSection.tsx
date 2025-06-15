@@ -2,22 +2,20 @@
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Funcionario } from '@/types/funcionario';
+import { CATEGORIAS_CERTIFICACAO } from '../../constants/documentosRHConstants';
 
 interface CertificacaoBasicSectionProps {
   form: UseFormReturn<any>;
   funcionarios: Funcionario[];
-  categorias: Array<{ value: string; label: string }>;
 }
 
 const CertificacaoBasicSection: React.FC<CertificacaoBasicSectionProps> = ({
   form,
-  funcionarios,
-  categorias
+  funcionarios
 }) => {
-  const { register, setValue, watch, formState: { errors } } = form;
+  const { setValue, watch, formState: { errors } } = form;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -39,7 +37,9 @@ const CertificacaoBasicSection: React.FC<CertificacaoBasicSectionProps> = ({
           </SelectContent>
         </Select>
         {errors.funcionarioId && (
-          <p className="text-sm text-red-500">{String(errors.funcionarioId.message || 'Campo obrigatório')}</p>
+          <p className="text-sm text-red-500">
+            {errors.funcionarioId?.message?.toString() || 'Campo obrigatório'}
+          </p>
         )}
       </div>
 
@@ -53,7 +53,7 @@ const CertificacaoBasicSection: React.FC<CertificacaoBasicSectionProps> = ({
             <SelectValue placeholder="Selecione a categoria" />
           </SelectTrigger>
           <SelectContent>
-            {categorias.map((categoria) => (
+            {CATEGORIAS_CERTIFICACAO.map((categoria) => (
               <SelectItem key={categoria.value} value={categoria.value}>
                 {categoria.label}
               </SelectItem>
@@ -61,7 +61,9 @@ const CertificacaoBasicSection: React.FC<CertificacaoBasicSectionProps> = ({
           </SelectContent>
         </Select>
         {errors.categoria && (
-          <p className="text-sm text-red-500">{String(errors.categoria.message || 'Campo obrigatório')}</p>
+          <p className="text-sm text-red-500">
+            {errors.categoria?.message?.toString() || 'Campo obrigatório'}
+          </p>
         )}
       </div>
     </div>
