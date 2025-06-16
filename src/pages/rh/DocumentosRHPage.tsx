@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Award, BarChart3 } from 'lucide-react';
+import { FileText, Award, BarChart3, Bell } from 'lucide-react';
 import DocumentosTab from '@/components/rh/tabs/DocumentosTab';
 import CertificacoesTab from '@/components/rh/tabs/CertificacoesTab';
 import RelatoriosRH from '@/components/rh/RelatoriosRH';
@@ -10,6 +10,9 @@ import CertificacaoDialog from '@/components/rh/dialogs/CertificacaoDialog';
 import DocumentoRHDetailsDialog from '@/components/rh/dialogs/DocumentoRHDetailsDialog';
 import CertificacaoDetailsDialog from '@/components/rh/dialogs/CertificacaoDetailsDialog';
 import DeleteConfirmDialog from '@/components/rh/dialogs/DeleteConfirmDialog';
+import RenovacaoDialog from '@/components/rh/renovacoes/RenovacaoDialog';
+import NotificationCenter from '@/components/rh/notifications/NotificationCenter';
+import DocumentosRHDashboard from '@/components/rh/dashboard/DocumentosRHDashboard';
 import Pagination from '@/components/rh/common/Pagination';
 import { useDocumentosRH } from '@/hooks/useDocumentosRH';
 import { useDocumentosRHDialogs } from '@/hooks/useDocumentosRHDialogs';
@@ -46,6 +49,10 @@ const DocumentosRHPage: React.FC = () => {
     viewingDocumento,
     viewingCertificacao,
     
+    // Renovacao states
+    isRenovacaoDialogOpen,
+    renewingCertificacao,
+    
     // Delete states
     isDeleteConfirmOpen,
     deletingItem,
@@ -54,11 +61,13 @@ const DocumentosRHPage: React.FC = () => {
     // Handlers
     handleDocumentoSubmit,
     handleCertificacaoSubmit,
+    handleRenovacaoSubmit,
     handleDeleteConfirm,
     handleEditDocument,
     handleEditCertification,
     handleViewDocument,
     handleViewCertification,
+    handleRenewCertification,
     handleDeleteDocument,
     handleDeleteCertification,
     handleNewDocument,
@@ -67,6 +76,7 @@ const DocumentosRHPage: React.FC = () => {
     handleCloseCertificacaoForm,
     handleCloseDocumentoDetails,
     handleCloseCertificacaoDetails,
+    handleCloseRenovacaoDialog,
     handleCloseDeleteConfirm
   } = useDocumentosRHDialogs();
 
@@ -81,8 +91,12 @@ const DocumentosRHPage: React.FC = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="documentos" className="w-full">
+      <Tabs defaultValue="dashboard" className="w-full">
         <TabsList>
+          <TabsTrigger value="dashboard">
+            <BarChart3 className="mr-2 h-4 w-4" />
+            Dashboard
+          </TabsTrigger>
           <TabsTrigger value="documentos">
             <FileText className="mr-2 h-4 w-4" />
             Documentos RH
@@ -91,11 +105,19 @@ const DocumentosRHPage: React.FC = () => {
             <Award className="mr-2 h-4 w-4" />
             Certificações
           </TabsTrigger>
+          <TabsTrigger value="notificacoes">
+            <Bell className="mr-2 h-4 w-4" />
+            Notificações
+          </TabsTrigger>
           <TabsTrigger value="relatorios">
             <BarChart3 className="mr-2 h-4 w-4" />
             Relatórios
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="dashboard">
+          <DocumentosRHDashboard />
+        </TabsContent>
 
         <TabsContent value="documentos">
           <DocumentosTab
@@ -125,12 +147,17 @@ const DocumentosRHPage: React.FC = () => {
             onEditCertification={handleEditCertification}
             onViewCertification={handleViewCertification}
             onDeleteCertification={handleDeleteCertification}
+            onRenewCertification={handleRenewCertification}
           />
           <Pagination
             currentPage={certPage}
             totalPages={totalCertPages}
             onPageChange={setCertPage}
           />
+        </TabsContent>
+
+        <TabsContent value="notificacoes">
+          <NotificationCenter />
         </TabsContent>
 
         <TabsContent value="relatorios">
@@ -154,6 +181,16 @@ const DocumentosRHPage: React.FC = () => {
         onSubmit={(data) => handleCertificacaoSubmit(data, loadData)}
         onCancel={handleCloseCertificacaoForm}
       />
+
+      {/* Renovacao Dialog */}
+      {renewingCertificacao && (
+        <RenovacaoDialog
+          isOpen={isRenovacaoDialogOpen}
+          onOpenChange={handleCloseRenovacaoDialog}
+          certificacao={renewingCertificacao}
+          onSubmit={(renovacao) => handleRenovacaoSubmit(renovacao, loadData)}
+        />
+      )}
 
       {/* Details Dialogs */}
       {viewingDocumento && (

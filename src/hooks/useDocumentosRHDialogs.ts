@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { DocumentoRH, Certificacao } from '@/types/documentosRH';
+import { DocumentoRH, Certificacao, RenovacaoCertificacao } from '@/types/documentosRH';
 import { documentosRHService } from '@/services/documentosRHService';
 import { toast } from 'sonner';
 
@@ -10,10 +10,12 @@ export function useDocumentosRHDialogs() {
   const [isDocumentoDetailsOpen, setIsDocumentoDetailsOpen] = useState(false);
   const [isCertificacaoDetailsOpen, setIsCertificacaoDetailsOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isRenovacaoDialogOpen, setIsRenovacaoDialogOpen] = useState(false);
   const [editingDocumento, setEditingDocumento] = useState<DocumentoRH | null>(null);
   const [editingCertificacao, setEditingCertificacao] = useState<Certificacao | null>(null);
   const [viewingDocumento, setViewingDocumento] = useState<DocumentoRH | null>(null);
   const [viewingCertificacao, setViewingCertificacao] = useState<Certificacao | null>(null);
+  const [renewingCertificacao, setRenewingCertificacao] = useState<Certificacao | null>(null);
   const [deletingItem, setDeletingItem] = useState<{ type: 'documento' | 'certificacao'; id: string; title: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -50,6 +52,28 @@ export function useDocumentosRHDialogs() {
     } catch (error) {
       console.error('Erro ao salvar certificação:', error);
       toast.error('Erro ao salvar certificação');
+    }
+  };
+
+  const handleRenovacaoSubmit = async (renovacao: Omit<RenovacaoCertificacao, 'id'>, loadData: () => Promise<void>) => {
+    if (!renewingCertificacao) return;
+
+    try {
+      await documentosRHService.addRenovacao(renewingCertificacao.id, renovacao);
+      
+      // Atualizar a data de vencimento da certificação
+      await documentosRHService.updateCertificacao(renewingCertificacao.id, {
+        dataVencimento: renovacao.novaDataVencimento,
+        status: 'valida'
+      });
+      
+      toast.success('Renovação registrada com sucesso');
+      setIsRenovacaoDialogOpen(false);
+      setRenewingCertificacao(null);
+      await loadData();
+    } catch (error) {
+      console.error('Erro ao registrar renovação:', error);
+      toast.error('Erro ao registrar renovação');
     }
   };
 
@@ -98,6 +122,11 @@ export function useDocumentosRHDialogs() {
     setIsCertificacaoDetailsOpen(true);
   };
 
+  const handleRenewCertification = (certificacao: Certificacao) => {
+    setRenewingCertificacao(certificacao);
+    setIsRenovacaoDialogOpen(true);
+  };
+
   const handleDeleteDocument = (documento: DocumentoRH) => {
     setDeletingItem({ type: 'documento', id: documento.id, title: documento.titulo });
     setIsDeleteConfirmOpen(true);
@@ -136,6 +165,11 @@ export function useDocumentosRHDialogs() {
     setViewingCertificacao(null);
   };
 
+  const handleCloseRenovacaoDialog = () => {
+    setIsRenovacaoDialogOpen(false);
+    setRenewingCertificacao(null);
+  };
+
   const handleCloseDeleteConfirm = () => {
     setIsDeleteConfirmOpen(false);
     setDeletingItem(null);
@@ -154,6 +188,10 @@ export function useDocumentosRHDialogs() {
     viewingDocumento,
     viewingCertificacao,
     
+    // Renovacao states
+    isRenovacaoDialogOpen,
+    renewingCertificacao,
+    
     // Delete states
     isDeleteConfirmOpen,
     deletingItem,
@@ -162,11 +200,13 @@ export function useDocumentosRHDialogs() {
     // Handlers
     handleDocumentoSubmit,
     handleCertificacaoSubmit,
+    handleRenovacaoSubmit,
     handleDeleteConfirm,
     handleEditDocument,
     handleEditCertification,
     handleViewDocument,
     handleViewCertification,
+    handleRenewCertification,
     handleDeleteDocument,
     handleDeleteCertification,
     handleNewDocument,
@@ -175,6 +215,7 @@ export function useDocumentosRHDialogs() {
     handleCloseCertificacaoForm,
     handleCloseDocumentoDetails,
     handleCloseCertificacaoDetails,
+    handleCloseRenovacaoDialog,
     handleCloseDeleteConfirm
   };
 }

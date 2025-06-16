@@ -16,6 +16,7 @@ interface CertificacoesTabProps {
   onEditCertification: (certificacao: Certificacao) => void;
   onViewCertification: (certificacao: Certificacao) => void;
   onDeleteCertification: (certificacao: Certificacao) => void;
+  onRenewCertification?: (certificacao: Certificacao) => void;
 }
 
 const CertificacoesTab: React.FC<CertificacoesTabProps> = ({
@@ -26,7 +27,8 @@ const CertificacoesTab: React.FC<CertificacoesTabProps> = ({
   onNewCertification,
   onEditCertification,
   onViewCertification,
-  onDeleteCertification
+  onDeleteCertification,
+  onRenewCertification
 }) => {
   return (
     <Card>
@@ -53,6 +55,7 @@ const CertificacoesTab: React.FC<CertificacoesTabProps> = ({
               onEdit={onEditCertification}
               onView={onViewCertification}
               onDelete={onDeleteCertification}
+              onRenew={onRenewCertification}
             />
           ))}
         </div>

@@ -2,10 +2,10 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Download, Calendar, Award, Building, Hash } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Award, Calendar, Building, Hash, FileText, RefreshCw } from 'lucide-react';
 import { Certificacao } from '@/types/documentosRH';
-import { CATEGORIAS_CERTIFICACAO } from '../constants/documentosRHConstants';
+import RenovacaoList from '../renovacoes/RenovacaoList';
 
 interface CertificacaoDetailsDialogProps {
   isOpen: boolean;
@@ -18,136 +18,144 @@ const CertificacaoDetailsDialog: React.FC<CertificacaoDetailsDialogProps> = ({
   onOpenChange,
   certificacao
 }) => {
-  const getCategoriaLabel = (categoria: string) => {
-    return CATEGORIAS_CERTIFICACAO.find(c => c.value === categoria)?.label || categoria;
+  const getCategoriaName = (categoria: Certificacao['categoria']) => {
+    const categoryMap = {
+      tecnica: 'Técnica',
+      seguranca: 'Segurança',
+      qualidade: 'Qualidade',
+      gestao: 'Gestão',
+      idioma: 'Idioma',
+      outros: 'Outros'
+    };
+    return categoryMap[categoria];
   };
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
       valida: { label: 'Válida', className: 'bg-green-500' },
       vencida: { label: 'Vencida', className: 'bg-red-500' },
-      em_renovacao: { label: 'Em Renovação', className: 'bg-yellow-500' }
+      em_renovacao: { label: 'Em Renovação', className: 'bg-orange-500' }
     } as const;
     
     const config = statusMap[status as keyof typeof statusMap];
     return config ? <Badge className={config.className}>{config.label}</Badge> : null;
   };
 
-  const handleDownload = () => {
-    if (certificacao.arquivo && certificacao.nomeArquivo) {
-      console.log('Download do certificado:', certificacao.nomeArquivo);
-      // Aqui seria implementada a lógica real de download
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Award className="h-5 w-5" />
-            {certificacao.nome}
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-6">
-          <div className="flex items-center gap-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <DialogTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5" />
+                {certificacao.nome}
+              </DialogTitle>
+              <p className="text-muted-foreground mt-1">
+                {certificacao.entidadeCertificadora}
+              </p>
+            </div>
             {getStatusBadge(certificacao.status)}
-            <Badge variant="outline">{getCategoriaLabel(certificacao.categoria)}</Badge>
           </div>
+        </DialogHeader>
 
+        <div className="space-y-6">
+          {/* Informações Básicas */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Building className="h-4 w-4" />
-                Entidade Certificadora
-              </div>
-              <p className="font-medium">{certificacao.entidadeCertificadora}</p>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 text-sm font-medium">
                 <Calendar className="h-4 w-4" />
                 Data de Obtenção
               </div>
-              <p className="font-medium">
+              <p className="text-sm">
                 {new Date(certificacao.dataObtencao).toLocaleDateString('pt-BR')}
               </p>
             </div>
 
             {certificacao.dataVencimento && (
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2 text-sm font-medium">
                   <Calendar className="h-4 w-4" />
                   Data de Vencimento
                 </div>
-                <p className="font-medium">
+                <p className="text-sm">
                   {new Date(certificacao.dataVencimento).toLocaleDateString('pt-BR')}
                 </p>
               </div>
             )}
 
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Building className="h-4 w-4" />
+                Categoria
+              </div>
+              <p className="text-sm">{getCategoriaName(certificacao.categoria)}</p>
+            </div>
+
             {certificacao.numero && (
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2 text-sm font-medium">
                   <Hash className="h-4 w-4" />
-                  Número da Certificação
+                  Número
                 </div>
-                <p className="font-medium font-mono">{certificacao.numero}</p>
+                <p className="text-sm">{certificacao.numero}</p>
               </div>
             )}
           </div>
 
+          {/* Observações */}
           {certificacao.observacoes && (
-            <div className="space-y-2">
-              <h4 className="font-medium">Observações</h4>
-              <p className="text-sm text-muted-foreground">
-                {certificacao.observacoes}
-              </p>
-            </div>
-          )}
-
-          {certificacao.renovacoes.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="font-medium">Histórico de Renovações</h4>
+            <>
+              <Separator />
               <div className="space-y-2">
-                {certificacao.renovacoes.map((renovacao) => (
-                  <div key={renovacao.id} className="p-3 border rounded-md text-sm">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p><strong>Data:</strong> {new Date(renovacao.dataRenovacao).toLocaleDateString('pt-BR')}</p>
-                        <p><strong>Nova validade:</strong> {new Date(renovacao.novaDataVencimento).toLocaleDateString('pt-BR')}</p>
-                      </div>
-                    </div>
-                    {renovacao.observacoes && (
-                      <p className="mt-2 text-muted-foreground">{renovacao.observacoes}</p>
-                    )}
-                  </div>
-                ))}
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <FileText className="h-4 w-4" />
+                  Observações
+                </div>
+                <p className="text-sm whitespace-pre-wrap">{certificacao.observacoes}</p>
               </div>
-            </div>
+            </>
           )}
 
-          {certificacao.arquivo && (
-            <div className="space-y-2">
-              <h4 className="font-medium">Certificado Anexado</h4>
-              <div className="flex items-center gap-2">
-                <span className="text-sm">{certificacao.nomeArquivo}</span>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleDownload}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </Button>
+          {/* Arquivo */}
+          {certificacao.nomeArquivo && (
+            <>
+              <Separator />
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <FileText className="h-4 w-4" />
+                  Arquivo
+                </div>
+                <p className="text-sm">{certificacao.nomeArquivo}</p>
               </div>
-            </div>
+            </>
           )}
 
-          <div className="text-xs text-muted-foreground border-t pt-4">
-            <p>Criado em: {new Date(certificacao.criadoEm).toLocaleString('pt-BR')}</p>
-            <p>Atualizado em: {new Date(certificacao.atualizadoEm).toLocaleString('pt-BR')}</p>
+          {/* Histórico de Renovações */}
+          {certificacao.renovacoes.length > 0 && (
+            <>
+              <Separator />
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <RefreshCw className="h-4 w-4" />
+                  Histórico de Renovações ({certificacao.renovacoes.length})
+                </div>
+                <RenovacaoList renovacoes={certificacao.renovacoes} />
+              </div>
+            </>
+          )}
+
+          {/* Informações de Sistema */}
+          <Separator />
+          <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground">
+            <div>
+              <span className="font-medium">Criado em:</span>
+              <p>{new Date(certificacao.criadoEm).toLocaleString('pt-BR')}</p>
+            </div>
+            <div>
+              <span className="font-medium">Atualizado em:</span>
+              <p>{new Date(certificacao.atualizadoEm).toLocaleString('pt-BR')}</p>
+            </div>
           </div>
         </div>
       </DialogContent>
