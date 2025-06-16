@@ -9,11 +9,15 @@ import { Certificacao } from '@/types/documentosRH';
 interface CertificacaoCardProps {
   certificacao: Certificacao;
   onEdit: (certificacao: Certificacao) => void;
+  onView: (certificacao: Certificacao) => void;
+  onDelete: (certificacao: Certificacao) => void;
 }
 
 const CertificacaoCard: React.FC<CertificacaoCardProps> = ({
   certificacao,
-  onEdit
+  onEdit,
+  onView,
+  onDelete
 }) => {
   const getStatusBadge = (status: string, isVencida?: boolean) => {
     if (isVencida) {
@@ -100,7 +104,7 @@ const CertificacaoCard: React.FC<CertificacaoCardProps> = ({
         <div className="flex justify-between items-center pt-2 border-t">
           <Badge variant="outline">{getCategoriaLabel(certificacao.categoria)}</Badge>
           <div className="flex gap-1">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={() => onView(certificacao)}>
               <Eye className="h-4 w-4" />
             </Button>
             <Button 
@@ -110,7 +114,12 @@ const CertificacaoCard: React.FC<CertificacaoCardProps> = ({
             >
               <Edit className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => onDelete(certificacao)}
+              className="text-red-600 hover:text-red-700"
+            >
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>

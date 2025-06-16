@@ -9,11 +9,15 @@ import { DocumentoRH } from '@/types/documentosRH';
 interface DocumentoRHCardProps {
   documento: DocumentoRH;
   onEdit: (documento: DocumentoRH) => void;
+  onView: (documento: DocumentoRH) => void;
+  onDelete: (documento: DocumentoRH) => void;
 }
 
 const DocumentoRHCard: React.FC<DocumentoRHCardProps> = ({
   documento,
-  onEdit
+  onEdit,
+  onView,
+  onDelete
 }) => {
   const getDocumentoTypeName = (tipo: DocumentoRH['tipo']) => {
     const typeMap = {
@@ -103,7 +107,7 @@ const DocumentoRHCard: React.FC<DocumentoRHCardProps> = ({
             )}
           </div>
           <div className="flex gap-1">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={() => onView(documento)}>
               <Eye className="h-4 w-4" />
             </Button>
             <Button 
@@ -113,7 +117,12 @@ const DocumentoRHCard: React.FC<DocumentoRHCardProps> = ({
             >
               <Edit className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => onDelete(documento)}
+              className="text-red-600 hover:text-red-700"
+            >
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>

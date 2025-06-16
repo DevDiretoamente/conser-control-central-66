@@ -83,6 +83,23 @@ export const certificacoesService = {
     });
   },
 
+  delete: async (id: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const certificacoes = getCertificacoesFromStorage();
+        const filtered = certificacoes.filter(c => c.id !== id);
+        
+        if (filtered.length === certificacoes.length) {
+          resolve(false);
+          return;
+        }
+        
+        saveCertificacoesToStorage(filtered);
+        resolve(true);
+      }, 500);
+    });
+  },
+
   addRenovacao: async (certificacaoId: string, renovacao: Omit<RenovacaoCertificacao, 'id'>): Promise<Certificacao | null> => {
     return new Promise((resolve) => {
       setTimeout(() => {

@@ -7,6 +7,9 @@ import CertificacoesTab from '@/components/rh/tabs/CertificacoesTab';
 import RelatoriosRH from '@/components/rh/RelatoriosRH';
 import DocumentoRHDialog from '@/components/rh/dialogs/DocumentoRHDialog';
 import CertificacaoDialog from '@/components/rh/dialogs/CertificacaoDialog';
+import DocumentoRHDetailsDialog from '@/components/rh/dialogs/DocumentoRHDetailsDialog';
+import CertificacaoDetailsDialog from '@/components/rh/dialogs/CertificacaoDetailsDialog';
+import DeleteConfirmDialog from '@/components/rh/dialogs/DeleteConfirmDialog';
 import Pagination from '@/components/rh/common/Pagination';
 import { useDocumentosRH } from '@/hooks/useDocumentosRH';
 import { useDocumentosRHDialogs } from '@/hooks/useDocumentosRHDialogs';
@@ -31,18 +34,40 @@ const DocumentosRHPage: React.FC = () => {
   } = useDocumentosRH();
 
   const {
+    // Form states
     isDocumentoFormOpen,
     isCertificacaoFormOpen,
     editingDocumento,
     editingCertificacao,
+    
+    // Details states
+    isDocumentoDetailsOpen,
+    isCertificacaoDetailsOpen,
+    viewingDocumento,
+    viewingCertificacao,
+    
+    // Delete states
+    isDeleteConfirmOpen,
+    deletingItem,
+    isDeleting,
+    
+    // Handlers
     handleDocumentoSubmit,
     handleCertificacaoSubmit,
+    handleDeleteConfirm,
     handleEditDocument,
     handleEditCertification,
+    handleViewDocument,
+    handleViewCertification,
+    handleDeleteDocument,
+    handleDeleteCertification,
     handleNewDocument,
     handleNewCertification,
     handleCloseDocumentoForm,
-    handleCloseCertificacaoForm
+    handleCloseCertificacaoForm,
+    handleCloseDocumentoDetails,
+    handleCloseCertificacaoDetails,
+    handleCloseDeleteConfirm
   } = useDocumentosRHDialogs();
 
   return (
@@ -80,6 +105,8 @@ const DocumentosRHPage: React.FC = () => {
             setDocumentoFilter={setDocumentoFilter}
             onNewDocument={handleNewDocument}
             onEditDocument={handleEditDocument}
+            onViewDocument={handleViewDocument}
+            onDeleteDocument={handleDeleteDocument}
           />
           <Pagination
             currentPage={docPage}
@@ -96,6 +123,8 @@ const DocumentosRHPage: React.FC = () => {
             setCertificacaoFilter={setCertificacaoFilter}
             onNewCertification={handleNewCertification}
             onEditCertification={handleEditCertification}
+            onViewCertification={handleViewCertification}
+            onDeleteCertification={handleDeleteCertification}
           />
           <Pagination
             currentPage={certPage}
@@ -109,6 +138,7 @@ const DocumentosRHPage: React.FC = () => {
         </TabsContent>
       </Tabs>
 
+      {/* Form Dialogs */}
       <DocumentoRHDialog
         isOpen={isDocumentoFormOpen}
         onOpenChange={handleCloseDocumentoForm}
@@ -123,6 +153,33 @@ const DocumentosRHPage: React.FC = () => {
         certificacao={editingCertificacao || undefined}
         onSubmit={(data) => handleCertificacaoSubmit(data, loadData)}
         onCancel={handleCloseCertificacaoForm}
+      />
+
+      {/* Details Dialogs */}
+      {viewingDocumento && (
+        <DocumentoRHDetailsDialog
+          isOpen={isDocumentoDetailsOpen}
+          onOpenChange={handleCloseDocumentoDetails}
+          documento={viewingDocumento}
+        />
+      )}
+
+      {viewingCertificacao && (
+        <CertificacaoDetailsDialog
+          isOpen={isCertificacaoDetailsOpen}
+          onOpenChange={handleCloseCertificacaoDetails}
+          certificacao={viewingCertificacao}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={isDeleteConfirmOpen}
+        onOpenChange={handleCloseDeleteConfirm}
+        title={`Excluir ${deletingItem?.type === 'documento' ? 'Documento' : 'Certificação'}`}
+        description={`Tem certeza que deseja excluir "${deletingItem?.title}"? Esta ação não pode ser desfeita.`}
+        onConfirm={() => handleDeleteConfirm(loadData)}
+        loading={isDeleting}
       />
     </div>
   );

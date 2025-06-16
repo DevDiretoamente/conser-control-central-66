@@ -16,5 +16,6 @@ export const documentosRHService = {
   getCertificacoesByFuncionario: certificacoesService.getByFuncionario,
   createCertificacao: certificacoesService.create,
   updateCertificacao: certificacoesService.update,
+  deleteCertificacao: certificacoesService.delete,
   addRenovacao: certificacoesService.addRenovacao
 };

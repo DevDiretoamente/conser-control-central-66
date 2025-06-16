@@ -14,6 +14,8 @@ interface CertificacoesTabProps {
   setCertificacaoFilter: (filter: CertificacaoFilter) => void;
   onNewCertification: () => void;
   onEditCertification: (certificacao: Certificacao) => void;
+  onViewCertification: (certificacao: Certificacao) => void;
+  onDeleteCertification: (certificacao: Certificacao) => void;
 }
 
 const CertificacoesTab: React.FC<CertificacoesTabProps> = ({
@@ -22,7 +24,9 @@ const CertificacoesTab: React.FC<CertificacoesTabProps> = ({
   certificacaoFilter,
   setCertificacaoFilter,
   onNewCertification,
-  onEditCertification
+  onEditCertification,
+  onViewCertification,
+  onDeleteCertification
 }) => {
   return (
     <Card>
@@ -47,9 +51,17 @@ const CertificacoesTab: React.FC<CertificacoesTabProps> = ({
               key={certificacao.id}
               certificacao={certificacao}
               onEdit={onEditCertification}
+              onView={onViewCertification}
+              onDelete={onDeleteCertification}
             />
           ))}
         </div>
+
+        {filteredCertificacoes.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>Nenhuma certificação encontrada</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

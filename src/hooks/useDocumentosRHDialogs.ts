@@ -7,8 +7,15 @@ import { toast } from 'sonner';
 export function useDocumentosRHDialogs() {
   const [isDocumentoFormOpen, setIsDocumentoFormOpen] = useState(false);
   const [isCertificacaoFormOpen, setIsCertificacaoFormOpen] = useState(false);
+  const [isDocumentoDetailsOpen, setIsDocumentoDetailsOpen] = useState(false);
+  const [isCertificacaoDetailsOpen, setIsCertificacaoDetailsOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [editingDocumento, setEditingDocumento] = useState<DocumentoRH | null>(null);
   const [editingCertificacao, setEditingCertificacao] = useState<Certificacao | null>(null);
+  const [viewingDocumento, setViewingDocumento] = useState<DocumentoRH | null>(null);
+  const [viewingCertificacao, setViewingCertificacao] = useState<Certificacao | null>(null);
+  const [deletingItem, setDeletingItem] = useState<{ type: 'documento' | 'certificacao'; id: string; title: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDocumentoSubmit = async (data: any, loadData: () => Promise<void>) => {
     try {
@@ -46,6 +53,31 @@ export function useDocumentosRHDialogs() {
     }
   };
 
+  const handleDeleteConfirm = async (loadData: () => Promise<void>) => {
+    if (!deletingItem) return;
+
+    try {
+      setIsDeleting(true);
+      
+      if (deletingItem.type === 'documento') {
+        await documentosRHService.deleteDocumento(deletingItem.id);
+        toast.success('Documento excluído com sucesso');
+      } else {
+        await documentosRHService.deleteCertificacao(deletingItem.id);
+        toast.success('Certificação excluída com sucesso');
+      }
+      
+      setIsDeleteConfirmOpen(false);
+      setDeletingItem(null);
+      await loadData();
+    } catch (error) {
+      console.error('Erro ao excluir:', error);
+      toast.error('Erro ao excluir item');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleEditDocument = (documento: DocumentoRH) => {
     setEditingDocumento(documento);
     setIsDocumentoFormOpen(true);
@@ -54,6 +86,26 @@ export function useDocumentosRHDialogs() {
   const handleEditCertification = (certificacao: Certificacao) => {
     setEditingCertificacao(certificacao);
     setIsCertificacaoFormOpen(true);
+  };
+
+  const handleViewDocument = (documento: DocumentoRH) => {
+    setViewingDocumento(documento);
+    setIsDocumentoDetailsOpen(true);
+  };
+
+  const handleViewCertification = (certificacao: Certificacao) => {
+    setViewingCertificacao(certificacao);
+    setIsCertificacaoDetailsOpen(true);
+  };
+
+  const handleDeleteDocument = (documento: DocumentoRH) => {
+    setDeletingItem({ type: 'documento', id: documento.id, title: documento.titulo });
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteCertification = (certificacao: Certificacao) => {
+    setDeletingItem({ type: 'certificacao', id: certificacao.id, title: certificacao.nome });
+    setIsDeleteConfirmOpen(true);
   };
 
   const handleNewDocument = () => {
@@ -74,18 +126,55 @@ export function useDocumentosRHDialogs() {
     setEditingCertificacao(null);
   };
 
+  const handleCloseDocumentoDetails = () => {
+    setIsDocumentoDetailsOpen(false);
+    setViewingDocumento(null);
+  };
+
+  const handleCloseCertificacaoDetails = () => {
+    setIsCertificacaoDetailsOpen(false);
+    setViewingCertificacao(null);
+  };
+
+  const handleCloseDeleteConfirm = () => {
+    setIsDeleteConfirmOpen(false);
+    setDeletingItem(null);
+  };
+
   return {
+    // Form states
     isDocumentoFormOpen,
     isCertificacaoFormOpen,
     editingDocumento,
     editingCertificacao,
+    
+    // Details states
+    isDocumentoDetailsOpen,
+    isCertificacaoDetailsOpen,
+    viewingDocumento,
+    viewingCertificacao,
+    
+    // Delete states
+    isDeleteConfirmOpen,
+    deletingItem,
+    isDeleting,
+    
+    // Handlers
     handleDocumentoSubmit,
     handleCertificacaoSubmit,
+    handleDeleteConfirm,
     handleEditDocument,
     handleEditCertification,
+    handleViewDocument,
+    handleViewCertification,
+    handleDeleteDocument,
+    handleDeleteCertification,
     handleNewDocument,
     handleNewCertification,
     handleCloseDocumentoForm,
-    handleCloseCertificacaoForm
+    handleCloseCertificacaoForm,
+    handleCloseDocumentoDetails,
+    handleCloseCertificacaoDetails,
+    handleCloseDeleteConfirm
   };
 }

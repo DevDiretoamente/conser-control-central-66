@@ -14,6 +14,8 @@ interface DocumentosTabProps {
   setDocumentoFilter: (filter: DocumentoRHFilter) => void;
   onNewDocument: () => void;
   onEditDocument: (documento: DocumentoRH) => void;
+  onViewDocument: (documento: DocumentoRH) => void;
+  onDeleteDocument: (documento: DocumentoRH) => void;
 }
 
 const DocumentosTab: React.FC<DocumentosTabProps> = ({
@@ -22,7 +24,9 @@ const DocumentosTab: React.FC<DocumentosTabProps> = ({
   documentoFilter,
   setDocumentoFilter,
   onNewDocument,
-  onEditDocument
+  onEditDocument,
+  onViewDocument,
+  onDeleteDocument
 }) => {
   return (
     <Card>
@@ -47,9 +51,17 @@ const DocumentosTab: React.FC<DocumentosTabProps> = ({
               key={documento.id}
               documento={documento}
               onEdit={onEditDocument}
+              onView={onViewDocument}
+              onDelete={onDeleteDocument}
             />
           ))}
         </div>
+
+        {filteredDocumentos.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>Nenhum documento encontrado</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
