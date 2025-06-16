@@ -22,8 +22,17 @@ const mockCertificacao: Certificacao = {
 describe('CertificacaoCard', () => {
   it('renderiza as informações da certificação corretamente', () => {
     const onEdit = jest.fn();
+    const onView = jest.fn();
+    const onDelete = jest.fn();
     
-    render(<CertificacaoCard certificacao={mockCertificacao} onEdit={onEdit} />);
+    render(
+      <CertificacaoCard 
+        certificacao={mockCertificacao} 
+        onEdit={onEdit}
+        onView={onView}
+        onDelete={onDelete}
+      />
+    );
 
     expect(screen.getByText('NR-10 Básico')).toBeInTheDocument();
     expect(screen.getByText('SENAI')).toBeInTheDocument();
@@ -33,8 +42,17 @@ describe('CertificacaoCard', () => {
 
   it('chama onEdit quando o botão de editar é clicado', () => {
     const onEdit = jest.fn();
+    const onView = jest.fn();
+    const onDelete = jest.fn();
     
-    render(<CertificacaoCard certificacao={mockCertificacao} onEdit={onEdit} />);
+    render(
+      <CertificacaoCard 
+        certificacao={mockCertificacao} 
+        onEdit={onEdit}
+        onView={onView}
+        onDelete={onDelete}
+      />
+    );
 
     const editButton = screen.getByRole('button', { name: /edit/i });
     fireEvent.click(editButton);
@@ -50,8 +68,17 @@ describe('CertificacaoCard', () => {
     };
     
     const onEdit = jest.fn();
+    const onView = jest.fn();
+    const onDelete = jest.fn();
     
-    render(<CertificacaoCard certificacao={certificacaoVencida} onEdit={onEdit} />);
+    render(
+      <CertificacaoCard 
+        certificacao={certificacaoVencida} 
+        onEdit={onEdit}
+        onView={onView}
+        onDelete={onDelete}
+      />
+    );
 
     expect(screen.getByText('Certificação vencida')).toBeInTheDocument();
     expect(screen.getByText('Vencida')).toBeInTheDocument();
