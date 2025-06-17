@@ -1,14 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Download, FileText, Award, Calendar, AlertTriangle } from 'lucide-react';
+import { Download, FileText, Award, Calendar, AlertTriangle, FileSpreadsheet } from 'lucide-react';
 import { DocumentoRH, Certificacao } from '@/types/documentosRH';
 import { Funcionario } from '@/types/funcionario';
 import { documentosRHService } from '@/services/documentosRHService';
 import { funcionariosService } from '@/services/funcionariosService';
+import { reportExportService } from '@/services/reportExportService';
 import { toast } from 'sonner';
 
 interface VencimentoProximo {
@@ -26,6 +26,7 @@ const RelatoriosRH: React.FC = () => {
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [vencimentosProximos, setVencimentosProximos] = useState<VencimentoProximo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [filtroRelatorio, setFiltroRelatorio] = useState('geral');
 
   useEffect(() => {
@@ -103,6 +104,75 @@ const RelatoriosRH: React.FC = () => {
 
     vencimentos.sort((a, b) => a.diasRestantes - b.diasRestantes);
     setVencimentosProximos(vencimentos);
+  };
+
+  const gerarRelatorioPDF = async (tipo: string) => {
+    try {
+      setExporting(true);
+      
+      const reportData = {
+        title: `Relatório de ${tipo}`,
+        documentos: tipo === 'documentos' || tipo === 'geral' ? documentos : undefined,
+        certificacoes: tipo === 'certificacoes' || tipo === 'geral' ? certificacoes : undefined,
+        funcionarios,
+        filters: { tipo: filtroRelatorio }
+      };
+      
+      await reportExportService.exportToPDF(reportData);
+      toast.success(`Relatório PDF de ${tipo} gerado com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast.error('Erro ao gerar relatório PDF');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const gerarRelatorioExcel = async (tipo: string) => {
+    try {
+      setExporting(true);
+      
+      const reportData = {
+        title: `Relatório de ${tipo}`,
+        documentos: tipo === 'documentos' || tipo === 'geral' ? documentos : undefined,
+        certificacoes: tipo === 'certificacoes' || tipo === 'geral' ? certificacoes : undefined,
+        funcionarios,
+        filters: { tipo: filtroRelatorio }
+      };
+      
+      await reportExportService.exportToExcel(reportData);
+      toast.success(`Relatório Excel de ${tipo} gerado com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao gerar Excel:', error);
+      toast.error('Erro ao gerar relatório Excel');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const gerarEstatisticas = async () => {
+    try {
+      setExporting(true);
+      
+      const stats = {
+        'Total de Documentos': estatisticas.totalDocumentos,
+        'Documentos Ativos': estatisticas.documentosAtivos,
+        'Documentos Vencidos': estatisticas.documentosVencidos,
+        'Total de Certificações': estatisticas.totalCertificacoes,
+        'Certificações Válidas': estatisticas.certificacoesValidas,
+        'Certificações Vencidas': estatisticas.certificacoesVencidas,
+        'Próximos Vencimentos': estatisticas.vencimentosProximos,
+        'Total de Funcionários': funcionarios.length
+      };
+      
+      await reportExportService.exportStatistics(stats);
+      toast.success('Relatório de estatísticas gerado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao gerar estatísticas:', error);
+      toast.error('Erro ao gerar relatório de estatísticas');
+    } finally {
+      setExporting(false);
+    }
   };
 
   const gerarRelatorio = (tipo: string) => {
@@ -239,67 +309,109 @@ const RelatoriosRH: React.FC = () => {
         </Card>
       )}
 
-      {/* Botões de Relatórios */}
+      {/* Botões de Relatórios com Exportação */}
       <Card>
         <CardHeader>
-          <CardTitle>Gerar Relatórios</CardTitle>
+          <CardTitle>Gerar e Exportar Relatórios</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Button
-              variant="outline"
-              className="h-20 flex flex-col items-center justify-center gap-2"
-              onClick={() => gerarRelatorio('Documentos por Funcionário')}
-            >
-              <FileText className="h-6 w-6" />
-              <span className="text-sm">Documentos por Funcionário</span>
-            </Button>
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full h-16 flex flex-col items-center justify-center gap-2"
+                onClick={() => gerarRelatorioPDF('Documentos por Funcionário')}
+                disabled={exporting}
+              >
+                <FileText className="h-6 w-6" />
+                <span className="text-sm">PDF - Documentos</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => gerarRelatorioExcel('Documentos por Funcionário')}
+                disabled={exporting}
+              >
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Excel
+              </Button>
+            </div>
 
-            <Button
-              variant="outline"
-              className="h-20 flex flex-col items-center justify-center gap-2"
-              onClick={() => gerarRelatorio('Certificações por Categoria')}
-            >
-              <Award className="h-6 w-6" />
-              <span className="text-sm">Certificações por Categoria</span>
-            </Button>
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full h-16 flex flex-col items-center justify-center gap-2"
+                onClick={() => gerarRelatorioPDF('Certificações por Categoria')}
+                disabled={exporting}
+              >
+                <Award className="h-6 w-6" />
+                <span className="text-sm">PDF - Certificações</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => gerarRelatorioExcel('Certificações por Categoria')}
+                disabled={exporting}
+              >
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Excel
+              </Button>
+            </div>
 
-            <Button
-              variant="outline"
-              className="h-20 flex flex-col items-center justify-center gap-2"
-              onClick={() => gerarRelatorio('Vencimentos Mensais')}
-            >
-              <Calendar className="h-6 w-6" />
-              <span className="text-sm">Vencimentos Mensais</span>
-            </Button>
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full h-16 flex flex-col items-center justify-center gap-2"
+                onClick={() => gerarRelatorioPDF('Relatório Completo')}
+                disabled={exporting}
+              >
+                <Download className="h-6 w-6" />
+                <span className="text-sm">PDF - Completo</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => gerarRelatorioExcel('Relatório Completo')}
+                disabled={exporting}
+              >
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Excel
+              </Button>
+            </div>
 
-            <Button
-              variant="outline"
-              className="h-20 flex flex-col items-center justify-center gap-2"
-              onClick={() => gerarRelatorio('Status dos Documentos')}
-            >
-              <Download className="h-6 w-6" />
-              <span className="text-sm">Status dos Documentos</span>
-            </Button>
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full h-16 flex flex-col items-center justify-center gap-2"
+                onClick={gerarEstatisticas}
+                disabled={exporting}
+              >
+                <Calendar className="h-6 w-6" />
+                <span className="text-sm">Estatísticas</span>
+              </Button>
+            </div>
 
-            <Button
-              variant="outline"
-              className="h-20 flex flex-col items-center justify-center gap-2"
-              onClick={() => gerarRelatorio('Compliance RH')}
-            >
-              <AlertTriangle className="h-6 w-6" />
-              <span className="text-sm">Compliance RH</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              className="h-20 flex flex-col items-center justify-center gap-2"
-              onClick={() => gerarRelatorio('Relatório Completo')}
-            >
-              <FileText className="h-6 w-6" />
-              <span className="text-sm">Relatório Completo</span>
-            </Button>
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full h-16 flex flex-col items-center justify-center gap-2"
+                onClick={() => gerarRelatorioPDF('Vencimentos Próximos')}
+                disabled={exporting}
+              >
+                <AlertTriangle className="h-6 w-6" />
+                <span className="text-sm">Vencimentos</span>
+              </Button>
+            </div>
           </div>
+          
+          {exporting && (
+            <div className="mt-4 text-center">
+              <p className="text-sm text-muted-foreground">Gerando relatório...</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

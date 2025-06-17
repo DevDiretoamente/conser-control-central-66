@@ -1,5 +1,6 @@
 
 import { Certificacao, RenovacaoCertificacao } from '@/types/documentosRH';
+import { auditService } from './auditService';
 import { toast } from 'sonner';
 
 const CERTIFICACOES_KEY = 'app_certificacoes';
@@ -43,7 +44,7 @@ export const certificacoesService = {
 
   create: async (certificacao: Omit<Certificacao, 'id' | 'criadoEm' | 'atualizadoEm' | 'renovacoes'>): Promise<Certificacao> => {
     return new Promise((resolve) => {
-      setTimeout(() => {
+      setTimeout(async () => {
         const certificacoes = getCertificacoesFromStorage();
         const newCertificacao: Certificacao = {
           ...certificacao,
@@ -55,6 +56,19 @@ export const certificacoesService = {
         
         const updatedCertificacoes = [...certificacoes, newCertificacao];
         saveCertificacoesToStorage(updatedCertificacoes);
+        
+        // Log de auditoria
+        await auditService.log({
+          action: 'create',
+          entityType: 'certificacao',
+          entityId: newCertificacao.id,
+          entityTitle: newCertificacao.nome,
+          details: {
+            entidadeCertificadora: newCertificacao.entidadeCertificadora,
+            categoria: newCertificacao.categoria
+          }
+        });
+        
         resolve(newCertificacao);
       }, 500);
     });
@@ -62,7 +76,7 @@ export const certificacoesService = {
 
   update: async (id: string, updates: Partial<Certificacao>): Promise<Certificacao | null> => {
     return new Promise((resolve) => {
-      setTimeout(() => {
+      setTimeout(async () => {
         const certificacoes = getCertificacoesFromStorage();
         const index = certificacoes.findIndex(c => c.id === id);
         
@@ -71,6 +85,7 @@ export const certificacoesService = {
           return;
         }
         
+        const oldCertificacao = { ...certificacoes[index] };
         certificacoes[index] = {
           ...certificacoes[index],
           ...updates,
@@ -78,6 +93,20 @@ export const certificacoesService = {
         };
         
         saveCertificacoesToStorage(certificacoes);
+        
+        // Log de auditoria
+        await auditService.log({
+          action: 'update',
+          entityType: 'certificacao',
+          entityId: id,
+          entityTitle: certificacoes[index].nome,
+          details: {
+            changes: Object.keys(updates),
+            oldStatus: oldCertificacao.status,
+            newStatus: certificacoes[index].status
+          }
+        });
+        
         resolve(certificacoes[index]);
       }, 500);
     });
@@ -85,8 +114,9 @@ export const certificacoesService = {
 
   delete: async (id: string): Promise<boolean> => {
     return new Promise((resolve) => {
-      setTimeout(() => {
+      setTimeout(async () => {
         const certificacoes = getCertificacoesFromStorage();
+        const certificacao = certificacoes.find(c => c.id === id);
         const filtered = certificacoes.filter(c => c.id !== id);
         
         if (filtered.length === certificacoes.length) {
@@ -95,6 +125,21 @@ export const certificacoesService = {
         }
         
         saveCertificacoesToStorage(filtered);
+        
+        // Log de auditoria
+        if (certificacao) {
+          await auditService.log({
+            action: 'delete',
+            entityType: 'certificacao',
+            entityId: id,
+            entityTitle: certificacao.nome,
+            details: {
+              entidadeCertificadora: certificacao.entidadeCertificadora,
+              categoria: certificacao.categoria
+            }
+          });
+        }
+        
         resolve(true);
       }, 500);
     });
@@ -102,7 +147,7 @@ export const certificacoesService = {
 
   addRenovacao: async (certificacaoId: string, renovacao: Omit<RenovacaoCertificacao, 'id'>): Promise<Certificacao | null> => {
     return new Promise((resolve) => {
-      setTimeout(() => {
+      setTimeout(async () => {
         const certificacoes = getCertificacoesFromStorage();
         const index = certificacoes.findIndex(c => c.id === certificacaoId);
         
@@ -120,6 +165,20 @@ export const certificacoesService = {
         certificacoes[index].atualizadoEm = new Date().toISOString();
         
         saveCertificacoesToStorage(certificacoes);
+        
+        // Log de auditoria
+        await auditService.log({
+          action: 'create',
+          entityType: 'renovacao',
+          entityId: newRenovacao.id,
+          entityTitle: `Renovação - ${certificacoes[index].nome}`,
+          details: {
+            certificacaoId,
+            dataRenovacao: renovacao.dataRenovacao,
+            novaDataVencimento: renovacao.novaDataVencimento
+          }
+        });
+        
         resolve(certificacoes[index]);
       }, 500);
     });
