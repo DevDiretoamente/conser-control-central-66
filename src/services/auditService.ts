@@ -9,6 +9,8 @@ export interface AuditLog {
   entityType: string;
   entityId: string;
   entityTitle?: string;
+  entityName?: string;
+  userName?: string;
   changes?: Record<string, { from: any; to: any }>;
   details?: any;
   timestamp?: string;

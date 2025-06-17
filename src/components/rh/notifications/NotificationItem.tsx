@@ -58,7 +58,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
 
   const getPriorityColor = () => {
     switch (notification.priority) {
-      case 'critical':
+      case 'urgent':
         return 'destructive';
       case 'high':
         return 'destructive';
@@ -69,8 +69,11 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     }
   };
 
+  const isRead = notification.read || notification.isRead || false;
+  const createdAt = notification.created_at || notification.createdAt || new Date().toISOString();
+
   const handleMarkAsRead = () => {
-    if (!notification.isRead) {
+    if (!isRead) {
       onMarkAsRead(notification.id);
     }
   };
@@ -83,7 +86,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   };
 
   return (
-    <Card className={`transition-all ${notification.isRead ? 'opacity-75' : 'shadow-md'}`}>
+    <Card className={`transition-all ${isRead ? 'opacity-75' : 'shadow-md'}`}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between space-x-3">
           <div className="flex items-start space-x-3 flex-1">
@@ -91,7 +94,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
             <div className="flex-1 space-y-2">
               <div className="flex items-center space-x-2">
                 <h4 className="font-medium text-sm">{notification.title}</h4>
-                {!notification.isRead && (
+                {!isRead && (
                   <div className="w-2 h-2 bg-blue-500 rounded-full" />
                 )}
               </div>
@@ -105,7 +108,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
                 <span>{notification.entityName}</span>
                 <span>•</span>
                 <span>
-                  {formatDistanceToNow(new Date(notification.createdAt), {
+                  {formatDistanceToNow(new Date(createdAt), {
                     addSuffix: true,
                     locale: ptBR
                   })}
@@ -136,7 +139,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
           </div>
           
           <div className="flex flex-col space-y-1">
-            {!notification.isRead && (
+            {!isRead && (
               <Button
                 variant="ghost"
                 size="sm"

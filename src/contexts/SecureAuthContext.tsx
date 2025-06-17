@@ -59,18 +59,19 @@ export const SecureAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      // For now, create a mock profile from user data until user_profiles table is created
+      const mockProfile: UserProfile = {
+        id: user.id,
+        email: user.email || '',
+        name: user.user_metadata?.name || user.email || 'Usuário',
+        role: user.user_metadata?.role || 'operator',
+        company_id: user.user_metadata?.company_id || 'default',
+        is_active: true,
+        created_at: user.created_at,
+        updated_at: user.updated_at || user.created_at
+      };
 
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return;
-      }
-
-      setProfile(data);
+      setProfile(mockProfile);
     } catch (error) {
       console.error('Error refreshing profile:', error);
     }

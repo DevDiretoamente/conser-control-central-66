@@ -4,7 +4,7 @@ import { notificationsSupabaseService } from './supabase/notificationsSupabaseSe
 
 // Export types
 export interface Notification {
-  id?: string;
+  id: string;
   type: 'success' | 'error' | 'warning' | 'info';
   category: string;
   title: string;
@@ -14,7 +14,11 @@ export interface Notification {
   entityName?: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   read?: boolean;
+  isRead?: boolean;
   created_at?: string;
+  createdAt?: string;
+  actionUrl?: string;
+  actionText?: string;
 }
 
 // Re-export all functions from the Supabase service

@@ -25,7 +25,7 @@ export const certificacoesSupabaseService = {
         arquivo: item.arquivo || '',
         nomeArquivo: item.nome_arquivo || '',
         observacoes: item.observacoes || '',
-        renovacoes: (item.renovacoes as RenovacaoCertificacao[]) || [],
+        renovacoes: (item.renovacoes as unknown as RenovacaoCertificacao[]) || [],
         criadoEm: item.created_at,
         atualizadoEm: item.updated_at
       })) || [];
@@ -58,7 +58,7 @@ export const certificacoesSupabaseService = {
         arquivo: item.arquivo || '',
         nomeArquivo: item.nome_arquivo || '',
         observacoes: item.observacoes || '',
-        renovacoes: (item.renovacoes as RenovacaoCertificacao[]) || [],
+        renovacoes: (item.renovacoes as unknown as RenovacaoCertificacao[]) || [],
         criadoEm: item.created_at,
         atualizadoEm: item.updated_at
       })) || [];
@@ -104,7 +104,7 @@ export const certificacoesSupabaseService = {
         arquivo: data.arquivo || '',
         nomeArquivo: data.nome_arquivo || '',
         observacoes: data.observacoes || '',
-        renovacoes: (data.renovacoes as RenovacaoCertificacao[]) || [],
+        renovacoes: (data.renovacoes as unknown as RenovacaoCertificacao[]) || [],
         criadoEm: data.created_at,
         atualizadoEm: data.updated_at
       };
@@ -153,7 +153,7 @@ export const certificacoesSupabaseService = {
         arquivo: data.arquivo || '',
         nomeArquivo: data.nome_arquivo || '',
         observacoes: data.observacoes || '',
-        renovacoes: (data.renovacoes as RenovacaoCertificacao[]) || [],
+        renovacoes: (data.renovacoes as unknown as RenovacaoCertificacao[]) || [],
         criadoEm: data.created_at,
         atualizadoEm: data.updated_at
       };
@@ -177,7 +177,7 @@ export const certificacoesSupabaseService = {
     }
   },
 
-  addRenovacao: async (id: string, renovacao: RenovacaoCertificacao): Promise<void> => {
+  addRenovacao: async (id: string, renovacao: Omit<RenovacaoCertificacao, 'id'>): Promise<void> => {
     try {
       // Get current renovacoes
       const { data: currentData, error: fetchError } = await supabase
@@ -188,12 +188,13 @@ export const certificacoesSupabaseService = {
 
       if (fetchError) throw fetchError;
 
-      const currentRenovacoes = (currentData.renovacoes as RenovacaoCertificacao[]) || [];
-      const newRenovacoes = [...currentRenovacoes, renovacao];
+      const currentRenovacoes = (currentData.renovacoes as unknown as RenovacaoCertificacao[]) || [];
+      const newRenovacao = { ...renovacao, id: Date.now().toString() };
+      const newRenovacoes = [...currentRenovacoes, newRenovacao];
 
       const { error } = await supabase
         .from('certificacoes')
-        .update({ renovacoes: newRenovacoes })
+        .update({ renovacoes: newRenovacoes as any })
         .eq('id', id);
 
       if (error) throw error;
@@ -232,7 +233,7 @@ export const certificacoesSupabaseService = {
         arquivo: item.arquivo || '',
         nomeArquivo: item.nome_arquivo || '',
         observacoes: item.observacoes || '',
-        renovacoes: (item.renovacoes as RenovacaoCertificacao[]) || [],
+        renovacoes: (item.renovacoes as unknown as RenovacaoCertificacao[]) || [],
         criadoEm: item.created_at,
         atualizadoEm: item.updated_at
       })) || [];
@@ -268,7 +269,7 @@ export const certificacoesSupabaseService = {
         arquivo: item.arquivo || '',
         nomeArquivo: item.nome_arquivo || '',
         observacoes: item.observacoes || '',
-        renovacoes: (item.renovacoes as RenovacaoCertificacao[]) || [],
+        renovacoes: (item.renovacoes as unknown as RenovacaoCertificacao[]) || [],
         criadoEm: item.created_at,
         atualizadoEm: item.updated_at
       })) || [];
