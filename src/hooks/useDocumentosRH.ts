@@ -3,6 +3,9 @@ import { useState, useEffect } from 'react';
 import { DocumentoRH, Certificacao, DocumentoRHFilter, CertificacaoFilter } from '@/types/documentosRH';
 import { documentosRHService } from '@/services/documentosRHService';
 import { useDebouncedValue } from './useDebouncedValue';
+import { notificationService } from '@/services/notificationService';
+import { documentosService } from '@/services/documentosService';
+import { certificacoesService } from '@/services/certificacoesService';
 import { toast } from 'sonner';
 
 const PAGE_SIZE = 20;
@@ -24,12 +27,28 @@ export function useDocumentosRH() {
   const loadData = async () => {
     try {
       setLoading(true);
+      
+      // Carregar dados usando os serviços atualizados
       const [docs, certs] = await Promise.all([
-        documentosRHService.getAllDocumentos(),
-        documentosRHService.getAllCertificacoes()
+        documentosService.getAll(),
+        certificacoesService.getAll()
       ]);
+      
       setDocumentos(docs);
       setCertificacoes(certs);
+
+      // Atualizar status de documentos vencidos automaticamente
+      await documentosService.updateExpiredDocumentsStatus();
+      
+      // Gerar notificações automáticas
+      // Mock funcionários para exemplo
+      const mockFuncionarios = [
+        { id: '1', dadosPessoais: { nome: 'João Silva' } },
+        { id: '2', dadosPessoais: { nome: 'Maria Santos' } }
+      ] as any[];
+
+      notificationService.generateAutomaticNotifications(docs, certs, mockFuncionarios);
+      
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       toast.error('Erro ao carregar dados');
@@ -45,7 +64,8 @@ export function useDocumentosRH() {
       const search = debouncedDocumentoSearch.toLowerCase();
       filtered = filtered.filter(d => 
         d.titulo.toLowerCase().includes(search) ||
-        d.descricao.toLowerCase().includes(search)
+        d.descricao.toLowerCase().includes(search) ||
+        d.tipo.toLowerCase().includes(search)
       );
     }
 
@@ -55,6 +75,24 @@ export function useDocumentosRH() {
 
     if (documentoFilter.status && documentoFilter.status !== 'all') {
       filtered = filtered.filter(d => d.status === documentoFilter.status);
+    }
+
+    if (documentoFilter.funcionarioId && documentoFilter.funcionarioId !== 'all') {
+      filtered = filtered.filter(d => d.funcionarioId === documentoFilter.funcionarioId);
+    }
+
+    // Filtros de data
+    if (documentoFilter.dataFrom) {
+      filtered = filtered.filter(d => new Date(d.dataDocumento) >= new Date(documentoFilter.dataFrom!));
+    }
+
+    if (documentoFilter.dataTo) {
+      filtered = filtered.filter(d => new Date(d.dataDocumento) <= new Date(documentoFilter.dataTo!));
+    }
+
+    // Filtro por assinatura
+    if (documentoFilter.assinado !== undefined) {
+      filtered = filtered.filter(d => d.assinado === documentoFilter.assinado);
     }
 
     setFilteredDocumentos(filtered);
@@ -67,7 +105,8 @@ export function useDocumentosRH() {
       const search = debouncedCertificacaoSearch.toLowerCase();
       filtered = filtered.filter(c => 
         c.nome.toLowerCase().includes(search) ||
-        c.entidadeCertificadora.toLowerCase().includes(search)
+        c.entidadeCertificadora.toLowerCase().includes(search) ||
+        c.categoria.toLowerCase().includes(search)
       );
     }
 
@@ -79,6 +118,28 @@ export function useDocumentosRH() {
       filtered = filtered.filter(c => c.status === certificacaoFilter.status);
     }
 
+    if (certificacaoFilter.funcionarioId && certificacaoFilter.funcionarioId !== 'all') {
+      filtered = filtered.filter(c => c.funcionarioId === certificacaoFilter.funcionarioId);
+    }
+
+    if (certificacaoFilter.entidade) {
+      filtered = filtered.filter(c => 
+        c.entidadeCertificadora.toLowerCase().includes(certificacaoFilter.entidade!.toLowerCase())
+      );
+    }
+
+    // Filtro por vencimento próximo
+    if (certificacaoFilter.vencimentoProximo) {
+      const em30Dias = new Date();
+      em30Dias.setDate(em30Dias.getDate() + 30);
+      
+      filtered = filtered.filter(c => 
+        c.dataVencimento && 
+        new Date(c.dataVencimento) <= em30Dias &&
+        new Date(c.dataVencimento) >= new Date()
+      );
+    }
+
     setFilteredCertificacoes(filtered);
   };
 
@@ -88,14 +149,20 @@ export function useDocumentosRH() {
 
   useEffect(() => {
     applyDocumentoFilters();
-  }, [documentos, debouncedDocumentoSearch, documentoFilter.tipo, documentoFilter.status]);
+  }, [documentos, debouncedDocumentoSearch, documentoFilter]);
 
   useEffect(() => {
     applyCertificacaoFilters();
-  }, [certificacoes, debouncedCertificacaoSearch, certificacaoFilter.categoria, certificacaoFilter.status]);
+  }, [certificacoes, debouncedCertificacaoSearch, certificacaoFilter]);
 
-  useEffect(() => { setDocPage(1); }, [debouncedDocumentoSearch, documentoFilter.tipo, documentoFilter.status]);
-  useEffect(() => { setCertPage(1); }, [debouncedCertificacaoSearch, certificacaoFilter.categoria, certificacaoFilter.status]);
+  // Reset page when filters change
+  useEffect(() => { 
+    setDocPage(1); 
+  }, [debouncedDocumentoSearch, documentoFilter]);
+  
+  useEffect(() => { 
+    setCertPage(1); 
+  }, [debouncedCertificacaoSearch, certificacaoFilter]);
 
   const paginatedDocumentos = filteredDocumentos.slice((docPage - 1) * PAGE_SIZE, docPage * PAGE_SIZE);
   const totalDocPages = Math.ceil(filteredDocumentos.length / PAGE_SIZE);
