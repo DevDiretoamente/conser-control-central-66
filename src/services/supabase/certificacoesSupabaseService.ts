@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Certificacao, RenovacaoCertificacao } from '@/types/documentosRH';
-import { toast } from 'sonner';
 
 export const certificacoesSupabaseService = {
   getAll: async (): Promise<Certificacao[]> => {
@@ -19,20 +18,19 @@ export const certificacoesSupabaseService = {
         nome: item.nome,
         entidadeCertificadora: item.entidade_certificadora,
         dataObtencao: item.data_obtencao,
-        dataVencimento: item.data_vencimento || undefined,
-        numero: item.numero || undefined,
+        dataVencimento: item.data_vencimento,
+        numero: item.numero || '',
         categoria: item.categoria as Certificacao['categoria'],
         status: item.status as Certificacao['status'],
-        arquivo: item.arquivo || undefined,
-        nomeArquivo: item.nome_arquivo || undefined,
-        observacoes: item.observacoes || undefined,
-        renovacoes: item.renovacoes || [],
+        arquivo: item.arquivo || '',
+        nomeArquivo: item.nome_arquivo || '',
+        observacoes: item.observacoes || '',
+        renovacoes: (item.renovacoes as RenovacaoCertificacao[]) || [],
         criadoEm: item.created_at,
         atualizadoEm: item.updated_at
       })) || [];
     } catch (error) {
       console.error('Erro ao carregar certificações:', error);
-      toast.error('Erro ao carregar certificações');
       return [];
     }
   },
@@ -53,30 +51,29 @@ export const certificacoesSupabaseService = {
         nome: item.nome,
         entidadeCertificadora: item.entidade_certificadora,
         dataObtencao: item.data_obtencao,
-        dataVencimento: item.data_vencimento || undefined,
-        numero: item.numero || undefined,
+        dataVencimento: item.data_vencimento,
+        numero: item.numero || '',
         categoria: item.categoria as Certificacao['categoria'],
         status: item.status as Certificacao['status'],
-        arquivo: item.arquivo || undefined,
-        nomeArquivo: item.nome_arquivo || undefined,
-        observacoes: item.observacoes || undefined,
-        renovacoes: item.renovacoes || [],
+        arquivo: item.arquivo || '',
+        nomeArquivo: item.nome_arquivo || '',
+        observacoes: item.observacoes || '',
+        renovacoes: (item.renovacoes as RenovacaoCertificacao[]) || [],
         criadoEm: item.created_at,
         atualizadoEm: item.updated_at
       })) || [];
     } catch (error) {
-      console.error('Erro ao carregar certificações:', error);
-      toast.error('Erro ao carregar certificações');
+      console.error('Erro ao carregar certificações do funcionário:', error);
       return [];
     }
   },
 
-  create: async (certificacao: Omit<Certificacao, 'id' | 'criadoEm' | 'atualizadoEm' | 'renovacoes'>): Promise<Certificacao> => {
+  create: async (certificacao: Omit<Certificacao, 'id' | 'criadoEm' | 'atualizadoEm'>): Promise<Certificacao> => {
     try {
       const { data, error } = await supabase
         .from('certificacoes')
         .insert({
-          funcionario_id: certificacao.funcionarioId,
+          funcionario_id: certificacao.funcionarioId || null,
           nome: certificacao.nome,
           entidade_certificadora: certificacao.entidadeCertificadora,
           data_obtencao: certificacao.dataObtencao,
@@ -87,56 +84,52 @@ export const certificacoesSupabaseService = {
           arquivo: certificacao.arquivo || null,
           nome_arquivo: certificacao.nomeArquivo || null,
           observacoes: certificacao.observacoes || null,
-          renovacoes: []
+          renovacoes: certificacao.renovacoes || []
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      const newCertificacao: Certificacao = {
+      return {
         id: data.id,
         funcionarioId: data.funcionario_id || '',
         nome: data.nome,
         entidadeCertificadora: data.entidade_certificadora,
         dataObtencao: data.data_obtencao,
-        dataVencimento: data.data_vencimento || undefined,
-        numero: data.numero || undefined,
+        dataVencimento: data.data_vencimento,
+        numero: data.numero || '',
         categoria: data.categoria as Certificacao['categoria'],
         status: data.status as Certificacao['status'],
-        arquivo: data.arquivo || undefined,
-        nomeArquivo: data.nome_arquivo || undefined,
-        observacoes: data.observacoes || undefined,
-        renovacoes: data.renovacoes || [],
+        arquivo: data.arquivo || '',
+        nomeArquivo: data.nome_arquivo || '',
+        observacoes: data.observacoes || '',
+        renovacoes: (data.renovacoes as RenovacaoCertificacao[]) || [],
         criadoEm: data.created_at,
         atualizadoEm: data.updated_at
       };
-
-      console.log('Certificação criada:', newCertificacao.nome);
-      return newCertificacao;
     } catch (error) {
       console.error('Erro ao criar certificação:', error);
-      toast.error('Erro ao criar certificação');
       throw error;
     }
   },
 
-  update: async (id: string, updates: Partial<Certificacao>): Promise<Certificacao | null> => {
+  update: async (id: string, certificacao: Partial<Certificacao>): Promise<Certificacao> => {
     try {
       const updateData: any = {};
       
-      if (updates.funcionarioId) updateData.funcionario_id = updates.funcionarioId;
-      if (updates.nome) updateData.nome = updates.nome;
-      if (updates.entidadeCertificadora) updateData.entidade_certificadora = updates.entidadeCertificadora;
-      if (updates.dataObtencao) updateData.data_obtencao = updates.dataObtencao;
-      if (updates.dataVencimento !== undefined) updateData.data_vencimento = updates.dataVencimento;
-      if (updates.numero !== undefined) updateData.numero = updates.numero;
-      if (updates.categoria) updateData.categoria = updates.categoria;
-      if (updates.status) updateData.status = updates.status;
-      if (updates.arquivo !== undefined) updateData.arquivo = updates.arquivo;
-      if (updates.nomeArquivo !== undefined) updateData.nome_arquivo = updates.nomeArquivo;
-      if (updates.observacoes !== undefined) updateData.observacoes = updates.observacoes;
-      if (updates.renovacoes) updateData.renovacoes = updates.renovacoes;
+      if (certificacao.funcionarioId !== undefined) updateData.funcionario_id = certificacao.funcionarioId || null;
+      if (certificacao.nome) updateData.nome = certificacao.nome;
+      if (certificacao.entidadeCertificadora) updateData.entidade_certificadora = certificacao.entidadeCertificadora;
+      if (certificacao.dataObtencao) updateData.data_obtencao = certificacao.dataObtencao;
+      if (certificacao.dataVencimento !== undefined) updateData.data_vencimento = certificacao.dataVencimento || null;
+      if (certificacao.numero !== undefined) updateData.numero = certificacao.numero || null;
+      if (certificacao.categoria) updateData.categoria = certificacao.categoria;
+      if (certificacao.status) updateData.status = certificacao.status;
+      if (certificacao.arquivo !== undefined) updateData.arquivo = certificacao.arquivo || null;
+      if (certificacao.nomeArquivo !== undefined) updateData.nome_arquivo = certificacao.nomeArquivo || null;
+      if (certificacao.observacoes !== undefined) updateData.observacoes = certificacao.observacoes || null;
+      if (certificacao.renovacoes) updateData.renovacoes = certificacao.renovacoes;
 
       const { data, error } = await supabase
         .from('certificacoes')
@@ -146,36 +139,31 @@ export const certificacoesSupabaseService = {
         .single();
 
       if (error) throw error;
-      if (!data) return null;
 
-      const updatedCertificacao: Certificacao = {
+      return {
         id: data.id,
         funcionarioId: data.funcionario_id || '',
         nome: data.nome,
         entidadeCertificadora: data.entidade_certificadora,
         dataObtencao: data.data_obtencao,
-        dataVencimento: data.data_vencimento || undefined,
-        numero: data.numero || undefined,
+        dataVencimento: data.data_vencimento,
+        numero: data.numero || '',
         categoria: data.categoria as Certificacao['categoria'],
         status: data.status as Certificacao['status'],
-        arquivo: data.arquivo || undefined,
-        nomeArquivo: data.nome_arquivo || undefined,
-        observacoes: data.observacoes || undefined,
-        renovacoes: data.renovacoes || [],
+        arquivo: data.arquivo || '',
+        nomeArquivo: data.nome_arquivo || '',
+        observacoes: data.observacoes || '',
+        renovacoes: (data.renovacoes as RenovacaoCertificacao[]) || [],
         criadoEm: data.created_at,
         atualizadoEm: data.updated_at
       };
-
-      console.log('Certificação atualizada:', updatedCertificacao.nome);
-      return updatedCertificacao;
     } catch (error) {
       console.error('Erro ao atualizar certificação:', error);
-      toast.error('Erro ao atualizar certificação');
-      return null;
+      throw error;
     }
   },
 
-  delete: async (id: string): Promise<boolean> => {
+  delete: async (id: string): Promise<void> => {
     try {
       const { error } = await supabase
         .from('certificacoes')
@@ -183,61 +171,51 @@ export const certificacoesSupabaseService = {
         .eq('id', id);
 
       if (error) throw error;
-
-      console.log('Certificação excluída:', id);
-      return true;
     } catch (error) {
       console.error('Erro ao excluir certificação:', error);
-      toast.error('Erro ao excluir certificação');
-      return false;
+      throw error;
     }
   },
 
-  addRenovacao: async (certificacaoId: string, renovacao: Omit<RenovacaoCertificacao, 'id'>): Promise<boolean> => {
+  addRenovacao: async (id: string, renovacao: RenovacaoCertificacao): Promise<void> => {
     try {
-      // Buscar certificação atual
-      const { data: certData, error: fetchError } = await supabase
+      // Get current renovacoes
+      const { data: currentData, error: fetchError } = await supabase
         .from('certificacoes')
         .select('renovacoes')
-        .eq('id', certificacaoId)
+        .eq('id', id)
         .single();
 
       if (fetchError) throw fetchError;
 
-      const novaRenovacao: RenovacaoCertificacao = {
-        ...renovacao,
-        id: `renov-${Date.now()}`
-      };
-
-      const renovacoes = [...(certData.renovacoes || []), novaRenovacao];
+      const currentRenovacoes = (currentData.renovacoes as RenovacaoCertificacao[]) || [];
+      const newRenovacoes = [...currentRenovacoes, renovacao];
 
       const { error } = await supabase
         .from('certificacoes')
-        .update({ renovacoes })
-        .eq('id', certificacaoId);
+        .update({ renovacoes: newRenovacoes })
+        .eq('id', id);
 
       if (error) throw error;
-
-      console.log('Renovação adicionada à certificação:', certificacaoId);
-      return true;
     } catch (error) {
       console.error('Erro ao adicionar renovação:', error);
-      toast.error('Erro ao adicionar renovação');
-      return false;
+      throw error;
     }
   },
 
   getExpiringCertifications: async (days: number = 60): Promise<Certificacao[]> => {
     try {
+      const today = new Date();
       const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + days);
-      
+      futureDate.setDate(today.getDate() + days);
+
       const { data, error } = await supabase
         .from('certificacoes')
         .select('*')
-        .not('data_vencimento', 'is', null)
+        .gte('data_vencimento', today.toISOString().split('T')[0])
         .lte('data_vencimento', futureDate.toISOString().split('T')[0])
-        .gte('data_vencimento', new Date().toISOString().split('T')[0]);
+        .eq('status', 'valida')
+        .order('data_vencimento', { ascending: true });
 
       if (error) throw error;
 
@@ -247,19 +225,19 @@ export const certificacoesSupabaseService = {
         nome: item.nome,
         entidadeCertificadora: item.entidade_certificadora,
         dataObtencao: item.data_obtencao,
-        dataVencimento: item.data_vencimento || undefined,
-        numero: item.numero || undefined,
+        dataVencimento: item.data_vencimento,
+        numero: item.numero || '',
         categoria: item.categoria as Certificacao['categoria'],
         status: item.status as Certificacao['status'],
-        arquivo: item.arquivo || undefined,
-        nomeArquivo: item.nome_arquivo || undefined,
-        observacoes: item.observacoes || undefined,
-        renovacoes: item.renovacoes || [],
+        arquivo: item.arquivo || '',
+        nomeArquivo: item.nome_arquivo || '',
+        observacoes: item.observacoes || '',
+        renovacoes: (item.renovacoes as RenovacaoCertificacao[]) || [],
         criadoEm: item.created_at,
         atualizadoEm: item.updated_at
       })) || [];
     } catch (error) {
-      console.error('Erro ao buscar certificações vencendo:', error);
+      console.error('Erro ao carregar certificações próximas ao vencimento:', error);
       return [];
     }
   },
@@ -267,13 +245,13 @@ export const certificacoesSupabaseService = {
   getExpiredCertifications: async (): Promise<Certificacao[]> => {
     try {
       const today = new Date().toISOString().split('T')[0];
-      
+
       const { data, error } = await supabase
         .from('certificacoes')
         .select('*')
-        .not('data_vencimento', 'is', null)
         .lt('data_vencimento', today)
-        .neq('status', 'vencida');
+        .eq('status', 'valida')
+        .order('data_vencimento', { ascending: false });
 
       if (error) throw error;
 
@@ -283,32 +261,36 @@ export const certificacoesSupabaseService = {
         nome: item.nome,
         entidadeCertificadora: item.entidade_certificadora,
         dataObtencao: item.data_obtencao,
-        dataVencimento: item.data_vencimento || undefined,
-        numero: item.numero || undefined,
+        dataVencimento: item.data_vencimento,
+        numero: item.numero || '',
         categoria: item.categoria as Certificacao['categoria'],
         status: item.status as Certificacao['status'],
-        arquivo: item.arquivo || undefined,
-        nomeArquivo: item.nome_arquivo || undefined,
-        observacoes: item.observacoes || undefined,
-        renovacoes: item.renovacoes || [],
+        arquivo: item.arquivo || '',
+        nomeArquivo: item.nome_arquivo || '',
+        observacoes: item.observacoes || '',
+        renovacoes: (item.renovacoes as RenovacaoCertificacao[]) || [],
         criadoEm: item.created_at,
         atualizadoEm: item.updated_at
       })) || [];
     } catch (error) {
-      console.error('Erro ao buscar certificações vencidas:', error);
+      console.error('Erro ao carregar certificações vencidas:', error);
       return [];
     }
   },
 
   updateExpiredCertificationsStatus: async (): Promise<void> => {
     try {
-      const expiredCerts = await certificacoesSupabaseService.getExpiredCertifications();
-      
-      for (const cert of expiredCerts) {
-        await certificacoesSupabaseService.update(cert.id, { status: 'vencida' });
-      }
+      const today = new Date().toISOString().split('T')[0];
+
+      const { error } = await supabase
+        .from('certificacoes')
+        .update({ status: 'vencida' })
+        .lt('data_vencimento', today)
+        .eq('status', 'valida');
+
+      if (error) throw error;
     } catch (error) {
-      console.error('Erro ao atualizar status de certificações vencidas:', error);
+      console.error('Erro ao atualizar status das certificações vencidas:', error);
     }
   }
 };

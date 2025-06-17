@@ -142,5 +142,10 @@ export const notificationsSupabaseService = {
     } catch (error) {
       console.error('Erro ao excluir notificação:', error);
     }
+  },
+
+  generateAutomaticNotifications: async (): Promise<void> => {
+    // This method exists for backward compatibility but is not implemented yet
+    console.log('Automatic notification generation not implemented yet');
   }
 };

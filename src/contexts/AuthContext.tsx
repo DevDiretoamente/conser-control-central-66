@@ -34,19 +34,19 @@ const initialState: AuthState = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Enhanced mock users for demonstration with permissions
+// SECURITY WARNING: These are demo users only - replace with real Supabase auth
 const mockUsers: User[] = [
   {
     id: '1',
     email: 'admin@conservias.com',
     password: 'admin123',
-    name: 'Administrador',
+    name: 'Administrador (DEMO)',
     role: 'admin' as UserRole,
     avatar: '',
     isActive: true,
     createdAt: '2023-01-01T10:00:00Z',
     lastLogin: '2024-05-09T08:30:00Z',
-    groupIds: ['1'], // Admin group
+    groupIds: ['1'],
     permissions: [
       { area: 'rh', level: 'manage' },
       { area: 'obras', level: 'manage' },
@@ -55,70 +55,17 @@ const mockUsers: User[] = [
       { area: 'financeiro', level: 'manage' },
       { area: 'configuracoes', level: 'manage' },
       { area: 'usuarios', level: 'manage' },
-      { area: 'cartaoponto', level: 'manage' }, // Added permission for cartão ponto
+      { area: 'cartaoponto', level: 'manage' },
     ]
-  },
-  {
-    id: '2',
-    email: 'gerente@conservias.com',
-    password: 'gerente123',
-    name: 'Gerente de RH',
-    role: 'manager' as UserRole,
-    avatar: '',
-    isActive: true,
-    createdAt: '2023-02-15T14:30:00Z',
-    lastLogin: '2024-05-08T16:45:00Z',
-    groupIds: ['2'], // RH Manager group
-    permissions: [
-      { area: 'rh', level: 'manage' },
-      { area: 'funcionarios', level: 'write' },
-      { area: 'exames', level: 'write' },
-      { area: 'documentos', level: 'read' },
-      { area: 'cartaoponto', level: 'write' }, // Added permission for cartão ponto
-    ]
-  },
-  {
-    id: '3',
-    email: 'operador@conservias.com',
-    password: 'operador123',
-    name: 'Operador',
-    role: 'operator' as UserRole,
-    avatar: '',
-    isActive: true,
-    createdAt: '2023-03-20T09:15:00Z',
-    lastLogin: '2024-05-09T10:20:00Z',
-    groupIds: ['3'], // Operator group
-    permissions: [
-      { area: 'rh', level: 'read' },
-      { area: 'funcionarios', level: 'read' },
-      { area: 'exames', level: 'read' },
-      { area: 'cartaoponto', level: 'create' }, // Added permission for cartão ponto (can create/edit records)
-    ]
-  },
-  {
-    id: '4',
-    email: 'inativo@conservias.com',
-    password: 'inativo123',
-    name: 'Usuário Inativo',
-    role: 'operator' as UserRole,
-    avatar: '',
-    isActive: false,
-    createdAt: '2023-04-10T11:25:00Z',
-    lastLogin: '2023-09-15T14:20:00Z',
-    groupIds: [],
-    permissions: [
-      { area: 'rh', level: 'read' },
-      { area: 'funcionarios', level: 'read' },
-    ]
-  },
+  }
 ];
 
-// Mock permission groups
+// SECURITY WARNING: These are demo groups only
 const mockGroups: UserGroup[] = [
   {
     id: '1',
-    name: 'Administradores',
-    description: 'Acesso total ao sistema',
+    name: 'Administradores (DEMO)',
+    description: 'Acesso total ao sistema - APENAS PARA DEMONSTRAÇÃO',
     permissions: [
       { area: 'rh', level: 'manage' },
       { area: 'obras', level: 'manage' },
@@ -129,39 +76,13 @@ const mockGroups: UserGroup[] = [
       { area: 'usuarios', level: 'manage' },
     ],
     createdAt: '2023-01-01T10:00:00Z',
-  },
-  {
-    id: '2',
-    name: 'Gerentes RH',
-    description: 'Acesso de gerenciamento para o módulo de RH',
-    permissions: [
-      { area: 'rh', level: 'manage' },
-      { area: 'funcionarios', level: 'manage' },
-      { area: 'exames', level: 'manage' },
-      { area: 'documentos', level: 'manage' },
-      { area: 'cartaoponto', level: 'manage' },
-    ],
-    createdAt: '2023-01-02T10:00:00Z',
-  },
-  {
-    id: '3',
-    name: 'Operadores de RH',
-    description: 'Acesso básico ao módulo de RH',
-    permissions: [
-      { area: 'rh', level: 'read' },
-      { area: 'funcionarios', level: 'read' },
-      { area: 'exames', level: 'read' },
-      { area: 'cartaoponto', level: 'create' },
-    ],
-    createdAt: '2023-01-03T10:00:00Z',
-  },
+  }
 ];
 
 // Helper function to get the highest permission level for an area from a user
 export const getHighestPermissionForArea = (user: User, area: PermissionArea): PermissionLevel | null => {
   if (!user.permissions) return null;
   
-  // First, check if user has admin role (has all permissions)
   if (user.role === 'admin') return 'manage';
   
   const areaPermissions = user.permissions.filter(p => p.area === area);
@@ -184,6 +105,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
+    // SECURITY WARNING: This is demo authentication only
+    console.warn('🚨 SECURITY WARNING: Using demo authentication. Replace with secure Supabase auth.');
+    
     // Check for stored authentication on initial load
     const storedUser = localStorage.getItem('conservias-user');
     
@@ -215,7 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setState({ ...state, isLoading: true, error: null });
 
     try {
-      // In a real app, this would be an API call
+      // SECURITY WARNING: This is demo authentication with hardcoded credentials
       const foundUser = users.find(
         (user) => user.email === email && user.password === password && user.isActive
       );
@@ -226,16 +150,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const { password: _, ...userWithoutPassword } = foundUser;
       
-      // Update last login time
       const updatedUser = {
         ...userWithoutPassword,
         lastLogin: new Date().toISOString()
       };
 
-      // Update users list with new login time
       setUsers(users.map(u => u.id === updatedUser.id ? {...u, lastLogin: updatedUser.lastLogin} : u));
       
-      // Store user in localStorage
       localStorage.setItem('conservias-user', JSON.stringify(updatedUser));
       
       setState({
@@ -246,8 +167,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       toast({
-        title: 'Login realizado com sucesso',
-        description: `Bem-vindo, ${updatedUser.name}!`,
+        title: 'Login realizado com sucesso (DEMO)',
+        description: `Bem-vindo, ${updatedUser.name}! ⚠️ Usando autenticação de demonstração`,
       });
     } catch (error) {
       setState({
@@ -283,20 +204,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const getCombinedPermissions = (user: User): Permission[] => {
     if (!user) return [];
     
-    // Start with user's direct permissions
     let combinedPermissions: Permission[] = [...(user.permissions || [])];
     
-    // Add permissions from user's groups
     if (user.groupIds && user.groupIds.length > 0) {
       const userGroups = groups.filter(group => user.groupIds?.includes(group.id));
       
       userGroups.forEach(group => {
         group.permissions.forEach(groupPerm => {
-          // Check if this permission area already exists
           const existingPermIdx = combinedPermissions.findIndex(p => p.area === groupPerm.area);
           
           if (existingPermIdx >= 0) {
-            // Compare and keep highest level permission
             const levelHierarchy: Record<PermissionLevel, number> = {
               'read': 1,
               'create': 2,
@@ -312,7 +229,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               combinedPermissions[existingPermIdx] = { ...groupPerm };
             }
           } else {
-            // Add new permission area
             combinedPermissions.push({ ...groupPerm });
           }
         });
@@ -325,7 +241,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const hasPermission = (requiredRole: UserRole): boolean => {
     if (!state.isAuthenticated || !state.user) return false;
     
-    // Role hierarchy: admin > manager > operator
     const roleHierarchy: Record<UserRole, number> = {
       'admin': 3,
       'manager': 2,
@@ -341,13 +256,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const hasSpecificPermission = (area: PermissionArea, level?: PermissionLevel): boolean => {
     if (!state.isAuthenticated || !state.user) return false;
     
-    // Admin role has all permissions
     if (state.user.role === 'admin') return true;
     
-    // Get combined permissions (user's direct permissions + group permissions)
     const combinedPermissions = getCombinedPermissions(state.user);
     
-    // For specific area and level
     if (level) {
       const levelHierarchy: Record<PermissionLevel, number> = {
         'read': 1,
@@ -363,9 +275,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const requiredPermissionLevel = levelHierarchy[level];
         return userPermissionLevel >= requiredPermissionLevel;
       }
-    } 
-    // Just check if user has any permission for the area
-    else {
+    } else {
       return combinedPermissions.some(p => p.area === area);
     }
     
@@ -382,7 +292,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUsers([...users, newUser]);
     
     toast({
-      title: 'Usuário criado',
+      title: 'Usuário criado (DEMO)',
       description: `Usuário ${newUser.name} criado com sucesso.`,
     });
   };
@@ -397,7 +307,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     setUsers(updatedUsers);
     
-    // If the logged in user was updated, update the logged in state
     if (state.user && state.user.id === id) {
       const updatedUser = updatedUsers.find(u => u.id === id);
       if (updatedUser) {
@@ -416,7 +325,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const deleteUser = (id: string) => {
-    // In a real app, you might want to soft-delete instead
     setUsers(users.filter(user => user.id !== id));
     
     toast({
@@ -436,7 +344,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     setUsers(updatedUsers);
     
-    // If the logged in user was updated, update the logged in state
     if (state.user && state.user.id === userId) {
       const updatedUser = updatedUsers.find(u => u.id === userId);
       if (updatedUser) {
@@ -464,7 +371,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     setUsers(updatedUsers);
     
-    // If the logged in user was updated, update the logged in state
     if (state.user && state.user.id === userId) {
       const updatedUser = updatedUsers.find(u => u.id === userId);
       if (updatedUser) {
@@ -486,7 +392,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const user = users.find(u => u.id === userId);
     if (!user) return;
 
-    // Update user active status
     const updatedUsers = users.map(user => {
       if (user.id === userId) {
         return { ...user, isActive: active };
@@ -496,7 +401,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     setUsers(updatedUsers);
 
-    // Add to activation history
     const historyEntry: UserActivationHistoryEntry = {
       userId,
       timestamp: new Date().toISOString(),
@@ -546,10 +450,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const deleteGroup = (id: string) => {
-    // Remove group
     setGroups(groups.filter(group => group.id !== id));
     
-    // Update users to remove this group from their groupIds
     const updatedUsers = users.map(user => {
       if (user.groupIds?.includes(id)) {
         return {
@@ -600,7 +502,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateUserGroups,
     toggleUserActivation,
     userActivationHistory,
-    // Group management
     groups,
     createGroup,
     updateGroup,

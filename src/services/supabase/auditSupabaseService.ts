@@ -52,7 +52,7 @@ export const auditSupabaseService = {
         entityType: item.entity_type,
         entityId: item.entity_id,
         entityTitle: item.entity_title || undefined,
-        changes: item.changes || undefined,
+        changes: (item.changes as Record<string, { from: any; to: any }>) || undefined,
         details: item.details || undefined,
         timestamp: item.timestamp
       })) || [];
@@ -79,7 +79,7 @@ export const auditSupabaseService = {
         entityType: item.entity_type,
         entityId: item.entity_id,
         entityTitle: item.entity_title || undefined,
-        changes: item.changes || undefined,
+        changes: (item.changes as Record<string, { from: any; to: any }>) || undefined,
         details: item.details || undefined,
         timestamp: item.timestamp
       })) || [];
