@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -55,11 +54,43 @@ const DocumentosRHMetrics: React.FC = () => {
         certificacoesService.getAll()
       ]);
 
-      // Mock funcionários (substitua pela implementação real)
+      // Mock funcionários com a estrutura completa do tipo Funcionario
       const mockFuncionarios: Funcionario[] = [
-        { id: '1', dadosPessoais: { nome: 'João Silva', email: 'joao@test.com', telefone: '11999999999' } },
-        { id: '2', dadosPessoais: { nome: 'Maria Santos', email: 'maria@test.com', telefone: '11888888888' } }
-      ] as Funcionario[];
+        {
+          id: '1',
+          dadosPessoais: {
+            nome: 'João Silva',
+            cpf: '123.456.789-00',
+            rg: '12345678',
+            dataNascimento: new Date('1990-01-01'),
+            escolaridade: 'Superior',
+            estadoCivil: 'Solteiro',
+            contatoEmergenciaNome: 'Maria Silva',
+            contatoEmergenciaTelefone: '11999999999'
+          },
+          contato: {
+            telefone: '11999999999',
+            email: 'joao@test.com'
+          }
+        } as Funcionario,
+        {
+          id: '2',
+          dadosPessoais: {
+            nome: 'Maria Santos',
+            cpf: '987.654.321-00',
+            rg: '87654321',
+            dataNascimento: new Date('1985-05-15'),
+            escolaridade: 'Superior',
+            estadoCivil: 'Casada',
+            contatoEmergenciaNome: 'João Santos',
+            contatoEmergenciaTelefone: '11888888888'
+          },
+          contato: {
+            telefone: '11888888888',
+            email: 'maria@test.com'
+          }
+        } as Funcionario
+      ];
 
       setFuncionarios(mockFuncionarios);
 
@@ -118,7 +149,7 @@ const DocumentosRHMetrics: React.FC = () => {
       const certsFuncionario = certificacoes.filter(c => c.funcionarioId === funcionario.id);
       
       const validacao = validationService.validateComplianceChecklist(
-        funcionario.id, 
+        funcionario.id!, 
         docsFuncionario, 
         certsFuncionario
       );

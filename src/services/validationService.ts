@@ -172,12 +172,12 @@ export const validationService = {
     const errors: string[] = [];
     const warnings: string[] = [];
 
-    // Validações básicas do funcionário podem ser adicionadas aqui
-    if (!funcionario.dadosPessoais.email) {
+    // Validações básicas do funcionário - acessar email e telefone do objeto contato
+    if (!funcionario.contato?.email) {
       warnings.push('Funcionário sem email cadastrado');
     }
 
-    if (!funcionario.dadosPessoais.telefone) {
+    if (!funcionario.contato?.telefone) {
       warnings.push('Funcionário sem telefone cadastrado');
     }
 
