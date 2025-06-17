@@ -9,7 +9,265 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      audit_logs: {
+        Row: {
+          action: string
+          changes: Json | null
+          details: Json | null
+          entity_id: string
+          entity_title: string | null
+          entity_type: string
+          id: string
+          timestamp: string
+        }
+        Insert: {
+          action: string
+          changes?: Json | null
+          details?: Json | null
+          entity_id: string
+          entity_title?: string | null
+          entity_type: string
+          id?: string
+          timestamp?: string
+        }
+        Update: {
+          action?: string
+          changes?: Json | null
+          details?: Json | null
+          entity_id?: string
+          entity_title?: string | null
+          entity_type?: string
+          id?: string
+          timestamp?: string
+        }
+        Relationships: []
+      }
+      certificacoes: {
+        Row: {
+          arquivo: string | null
+          categoria: string
+          created_at: string
+          data_obtencao: string
+          data_vencimento: string | null
+          entidade_certificadora: string
+          funcionario_id: string | null
+          id: string
+          nome: string
+          nome_arquivo: string | null
+          numero: string | null
+          observacoes: string | null
+          renovacoes: Json | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          arquivo?: string | null
+          categoria: string
+          created_at?: string
+          data_obtencao: string
+          data_vencimento?: string | null
+          entidade_certificadora: string
+          funcionario_id?: string | null
+          id?: string
+          nome: string
+          nome_arquivo?: string | null
+          numero?: string | null
+          observacoes?: string | null
+          renovacoes?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          arquivo?: string | null
+          categoria?: string
+          created_at?: string
+          data_obtencao?: string
+          data_vencimento?: string | null
+          entidade_certificadora?: string
+          funcionario_id?: string | null
+          id?: string
+          nome?: string
+          nome_arquivo?: string | null
+          numero?: string | null
+          observacoes?: string | null
+          renovacoes?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificacoes_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documentos_rh: {
+        Row: {
+          arquivo: string | null
+          assinado: boolean
+          created_at: string
+          criado_por: string
+          data_assinatura: string | null
+          data_documento: string
+          data_vencimento: string | null
+          descricao: string
+          funcionario_id: string | null
+          id: string
+          nome_arquivo: string | null
+          observacoes: string | null
+          status: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          arquivo?: string | null
+          assinado?: boolean
+          created_at?: string
+          criado_por: string
+          data_assinatura?: string | null
+          data_documento: string
+          data_vencimento?: string | null
+          descricao: string
+          funcionario_id?: string | null
+          id?: string
+          nome_arquivo?: string | null
+          observacoes?: string | null
+          status?: string
+          tipo: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          arquivo?: string | null
+          assinado?: boolean
+          created_at?: string
+          criado_por?: string
+          data_assinatura?: string | null
+          data_documento?: string
+          data_vencimento?: string | null
+          descricao?: string
+          funcionario_id?: string | null
+          id?: string
+          nome_arquivo?: string | null
+          observacoes?: string | null
+          status?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_rh_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcionarios: {
+        Row: {
+          cnh: Json | null
+          contato: Json
+          created_at: string
+          dados_bancarios: Json
+          dados_pessoais: Json
+          dados_profissionais: Json
+          dependentes: Json | null
+          documentos: Json | null
+          documentos_gerados: Json | null
+          endereco: Json
+          epis_entregues: Json | null
+          exames_realizados: Json | null
+          id: string
+          tamanho_uniforme: Json | null
+          uniformes_entregues: Json | null
+          updated_at: string
+        }
+        Insert: {
+          cnh?: Json | null
+          contato: Json
+          created_at?: string
+          dados_bancarios: Json
+          dados_pessoais: Json
+          dados_profissionais: Json
+          dependentes?: Json | null
+          documentos?: Json | null
+          documentos_gerados?: Json | null
+          endereco: Json
+          epis_entregues?: Json | null
+          exames_realizados?: Json | null
+          id?: string
+          tamanho_uniforme?: Json | null
+          uniformes_entregues?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          cnh?: Json | null
+          contato?: Json
+          created_at?: string
+          dados_bancarios?: Json
+          dados_pessoais?: Json
+          dados_profissionais?: Json
+          dependentes?: Json | null
+          documentos?: Json | null
+          documentos_gerados?: Json | null
+          endereco?: Json
+          epis_entregues?: Json | null
+          exames_realizados?: Json | null
+          id?: string
+          tamanho_uniforme?: Json | null
+          uniformes_entregues?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          category: string
+          created_at: string
+          entity_id: string | null
+          entity_name: string | null
+          entity_type: string | null
+          id: string
+          message: string
+          priority: string
+          read: boolean
+          title: string
+          type: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          entity_id?: string | null
+          entity_name?: string | null
+          entity_type?: string | null
+          id?: string
+          message: string
+          priority?: string
+          read?: boolean
+          title: string
+          type: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_name?: string | null
+          entity_type?: string | null
+          id?: string
+          message?: string
+          priority?: string
+          read?: boolean
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
