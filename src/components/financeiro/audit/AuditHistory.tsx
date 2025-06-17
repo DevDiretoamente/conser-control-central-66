@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { History, Download, Search, Filter } from 'lucide-react';
-import { AuditLog, AuditService } from '@/services/auditService';
+import { AuditLog, auditService } from '@/services/auditService';
 
 const AuditHistory: React.FC = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -23,8 +23,8 @@ const AuditHistory: React.FC = () => {
     filterLogs();
   }, [logs, searchTerm, entityTypeFilter, actionFilter]);
 
-  const loadLogs = () => {
-    const allLogs = AuditService.getRecentActivity(100);
+  const loadLogs = async () => {
+    const allLogs = await auditService.getLogs();
     setLogs(allLogs);
   };
 
@@ -33,7 +33,7 @@ const AuditHistory: React.FC = () => {
 
     if (searchTerm) {
       filtered = filtered.filter(log =>
-        log.entityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (log.entityName || log.entityTitle).toLowerCase().includes(searchTerm.toLowerCase()) ||
         log.userName.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -57,6 +57,8 @@ const AuditHistory: React.FC = () => {
         return 'secondary';
       case 'delete':
         return 'destructive';
+      default:
+        return 'outline';
     }
   };
 
@@ -68,6 +70,12 @@ const AuditHistory: React.FC = () => {
         return 'Atualizado';
       case 'delete':
         return 'Excluído';
+      case 'view':
+        return 'Visualizado';
+      case 'download':
+        return 'Download';
+      default:
+        return action;
     }
   };
 
@@ -85,6 +93,14 @@ const AuditHistory: React.FC = () => {
         return 'Obra/Projeto';
       case 'budget':
         return 'Orçamento';
+      case 'documento':
+        return 'Documento';
+      case 'certificacao':
+        return 'Certificação';
+      case 'renovacao':
+        return 'Renovação';
+      default:
+        return entityType;
     }
   };
 
@@ -162,6 +178,9 @@ const AuditHistory: React.FC = () => {
                 <SelectItem value="cost_center">Centros de Custo</SelectItem>
                 <SelectItem value="work">Obras/Projetos</SelectItem>
                 <SelectItem value="budget">Orçamentos</SelectItem>
+                <SelectItem value="documento">Documentos RH</SelectItem>
+                <SelectItem value="certificacao">Certificações</SelectItem>
+                <SelectItem value="renovacao">Renovações</SelectItem>
               </SelectContent>
             </Select>
 
@@ -174,6 +193,8 @@ const AuditHistory: React.FC = () => {
                 <SelectItem value="create">Criação</SelectItem>
                 <SelectItem value="update">Atualização</SelectItem>
                 <SelectItem value="delete">Exclusão</SelectItem>
+                <SelectItem value="view">Visualização</SelectItem>
+                <SelectItem value="download">Download</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -190,7 +211,7 @@ const AuditHistory: React.FC = () => {
                   <History className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium">{log.entityName}</span>
+                      <span className="font-medium">{log.entityName || log.entityTitle}</span>
                       <Badge variant={getActionBadgeVariant(log.action)}>
                         {getActionLabel(log.action)}
                       </Badge>
@@ -205,7 +226,7 @@ const AuditHistory: React.FC = () => {
                 </div>
               </div>
 
-              {Object.keys(log.changes).length > 0 && (
+              {log.changes && Object.keys(log.changes).length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium">Alterações:</h4>
                   <div className="space-y-1">

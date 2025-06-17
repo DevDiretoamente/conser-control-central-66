@@ -1,6 +1,6 @@
 import { Invoice, Payment } from '@/types/financeiro';
 import { v4 as uuidv4 } from 'uuid';
-import { AuditService } from '@/services/auditService';
+import { auditService } from '@/services/auditService';
 import { BudgetService } from '@/services/budgetService';
 
 const STORAGE_KEY = 'financeiro_invoices';
@@ -32,7 +32,13 @@ export class InvoiceService {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(invoices));
     
     // Log audit
-    AuditService.logCreate('invoice', invoice.id, invoice.number, invoice);
+    auditService.log({
+      action: 'create',
+      entityType: 'invoice',
+      entityId: invoice.id,
+      entityTitle: invoice.number,
+      details: invoice
+    });
     
     // Update budget if applicable
     if (invoice.status === 'paid' || invoice.status === 'released') {
@@ -58,8 +64,24 @@ export class InvoiceService {
     invoices[index] = updatedInvoice;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(invoices));
     
-    // Log audit
-    AuditService.logUpdate('invoice', id, updatedInvoice.number, oldInvoice, updatedInvoice);
+    // Log audit with changes
+    const changes: Record<string, { from: any; to: any }> = {};
+    Object.keys(invoiceData).forEach(key => {
+      const oldValue = (oldInvoice as any)[key];
+      const newValue = (invoiceData as any)[key];
+      if (oldValue !== newValue) {
+        changes[key] = { from: oldValue, to: newValue };
+      }
+    });
+    
+    auditService.log({
+      action: 'update',
+      entityType: 'invoice',
+      entityId: id,
+      entityTitle: updatedInvoice.number,
+      changes,
+      details: { oldInvoice, updatedInvoice }
+    });
     
     // Update budget if status changed to paid/released
     if ((invoiceData.status === 'paid' || invoiceData.status === 'released') && 
@@ -81,7 +103,12 @@ export class InvoiceService {
     
     // Log audit
     if (invoice) {
-      AuditService.logDelete('invoice', id, invoice.number);
+      auditService.log({
+        action: 'delete',
+        entityType: 'invoice',
+        entityId: id,
+        entityTitle: invoice.number
+      });
     }
     
     return true;

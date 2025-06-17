@@ -2,13 +2,15 @@
 export interface AuditLog {
   id: string;
   action: 'create' | 'update' | 'delete' | 'view' | 'download';
-  entityType: 'documento' | 'certificacao' | 'renovacao';
+  entityType: 'documento' | 'certificacao' | 'renovacao' | 'invoice' | 'supplier' | 'customer' | 'cost_center' | 'work' | 'budget';
   entityId: string;
   entityTitle: string;
+  entityName?: string; // For backward compatibility
   userId: string;
   userName: string;
   timestamp: string;
   details?: Record<string, any>;
+  changes?: Record<string, { from: any; to: any }>; // For tracking changes
   ipAddress?: string;
 }
 
@@ -42,7 +44,8 @@ export const auditService = {
       id: `audit-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date().toISOString(),
       userId: 'current-user', // Substituir pela sessão real
-      userName: 'Usuário Admin' // Substituir pela sessão real
+      userName: 'Usuário Admin', // Substituir pela sessão real
+      entityName: logData.entityTitle // For backward compatibility
     };
     
     logs.push(newLog);
@@ -90,7 +93,17 @@ export const auditService = {
     return auditService.getLogs({ entityType, entityId });
   },
 
+  getRecentActivity: (limit: number = 50): AuditLog[] => {
+    const logs = getAuditLogs();
+    return logs
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, limit);
+  },
+
   clear: async (): Promise<void> => {
     localStorage.removeItem(AUDIT_KEY);
   }
 };
+
+// Export for backward compatibility
+export const AuditService = auditService;
