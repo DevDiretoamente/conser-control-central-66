@@ -179,7 +179,7 @@ export const funcionariosSupabaseService = {
         contato: data.contato as unknown as Funcionario['contato'],
         dadosProfissionais: data.dados_profissionais as unknown as Funcionario['dadosProfissionais'],
         cnh: (data.cnh as unknown as Funcionario['cnh']) || {},
-        dadosB ancarios: data.dados_bancarios as unknown as Funcionario['dadosBancarios'],
+        dadosBancarios: data.dados_bancarios as unknown as Funcionario['dadosBancarios'],
         documentos: (data.documentos as unknown as Funcionario['documentos']) || {
           rgFile: null,
           cpfFile: null,
