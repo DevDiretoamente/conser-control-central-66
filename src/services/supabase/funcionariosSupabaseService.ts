@@ -66,19 +66,19 @@ export const funcionariosSupabaseService = {
 
       return data?.map((item: FuncionarioRow) => ({
         id: item.id,
-        dadosPessoais: deserializeDateFromJson(item.dados_pessoais) as Funcionario['dadosPessoais'],
+        dadosPessoais: deserializeDateFromJson(item.dados_pessoais as unknown) as Funcionario['dadosPessoais'],
         endereco: item.endereco as unknown as Funcionario['endereco'],
         contato: item.contato as unknown as Funcionario['contato'],
-        dadosProfissionais: deserializeDateFromJson(item.dados_profissionais) as Funcionario['dadosProfissionais'],
-        cnh: deserializeDateFromJson(item.cnh || {}) as Funcionario['cnh'],
+        dadosProfissionais: deserializeDateFromJson(item.dados_profissionais as unknown) as Funcionario['dadosProfissionais'],
+        cnh: deserializeDateFromJson(item.cnh || {} as unknown) as Funcionario['cnh'],
         dadosBancarios: item.dados_bancarios as unknown as Funcionario['dadosBancarios'],
-        documentos: (item.documentos || {}) as unknown as Funcionario['documentos'],
-        dependentes: deserializeDateFromJson(item.dependentes || []) as Funcionario['dependentes'],
-        tamanhoUniforme: (item.tamanho_uniforme || { camisa: '', calca: '', calcado: 0 }) as Funcionario['tamanhoUniforme'],
-        episEntregues: deserializeDateFromJson(item.epis_entregues || []) as Funcionario['episEntregues'],
-        uniformesEntregues: deserializeDateFromJson(item.uniformes_entregues || []) as Funcionario['uniformesEntregues'],
-        examesRealizados: deserializeDateFromJson(item.exames_realizados || []) as Funcionario['examesRealizados'],
-        documentosGerados: deserializeDateFromJson(item.documentos_gerados || []) as Funcionario['documentosGerados']
+        documentos: (item.documentos || {} as unknown) as Funcionario['documentos'],
+        dependentes: deserializeDateFromJson(item.dependentes || [] as unknown) as Funcionario['dependentes'],
+        tamanhoUniforme: (item.tamanho_uniforme || { camisa: '', calca: '', calcado: 0 } as unknown) as Funcionario['tamanhoUniforme'],
+        episEntregues: deserializeDateFromJson(item.epis_entregues || [] as unknown) as Funcionario['episEntregues'],
+        uniformesEntregues: deserializeDateFromJson(item.uniformes_entregues || [] as unknown) as Funcionario['uniformesEntregues'],
+        examesRealizados: deserializeDateFromJson(item.exames_realizados || [] as unknown) as Funcionario['examesRealizados'],
+        documentosGerados: deserializeDateFromJson(item.documentos_gerados || [] as unknown) as Funcionario['documentosGerados']
       })) || [];
     } catch (error) {
       console.error('Erro ao carregar funcionários:', error);
@@ -99,19 +99,19 @@ export const funcionariosSupabaseService = {
       const item = data as FuncionarioRow;
       return {
         id: item.id,
-        dadosPessoais: deserializeDateFromJson(item.dados_pessoais) as Funcionario['dadosPessoais'],
+        dadosPessoais: deserializeDateFromJson(item.dados_pessoais as unknown) as Funcionario['dadosPessoais'],
         endereco: item.endereco as unknown as Funcionario['endereco'],
         contato: item.contato as unknown as Funcionario['contato'],
-        dadosProfissionais: deserializeDateFromJson(item.dados_profissionais) as Funcionario['dadosProfissionais'],
-        cnh: deserializeDateFromJson(item.cnh || {}) as Funcionario['cnh'],
+        dadosProfissionais: deserializeDateFromJson(item.dados_profissionais as unknown) as Funcionario['dadosProfissionais'],
+        cnh: deserializeDateFromJson(item.cnh || {} as unknown) as Funcionario['cnh'],
         dadosBancarios: item.dados_bancarios as unknown as Funcionario['dadosBancarios'],
-        documentos: (item.documentos || {}) as unknown as Funcionario['documentos'],
-        dependentes: deserializeDateFromJson(item.dependentes || []) as Funcionario['dependentes'],
-        tamanhoUniforme: (item.tamanho_uniforme || { camisa: '', calca: '', calcado: 0 }) as Funcionario['tamanhoUniforme'],
-        episEntregues: deserializeDateFromJson(item.epis_entregues || []) as Funcionario['episEntregues'],
-        uniformesEntregues: deserializeDateFromJson(item.uniformes_entregues || []) as Funcionario['uniformesEntregues'],
-        examesRealizados: deserializeDateFromJson(item.exames_realizados || []) as Funcionario['examesRealizados'],
-        documentosGerados: deserializeDateFromJson(item.documentos_gerados || []) as Funcionario['documentosGerados']
+        documentos: (item.documentos || {} as unknown) as Funcionario['documentos'],
+        dependentes: deserializeDateFromJson(item.dependentes || [] as unknown) as Funcionario['dependentes'],
+        tamanhoUniforme: (item.tamanho_uniforme || { camisa: '', calca: '', calcado: 0 } as unknown) as Funcionario['tamanhoUniforme'],
+        episEntregues: deserializeDateFromJson(item.epis_entregues || [] as unknown) as Funcionario['episEntregues'],
+        uniformesEntregues: deserializeDateFromJson(item.uniformes_entregues || [] as unknown) as Funcionario['uniformesEntregues'],
+        examesRealizados: deserializeDateFromJson(item.exames_realizados || [] as unknown) as Funcionario['examesRealizados'],
+        documentosGerados: deserializeDateFromJson(item.documentos_gerados || [] as unknown) as Funcionario['documentosGerados']
       };
     } catch (error) {
       console.error('Erro ao carregar funcionário:', error);
@@ -162,19 +162,19 @@ export const funcionariosSupabaseService = {
       const createdItem = data as FuncionarioRow;
       return {
         id: createdItem.id,
-        dadosPessoais: deserializeDateFromJson(createdItem.dados_pessoais) as Funcionario['dadosPessoais'],
+        dadosPessoais: deserializeDateFromJson(createdItem.dados_pessoais as unknown) as Funcionario['dadosPessoais'],
         endereco: createdItem.endereco as unknown as Funcionario['endereco'],
         contato: createdItem.contato as unknown as Funcionario['contato'],
-        dadosProfissionais: deserializeDateFromJson(createdItem.dados_profissionais) as Funcionario['dadosProfissionais'],
-        cnh: deserializeDateFromJson(createdItem.cnh || {}) as Funcionario['cnh'],
+        dadosProfissionais: deserializeDateFromJson(createdItem.dados_profissionais as unknown) as Funcionario['dadosProfissionais'],
+        cnh: deserializeDateFromJson(createdItem.cnh || {} as unknown) as Funcionario['cnh'],
         dadosBancarios: createdItem.dados_bancarios as unknown as Funcionario['dadosBancarios'],
-        documentos: (createdItem.documentos || {}) as unknown as Funcionario['documentos'],
-        dependentes: deserializeDateFromJson(createdItem.dependentes || []) as Funcionario['dependentes'],
-        tamanhoUniforme: (createdItem.tamanho_uniforme || { camisa: '', calca: '', calcado: 0 }) as Funcionario['tamanhoUniforme'],
-        episEntregues: deserializeDateFromJson(createdItem.epis_entregues || []) as Funcionario['episEntregues'],
-        uniformesEntregues: deserializeDateFromJson(createdItem.uniformes_entregues || []) as Funcionario['uniformesEntregues'],
-        examesRealizados: deserializeDateFromJson(createdItem.exames_realizados || []) as Funcionario['examesRealizados'],
-        documentosGerados: deserializeDateFromJson(createdItem.documentos_gerados || []) as Funcionario['documentosGerados']
+        documentos: (createdItem.documentos || {} as unknown) as Funcionario['documentos'],
+        dependentes: deserializeDateFromJson(createdItem.dependentes || [] as unknown) as Funcionario['dependentes'],
+        tamanhoUniforme: (createdItem.tamanho_uniforme || { camisa: '', calca: '', calcado: 0 } as unknown) as Funcionario['tamanhoUniforme'],
+        episEntregues: deserializeDateFromJson(createdItem.epis_entregues || [] as unknown) as Funcionario['episEntregues'],
+        uniformesEntregues: deserializeDateFromJson(createdItem.uniformes_entregues || [] as unknown) as Funcionario['uniformesEntregues'],
+        examesRealizados: deserializeDateFromJson(createdItem.exames_realizados || [] as unknown) as Funcionario['examesRealizados'],
+        documentosGerados: deserializeDateFromJson(createdItem.documentos_gerados || [] as unknown) as Funcionario['documentosGerados']
       };
     } catch (error) {
       console.error('Erro ao criar funcionário:', error);
@@ -225,19 +225,19 @@ export const funcionariosSupabaseService = {
       const updatedItem = data as FuncionarioRow;
       return {
         id: updatedItem.id,
-        dadosPessoais: deserializeDateFromJson(updatedItem.dados_pessoais) as Funcionario['dadosPessoais'],
+        dadosPessoais: deserializeDateFromJson(updatedItem.dados_pessoais as unknown) as Funcionario['dadosPessoais'],
         endereco: updatedItem.endereco as unknown as Funcionario['endereco'],
         contato: updatedItem.contato as unknown as Funcionario['contato'],
-        dadosProfissionais: deserializeDateFromJson(updatedItem.dados_profissionais) as Funcionario['dadosProfissionais'],
-        cnh: deserializeDateFromJson(updatedItem.cnh || {}) as Funcionario['cnh'],
+        dadosProfissionais: deserializeDateFromJson(updatedItem.dados_profissionais as unknown) as Funcionario['dadosProfissionais'],
+        cnh: deserializeDateFromJson(updatedItem.cnh || {} as unknown) as Funcionario['cnh'],
         dadosBancarios: updatedItem.dados_bancarios as unknown as Funcionario['dadosBancarios'],
-        documentos: (updatedItem.documentos || {}) as unknown as Funcionario['documentos'],
-        dependentes: deserializeDateFromJson(updatedItem.dependentes || []) as Funcionario['dependentes'],
-        tamanhoUniforme: (updatedItem.tamanho_uniforme || { camisa: '', calca: '', calcado: 0 }) as Funcionario['tamanhoUniforme'],
-        episEntregues: deserializeDateFromJson(updatedItem.epis_entregues || []) as Funcionario['episEntregues'],
-        uniformesEntregues: deserializeDateFromJson(updatedItem.uniformes_entregues || []) as Funcionario['uniformesEntregues'],
-        examesRealizados: deserializeDateFromJson(updatedItem.exames_realizados || []) as Funcionario['examesRealizados'],
-        documentosGerados: deserializeDateFromJson(updatedItem.documentos_gerados || []) as Funcionario['documentosGerados']
+        documentos: (updatedItem.documentos || {} as unknown) as Funcionario['documentos'],
+        dependentes: deserializeDateFromJson(updatedItem.dependentes || [] as unknown) as Funcionario['dependentes'],
+        tamanhoUniforme: (updatedItem.tamanho_uniforme || { camisa: '', calca: '', calcado: 0 } as unknown) as Funcionario['tamanhoUniforme'],
+        episEntregues: deserializeDateFromJson(updatedItem.epis_entregues || [] as unknown) as Funcionario['episEntregues'],
+        uniformesEntregues: deserializeDateFromJson(updatedItem.uniformes_entregues || [] as unknown) as Funcionario['uniformesEntregues'],
+        examesRealizados: deserializeDateFromJson(updatedItem.exames_realizados || [] as unknown) as Funcionario['examesRealizados'],
+        documentosGerados: deserializeDateFromJson(updatedItem.documentos_gerados || [] as unknown) as Funcionario['documentosGerados']
       };
     } catch (error) {
       console.error('Erro ao atualizar funcionário:', error);
