@@ -27,6 +27,9 @@ interface SecureAuthContextType {
   hasRole: (role: string) => boolean;
   hasPermission: (resource: string, action: string) => boolean;
   refreshProfile: () => Promise<void>;
+  createUser: (userData: { email: string; password: string; name: string; role: 'admin' | 'manager' | 'operator' }) => Promise<void>;
+  updateUserProfile: (userId: string, updates: Partial<UserProfile>) => Promise<void>;
+  getAllUsers: () => Promise<UserProfile[]>;
 }
 
 const SecureAuthContext = createContext<SecureAuthContextType | undefined>(undefined);
@@ -41,13 +44,11 @@ export const SecureAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Clean up auth state utility
   const cleanupAuthState = () => {
-    // Remove all Supabase auth keys from localStorage
     Object.keys(localStorage).forEach((key) => {
       if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
         localStorage.removeItem(key);
       }
     });
-    // Remove from sessionStorage if in use
     Object.keys(sessionStorage || {}).forEach((key) => {
       if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
         sessionStorage.removeItem(key);
@@ -59,26 +60,91 @@ export const SecureAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     if (!user) return;
 
     try {
-      // For now, create a mock profile from user data until user_profiles table is created
-      const mockProfile: UserProfile = {
-        id: user.id,
-        email: user.email || '',
-        name: user.user_metadata?.name || user.email || 'Usuário',
-        role: user.user_metadata?.role || 'operator',
-        company_id: user.user_metadata?.company_id || 'default',
-        is_active: true,
-        created_at: user.created_at,
-        updated_at: user.updated_at || user.created_at
-      };
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-      setProfile(mockProfile);
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      setProfile(data);
     } catch (error) {
       console.error('Error refreshing profile:', error);
     }
   };
 
+  const getAllUsers = async (): Promise<UserProfile[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      return [];
+    }
+  };
+
+  const createUser = async (userData: { email: string; password: string; name: string; role: 'admin' | 'manager' | 'operator' }) => {
+    try {
+      // Create user in Auth
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: userData.email,
+        password: userData.password,
+        user_metadata: {
+          name: userData.name,
+          role: userData.role
+        },
+        email_confirm: true
+      });
+
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // Create profile manually since we're using admin.createUser
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .insert([{
+            id: authData.user.id,
+            email: userData.email,
+            name: userData.name,
+            role: userData.role
+          }]);
+
+        if (profileError) throw profileError;
+        toast.success('Usuário criado com sucesso!');
+      }
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      toast.error(error.message || 'Erro ao criar usuário');
+      throw error;
+    }
+  };
+
+  const updateUserProfile = async (userId: string, updates: Partial<UserProfile>) => {
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update(updates)
+        .eq('id', userId);
+
+      if (error) throw error;
+      toast.success('Perfil atualizado com sucesso!');
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      toast.error(error.message || 'Erro ao atualizar perfil');
+      throw error;
+    }
+  };
+
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id);
@@ -87,7 +153,6 @@ export const SecureAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Defer profile fetching to prevent deadlocks
           setTimeout(() => {
             refreshProfile();
           }, 0);
@@ -99,7 +164,6 @@ export const SecureAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -120,10 +184,8 @@ export const SecureAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     try {
       setIsLoading(true);
       
-      // Clean up existing state
       cleanupAuthState();
       
-      // Attempt global sign out first
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
@@ -139,7 +201,6 @@ export const SecureAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
       if (data.user) {
         toast.success('Login realizado com sucesso');
-        // Force page reload for clean state
         setTimeout(() => {
           window.location.href = '/';
         }, 100);
@@ -185,10 +246,8 @@ export const SecureAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const signOut = async () => {
     try {
-      // Clean up auth state
       cleanupAuthState();
       
-      // Attempt global sign out
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
@@ -196,9 +255,7 @@ export const SecureAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       }
       
       toast.success('Logout realizado com sucesso');
-      
-      // Force page reload for clean state
-      window.location.href = '/login';
+      window.location.href = '/secure-login';
     } catch (error: any) {
       console.error('Sign out error:', error);
       toast.error('Erro ao fazer logout');
@@ -221,14 +278,28 @@ export const SecureAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       manager: {
         funcionarios: ['read', 'create', 'update'],
         documentos: ['read', 'create', 'update'],
-        certificacoes: ['read', 'create', 'update'],
-        relatorios: ['read']
+        exames: ['read', 'create', 'update'],
+        relatorios: ['read'],
+        cartaoponto: ['read', 'create', 'update'],
+        rh: ['read', 'create', 'update'],
+        obras: ['read'],
+        frota: ['read'],
+        patrimonio: ['read'],
+        financeiro: ['read'],
+        configuracoes: ['read']
       },
       operator: {
         funcionarios: ['read'],
         documentos: ['read'],
-        certificacoes: ['read'],
-        relatorios: ['read']
+        exames: ['read'],
+        relatorios: ['read'],
+        cartaoponto: ['read'],
+        rh: ['read'],
+        obras: ['read'],
+        frota: ['read'],
+        patrimonio: ['read'],
+        financeiro: ['read'],
+        configuracoes: ['read']
       }
     };
 
@@ -250,7 +321,10 @@ export const SecureAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     signOut,
     hasRole,
     hasPermission,
-    refreshProfile
+    refreshProfile,
+    createUser,
+    updateUserProfile,
+    getAllUsers
   };
 
   return (

@@ -2,10 +2,12 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
-import { AuthProvider } from './contexts/AuthContext'
+import { SecureAuthProvider } from './contexts/SecureAuthContext'
+import { Toaster } from '@/components/ui/sonner'
 
 createRoot(document.getElementById("root")!).render(
-  <AuthProvider>
+  <SecureAuthProvider>
     <App />
-  </AuthProvider>
+    <Toaster />
+  </SecureAuthProvider>
 );

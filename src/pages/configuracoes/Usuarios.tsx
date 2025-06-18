@@ -1,16 +1,16 @@
 
 import React, { useState } from 'react';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import GerenciamentoUsuarios from '@/components/usuarios/GerenciamentoUsuarios';
+import RealUserManagement from '@/components/usuarios/RealUserManagement';
 import GroupManagement from '@/components/usuarios/grupos/GroupManagement';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Shield } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const UsuariosPage: React.FC = () => {
-  const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
+  const { profile } = useSecureAuth();
+  const isAdmin = profile?.role === 'admin';
   const [activeTab, setActiveTab] = useState<string>("usuarios");
 
   return (
@@ -36,12 +36,12 @@ const UsuariosPage: React.FC = () => {
       >
         <TabsList className="mb-6">
           <TabsTrigger value="usuarios">Usuários</TabsTrigger>
-          <TabsTrigger value="grupos">Grupos de Permissão</TabsTrigger>
+          {isAdmin && <TabsTrigger value="grupos">Grupos de Permissão</TabsTrigger>}
         </TabsList>
         
         <TabsContent value="usuarios">
           {isAdmin ? (
-            <GerenciamentoUsuarios />
+            <RealUserManagement />
           ) : (
             <div className="mb-6">
               <Card className="bg-amber-50 border-amber-200">
@@ -56,31 +56,17 @@ const UsuariosPage: React.FC = () => {
                 </CardContent>
               </Card>
               <div className="mt-6">
-                <GerenciamentoUsuarios />
+                <RealUserManagement />
               </div>
             </div>
           )}
         </TabsContent>
         
-        <TabsContent value="grupos">
-          {isAdmin ? (
+        {isAdmin && (
+          <TabsContent value="grupos">
             <GroupManagement />
-          ) : (
-            <div className="mb-6">
-              <Card className="bg-amber-50 border-amber-200">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2 text-amber-700">
-                    <Shield className="h-5 w-5" />
-                    <p className="font-medium">Apenas administradores podem gerenciar grupos de permissão</p>
-                  </div>
-                  <p className="mt-2 text-amber-600 text-sm">
-                    O gerenciamento de grupos de permissão é restrito a administradores do sistema.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </TabsContent>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
