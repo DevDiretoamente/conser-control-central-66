@@ -39,9 +39,7 @@ export const funcionariosSupabaseService = {
         episEntregues: (item.epis_entregues as unknown as Funcionario['episEntregues']) || [],
         uniformesEntregues: (item.uniformes_entregues as unknown as Funcionario['uniformesEntregues']) || [],
         examesRealizados: (item.exames_realizados as unknown as Funcionario['examesRealizados']) || [],
-        documentosGerados: (item.documentos_gerados as unknown as Funcionario['documentosGerados']) || [],
-        criadoEm: item.created_at,
-        atualizadoEm: item.updated_at
+        documentosGerados: (item.documentos_gerados as unknown as Funcionario['documentosGerados']) || []
       })) || [];
     } catch (error) {
       console.error('Erro ao carregar funcionários:', error);
@@ -86,9 +84,7 @@ export const funcionariosSupabaseService = {
         episEntregues: (data.epis_entregues as unknown as Funcionario['episEntregues']) || [],
         uniformesEntregues: (data.uniformes_entregues as unknown as Funcionario['uniformesEntregues']) || [],
         examesRealizados: (data.exames_realizados as unknown as Funcionario['examesRealizados']) || [],
-        documentosGerados: (data.documentos_gerados as unknown as Funcionario['documentosGerados']) || [],
-        criadoEm: data.created_at,
-        atualizadoEm: data.updated_at
+        documentosGerados: (data.documentos_gerados as unknown as Funcionario['documentosGerados']) || []
       };
     } catch (error) {
       console.error('Erro ao carregar funcionário:', error);
@@ -96,11 +92,11 @@ export const funcionariosSupabaseService = {
     }
   },
 
-  create: async (funcionario: Omit<Funcionario, 'id' | 'criadoEm' | 'atualizadoEm'>): Promise<Funcionario> => {
+  create: async (funcionario: Omit<Funcionario, 'id'>): Promise<Funcionario> => {
     try {
       const { data, error } = await supabase
         .from('funcionarios')
-        .insert([{
+        .insert({
           dados_pessoais: funcionario.dadosPessoais as any,
           endereco: funcionario.endereco as any,
           contato: funcionario.contato as any,
@@ -114,7 +110,7 @@ export const funcionariosSupabaseService = {
           uniformes_entregues: funcionario.uniformesEntregues || [],
           exames_realizados: funcionario.examesRealizados || [],
           documentos_gerados: funcionario.documentosGerados || []
-        }])
+        })
         .select()
         .single();
 
@@ -147,9 +143,7 @@ export const funcionariosSupabaseService = {
         episEntregues: (data.epis_entregues as unknown as Funcionario['episEntregues']) || [],
         uniformesEntregues: (data.uniformes_entregues as unknown as Funcionario['uniformesEntregues']) || [],
         examesRealizados: (data.exames_realizados as unknown as Funcionario['examesRealizados']) || [],
-        documentosGerados: (data.documentos_gerados as unknown as Funcionario['documentosGerados']) || [],
-        criadoEm: data.created_at,
-        atualizadoEm: data.updated_at
+        documentosGerados: (data.documentos_gerados as unknown as Funcionario['documentosGerados']) || []
       };
     } catch (error) {
       console.error('Erro ao criar funcionário:', error);
@@ -211,9 +205,7 @@ export const funcionariosSupabaseService = {
         episEntregues: (data.epis_entregues as unknown as Funcionario['episEntregues']) || [],
         uniformesEntregues: (data.uniformes_entregues as unknown as Funcionario['uniformesEntregues']) || [],
         examesRealizados: (data.exames_realizados as unknown as Funcionario['examesRealizados']) || [],
-        documentosGerados: (data.documentos_gerados as unknown as Funcionario['documentosGerados']) || [],
-        criadoEm: data.created_at,
-        atualizadoEm: data.updated_at
+        documentosGerados: (data.documentos_gerados as unknown as Funcionario['documentosGerados']) || []
       };
     } catch (error) {
       console.error('Erro ao atualizar funcionário:', error);
