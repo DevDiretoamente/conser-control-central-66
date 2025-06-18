@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Certificacao, RenovacaoCertificacao } from '@/types/documentosRH';
 
@@ -84,7 +83,7 @@ export const certificacoesSupabaseService = {
           arquivo: certificacao.arquivo || null,
           nome_arquivo: certificacao.nomeArquivo || null,
           observacoes: certificacao.observacoes || null,
-          renovacoes: certificacao.renovacoes || []
+          renovacoes: (certificacao.renovacoes || []) as any
         })
         .select()
         .single();
@@ -129,7 +128,7 @@ export const certificacoesSupabaseService = {
       if (certificacao.arquivo !== undefined) updateData.arquivo = certificacao.arquivo || null;
       if (certificacao.nomeArquivo !== undefined) updateData.nome_arquivo = certificacao.nomeArquivo || null;
       if (certificacao.observacoes !== undefined) updateData.observacoes = certificacao.observacoes || null;
-      if (certificacao.renovacoes) updateData.renovacoes = certificacao.renovacoes;
+      if (certificacao.renovacoes) updateData.renovacoes = certificacao.renovacoes as any;
 
       const { data, error } = await supabase
         .from('certificacoes')

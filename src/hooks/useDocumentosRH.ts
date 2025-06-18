@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { DocumentoRH, Certificacao, DocumentoRHFilter, CertificacaoFilter } from '@/types/documentosRH';
 import { documentosRHService } from '@/services/documentosRHService';
@@ -40,14 +39,8 @@ export function useDocumentosRH() {
       // Atualizar status de documentos vencidos automaticamente
       await documentosService.updateExpiredDocumentsStatus();
       
-      // Gerar notificações automáticas
-      // Mock funcionários para exemplo
-      const mockFuncionarios = [
-        { id: '1', dadosPessoais: { nome: 'João Silva' } },
-        { id: '2', dadosPessoais: { nome: 'Maria Santos' } }
-      ] as any[];
-
-      notificationService.generateAutomaticNotifications(docs, certs, mockFuncionarios);
+      // Gerar notificações automáticas sem parâmetros
+      await notificationService.generateAutomaticNotifications();
       
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
