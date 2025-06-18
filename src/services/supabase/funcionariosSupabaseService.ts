@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Funcionario } from '@/types/funcionario';
 import { Database } from '@/integrations/supabase/types'; // Corrigir importação
@@ -21,12 +22,12 @@ export const funcionariosSupabaseService = {
       // Com as validações para null/undefined do DB para os padrões do app
       return data?.map((item: FuncionarioRow) => ({
         id: item.id,
-        dadosPessoais: item.dados_pessoais,
-        endereco: item.endereco,
-        contato: item.contato,
-        dadosProfissionais: item.dados_profissionais,
+        dadosPessoais: item.dados_pessoais as Funcionario['dadosPessoais'],
+        endereco: item.endereco as Funcionario['endereco'],
+        contato: item.contato as Funcionario['contato'],
+        dadosProfissionais: item.dados_profissionais as Funcionario['dadosProfissionais'],
         cnh: (item.cnh || {}) as Funcionario['cnh'], // Se DB pode ser null, garanta um objeto vazio
-        dadosBancarios: item.dados_bancarios,
+        dadosBancarios: item.dados_bancarios as Funcionario['dadosBancarios'],
         documentos: (item.documentos || {}) as Funcionario['documentos'], // Assumindo que documentos pode ser null no DB
         dependentes: (item.dependentes || []) as Funcionario['dependentes'],
         tamanhoUniforme: (item.tamanho_uniforme || { camisa: '', calca: '', calcado: 0 }) as Funcionario['tamanhoUniforme'],
@@ -55,12 +56,12 @@ export const funcionariosSupabaseService = {
       const item = data as FuncionarioRow; // Assegure que 'data' é do tipo Row
       return {
         id: item.id,
-        dadosPessoais: item.dados_pessoais,
-        endereco: item.endereco,
-        contato: item.contato,
-        dadosProfissionais: item.dados_profissionais,
+        dadosPessoais: item.dados_pessoais as Funcionario['dadosPessoais'],
+        endereco: item.endereco as Funcionario['endereco'],
+        contato: item.contato as Funcionario['contato'],
+        dadosProfissionais: item.dados_profissionais as Funcionario['dadosProfissionais'],
         cnh: (item.cnh || {}) as Funcionario['cnh'],
-        dadosBancarios: item.dados_bancarios,
+        dadosBancarios: item.dados_bancarios as Funcionario['dadosBancarios'],
         documentos: (item.documentos || {}) as Funcionario['documentos'],
         dependentes: (item.dependentes || []) as Funcionario['dependentes'],
         tamanhoUniforme: (item.tamanho_uniforme || { camisa: '', calca: '', calcado: 0 }) as Funcionario['tamanhoUniforme'],
@@ -111,12 +112,12 @@ export const funcionariosSupabaseService = {
       const createdItem = data as FuncionarioRow;
       return {
         id: createdItem.id,
-        dadosPessoais: createdItem.dados_pessoais,
-        endereco: createdItem.endereco,
-        contato: createdItem.contato,
-        dadosProfissionais: createdItem.dados_profissionais,
+        dadosPessoais: createdItem.dados_pessoais as Funcionario['dadosPessoais'],
+        endereco: createdItem.endereco as Funcionario['endereco'],
+        contato: createdItem.contato as Funcionario['contato'],
+        dadosProfissionais: createdItem.dados_profissionais as Funcionario['dadosProfissionais'],
         cnh: (createdItem.cnh || {}) as Funcionario['cnh'],
-        dadosBancarios: createdItem.dados_bancarios,
+        dadosBancarios: createdItem.dados_bancarios as Funcionario['dadosBancarios'],
         documentos: (createdItem.documentos || {}) as Funcionario['documentos'],
         dependentes: (createdItem.dependentes || []) as Funcionario['dependentes'],
         tamanhoUniforme: (createdItem.tamanho_uniforme || { camisa: '', calca: '', calcado: 0 }) as Funcionario['tamanhoUniforme'],
@@ -163,12 +164,12 @@ export const funcionariosSupabaseService = {
       const updatedItem = data as FuncionarioRow;
       return {
         id: updatedItem.id,
-        dadosPessoais: updatedItem.dados_pessoais,
-        endereco: updatedItem.endereco,
-        contato: updatedItem.contato,
-        dadosProfissionais: updatedItem.dados_profissionais,
+        dadosPessoais: updatedItem.dados_pessoais as Funcionario['dadosPessoais'],
+        endereco: updatedItem.endereco as Funcionario['endereco'],
+        contato: updatedItem.contato as Funcionario['contato'],
+        dadosProfissionais: updatedItem.dados_profissionais as Funcionario['dadosProfissionais'],
         cnh: (updatedItem.cnh || {}) as Funcionario['cnh'],
-        dadosBancarios: updatedItem.dados_bancarios,
+        dadosBancarios: updatedItem.dados_bancarios as Funcionario['dadosBancarios'],
         documentos: (updatedItem.documentos || {}) as Funcionario['documentos'],
         dependentes: (updatedItem.dependentes || []) as Funcionario['dependentes'],
         tamanhoUniforme: (updatedItem.tamanho_uniforme || { camisa: '', calca: '', calcado: 0 }) as Funcionario['tamanhoUniforme'],
