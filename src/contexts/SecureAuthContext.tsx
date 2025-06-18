@@ -34,7 +34,7 @@ interface SecureAuthContextType {
 
 const SecureAuthContext = createContext<SecureAuthContextType | undefined>(undefined);
 
-export const SecureAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function SecureAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -332,7 +332,7 @@ export const SecureAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       {children}
     </SecureAuthContext.Provider>
   );
-};
+}
 
 export const useSecureAuth = (): SecureAuthContextType => {
   const context = useContext(SecureAuthContext);
