@@ -31,7 +31,11 @@ export const funcionariosSupabaseService = {
           outrosDocumentos: null
         },
         dependentes: (item.dependentes as unknown as Funcionario['dependentes']) || [],
-        tamanhoUniforme: (item.tamanho_uniforme as unknown as Funcionario['tamanhoUniforme']) || {},
+        tamanhoUniforme: (item.tamanho_uniforme as unknown as Funcionario['tamanhoUniforme']) || {
+          camisa: '',
+          calca: '',
+          calcado: 0
+        },
         episEntregues: (item.epis_entregues as unknown as Funcionario['episEntregues']) || [],
         uniformesEntregues: (item.uniformes_entregues as unknown as Funcionario['uniformesEntregues']) || [],
         examesRealizados: (item.exames_realizados as unknown as Funcionario['examesRealizados']) || [],
@@ -74,7 +78,11 @@ export const funcionariosSupabaseService = {
           outrosDocumentos: null
         },
         dependentes: (data.dependentes as unknown as Funcionario['dependentes']) || [],
-        tamanhoUniforme: (data.tamanho_uniforme as unknown as Funcionario['tamanhoUniforme']) || {},
+        tamanhoUniforme: (data.tamanho_uniforme as unknown as Funcionario['tamanhoUniforme']) || {
+          camisa: '',
+          calca: '',
+          calcado: 0
+        },
         episEntregues: (data.epis_entregues as unknown as Funcionario['episEntregues']) || [],
         uniformesEntregues: (data.uniformes_entregues as unknown as Funcionario['uniformesEntregues']) || [],
         examesRealizados: (data.exames_realizados as unknown as Funcionario['examesRealizados']) || [],
@@ -92,7 +100,7 @@ export const funcionariosSupabaseService = {
     try {
       const { data, error } = await supabase
         .from('funcionarios')
-        .insert({
+        .insert([{
           dados_pessoais: funcionario.dadosPessoais as any,
           endereco: funcionario.endereco as any,
           contato: funcionario.contato as any,
@@ -101,12 +109,12 @@ export const funcionariosSupabaseService = {
           dados_bancarios: funcionario.dadosBancarios as any,
           documentos: funcionario.documentos || {},
           dependentes: funcionario.dependentes || [],
-          tamanho_uniforme: funcionario.tamanhoUniforme || {},
+          tamanho_uniforme: funcionario.tamanhoUniforme || { camisa: '', calca: '', calcado: 0 },
           epis_entregues: funcionario.episEntregues || [],
           uniformes_entregues: funcionario.uniformesEntregues || [],
           exames_realizados: funcionario.examesRealizados || [],
           documentos_gerados: funcionario.documentosGerados || []
-        })
+        }])
         .select()
         .single();
 
@@ -131,7 +139,11 @@ export const funcionariosSupabaseService = {
           outrosDocumentos: null
         },
         dependentes: (data.dependentes as unknown as Funcionario['dependentes']) || [],
-        tamanhoUniforme: (data.tamanho_uniforme as unknown as Funcionario['tamanhoUniforme']) || {},
+        tamanhoUniforme: (data.tamanho_uniforme as unknown as Funcionario['tamanhoUniforme']) || {
+          camisa: '',
+          calca: '',
+          calcado: 0
+        },
         episEntregues: (data.epis_entregues as unknown as Funcionario['episEntregues']) || [],
         uniformesEntregues: (data.uniformes_entregues as unknown as Funcionario['uniformesEntregues']) || [],
         examesRealizados: (data.exames_realizados as unknown as Funcionario['examesRealizados']) || [],
@@ -191,7 +203,11 @@ export const funcionariosSupabaseService = {
           outrosDocumentos: null
         },
         dependentes: (data.dependentes as unknown as Funcionario['dependentes']) || [],
-        tamanhoUniforme: (data.tamanho_uniforme as unknown as Funcionario['tamanhoUniforme']) || {},
+        tamanhoUniforme: (data.tamanho_uniforme as unknown as Funcionario['tamanhoUniforme']) || {
+          camisa: '',
+          calca: '',
+          calcado: 0
+        },
         episEntregues: (data.epis_entregues as unknown as Funcionario['episEntregues']) || [],
         uniformesEntregues: (data.uniformes_entregues as unknown as Funcionario['uniformesEntregues']) || [],
         examesRealizados: (data.exames_realizados as unknown as Funcionario['examesRealizados']) || [],
