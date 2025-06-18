@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Funcionario } from '@/types/funcionario';
-import { Database } from '@/types/supabase'; // Importe os tipos gerados pelo Supabase
+import { Database } from '@/integrations/supabase/types'; // Corrigir importação
 
 // Tipos auxiliares para facilitar a leitura
 type FuncionarioRow = Database['public']['Tables']['funcionarios']['Row'];
