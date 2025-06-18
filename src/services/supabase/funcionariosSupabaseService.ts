@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Funcionario } from '@/types/funcionario';
 
@@ -96,7 +95,7 @@ export const funcionariosSupabaseService = {
     try {
       const { data, error } = await supabase
         .from('funcionarios')
-        .insert({
+        .insert([{
           dados_pessoais: funcionario.dadosPessoais as any,
           endereco: funcionario.endereco as any,
           contato: funcionario.contato as any,
@@ -110,7 +109,7 @@ export const funcionariosSupabaseService = {
           uniformes_entregues: funcionario.uniformesEntregues || [],
           exames_realizados: funcionario.examesRealizados || [],
           documentos_gerados: funcionario.documentosGerados || []
-        })
+        }])
         .select()
         .single();
 
