@@ -5,6 +5,8 @@ import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import SecureProtectedRoute from './components/auth/SecureProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import SecureLogin from './components/auth/SecureLogin';
+import MasterAdminSetup from './pages/MasterAdminSetup';
+import PublicLanding from './components/PublicLanding';
 import AppLayout from './components/layout/AppLayout';
 import NotFound from './pages/NotFound';
 import AccessDenied from './pages/AccessDenied';
@@ -44,12 +46,16 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public routes */}
+        <Route path="/public" element={<PublicLanding />} />
         <Route path="/secure-login" element={<SecureLogin />} />
+        <Route path="/master-admin-setup" element={<MasterAdminSetup />} />
         <Route path="/login" element={<Navigate to="/secure-login" replace />} />
         <Route path="/acesso-negado" element={<AccessDenied />} />
         <Route path="/conta-inativa" element={<InactiveAccount />} />
         
-        <Route path="/" element={
+        {/* Protected application routes */}
+        <Route path="/app" element={
           <SecureProtectedRoute>
             <AppLayout />
           </SecureProtectedRoute>
@@ -201,10 +207,11 @@ function App() {
               <DocumentosOcupacionaisPage />
             </SecureProtectedRoute>
           } />
-          
-          {/* Redirect root to dashboard */}
-          <Route path="*" element={<NotFound />} />
         </Route>
+        
+        {/* Root redirect logic */}
+        <Route path="/" element={<Navigate to="/public" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

@@ -202,7 +202,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       if (data.user) {
         toast.success('Login realizado com sucesso');
         setTimeout(() => {
-          window.location.href = '/';
+          window.location.href = '/app';
         }, 100);
       }
     } catch (error: any) {
@@ -218,7 +218,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     try {
       setIsLoading(true);
       
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}/app`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -255,7 +255,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       }
       
       toast.success('Logout realizado com sucesso');
-      window.location.href = '/secure-login';
+      window.location.href = '/public';
     } catch (error: any) {
       console.error('Sign out error:', error);
       toast.error('Erro ao fazer logout');
