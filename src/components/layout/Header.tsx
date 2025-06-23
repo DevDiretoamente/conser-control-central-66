@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +14,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useLocation } from 'react-router-dom';
 import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface HeaderProps {
   toggleSidebar: () => void;
