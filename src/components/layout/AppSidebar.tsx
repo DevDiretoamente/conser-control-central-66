@@ -20,16 +20,69 @@ import {
   CreditCard,
   Download
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { UserRole, PermissionLevel, PermissionArea } from '@/types/auth';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
 
 // Completely redesigned sidebar that's always visible
 const AppSidebar = ({ isCollapsed = false }) => {
-  const { user, logout, hasSpecificPermission } = useAuth();
+  const { profile } = useSecureAuth();
+
+  // Helper function to check permissions using the SecureAuth context
+  const hasPermission = (resource: string, action: string = 'read') => {
+    if (!profile) return false;
+    
+    // Admin has all permissions
+    if (profile.role === 'admin') return true;
+    
+    // Define role-based permissions
+    const permissions = {
+      manager: {
+        funcionarios: ['read', 'create', 'update'],
+        documentos: ['read', 'create', 'update'],
+        exames: ['read', 'create', 'update'],
+        relatorios: ['read'],
+        cartaoponto: ['read', 'create', 'update'],
+        rh: ['read', 'create', 'update'],
+        obras: ['read'],
+        frota: ['read'],
+        patrimonio: ['read'],
+        financeiro: ['read'],
+        configuracoes: ['read'],
+        usuarios: ['read'],
+        emails: ['read'],
+        funcoes: ['read'],
+        setores: ['read'],
+        clinicas: ['read']
+      },
+      operator: {
+        funcionarios: ['read'],
+        documentos: ['read'],
+        exames: ['read'],
+        relatorios: ['read'],
+        cartaoponto: ['read'],
+        rh: ['read'],
+        obras: ['read'],
+        frota: ['read'],
+        patrimonio: ['read'],
+        financeiro: ['read'],
+        configuracoes: ['read'],
+        usuarios: [],
+        emails: ['read'],
+        funcoes: ['read'],
+        setores: ['read'],
+        clinicas: ['read']
+      }
+    };
+
+    const rolePermissions = permissions[profile.role as keyof typeof permissions];
+    if (!rolePermissions) return false;
+
+    const resourcePermissions = rolePermissions[resource as keyof typeof rolePermissions];
+    return resourcePermissions ? resourcePermissions.includes(action) : false;
+  };
 
   // Styled navigation link component
-  const NavItem = ({ to, icon: Icon, label, hasPermission = true }) => {
-    if (!hasPermission) return null;
+  const NavItem = ({ to, icon: Icon, label, hasPermissionCheck = true }) => {
+    if (!hasPermissionCheck) return null;
     
     return (
       <NavLink
@@ -61,34 +114,34 @@ const AppSidebar = ({ isCollapsed = false }) => {
       <SectionHeading>Recursos Humanos</SectionHeading>
       <div className="space-y-1">
         <NavItem 
-          to="/funcionarios" 
+          to="/app/funcionarios" 
           icon={Users} 
           label="Funcionários" 
-          hasPermission={hasSpecificPermission('funcionarios', 'read')} 
+          hasPermissionCheck={hasPermission('funcionarios', 'read')} 
         />
         <NavItem 
-          to="/funcionarios/exames" 
+          to="/app/funcionarios/exames" 
           icon={Stethoscope} 
           label="Exames Médicos" 
-          hasPermission={hasSpecificPermission('exames', 'read')}
+          hasPermissionCheck={hasPermission('exames', 'read')}
         />
         <NavItem 
-          to="/rh/cartao-ponto" 
+          to="/app/rh/cartao-ponto" 
           icon={Clock} 
           label="Cartão Ponto" 
-          hasPermission={hasSpecificPermission('cartaoponto', 'read')}
+          hasPermissionCheck={hasPermission('cartaoponto', 'read')}
         />
         <NavItem 
-          to="/beneficios" 
+          to="/app/beneficios" 
           icon={CreditCard} 
           label="Benefícios" 
-          hasPermission={hasSpecificPermission('cartaoponto', 'manage') || hasSpecificPermission('admin', 'read')}
+          hasPermissionCheck={hasPermission('cartaoponto', 'read')}
         />
         <NavItem 
-          to="/rh/relatorios" 
+          to="/app/rh/relatorios" 
           icon={FileText} 
           label="Relatórios" 
-          hasPermission={hasSpecificPermission('cartaoponto', 'read')}
+          hasPermissionCheck={hasPermission('cartaoponto', 'read')}
         />
       </div>
     </div>
@@ -100,40 +153,40 @@ const AppSidebar = ({ isCollapsed = false }) => {
       <SectionHeading>Configurações</SectionHeading>
       <div className="space-y-1">
         <NavItem 
-          to="/funcoes" 
+          to="/app/funcoes" 
           icon={Briefcase} 
           label="Funções" 
-          hasPermission={hasSpecificPermission('funcoes', 'read')}
+          hasPermissionCheck={hasPermission('funcoes', 'read')}
         />
         <NavItem 
-          to="/setores" 
+          to="/app/setores" 
           icon={Building} 
           label="Setores" 
-          hasPermission={hasSpecificPermission('setores', 'read')}
+          hasPermissionCheck={hasPermission('setores', 'read')}
         />
         <NavItem 
-          to="/clinicas" 
+          to="/app/clinicas" 
           icon={Building2} 
           label="Clínicas" 
-          hasPermission={hasSpecificPermission('clinicas', 'read')}
+          hasPermissionCheck={hasPermission('clinicas', 'read')}
         />
         <NavItem 
-          to="/exames" 
+          to="/app/exames" 
           icon={BadgeCheck} 
           label="Exames" 
-          hasPermission={hasSpecificPermission('exames', 'read')}
+          hasPermissionCheck={hasPermission('exames', 'read')}
         />
         <NavItem 
-          to="/configuracoes/usuarios" 
+          to="/app/configuracoes/usuarios" 
           icon={UserCog} 
           label="Usuários" 
-          hasPermission={hasSpecificPermission('usuarios', 'read')}
+          hasPermissionCheck={hasPermission('usuarios', 'read')}
         />
         <NavItem 
-          to="/configuracoes/emails" 
+          to="/app/configuracoes/emails" 
           icon={Mail} 
           label="E-mails" 
-          hasPermission={hasSpecificPermission('emails', 'read')}
+          hasPermissionCheck={hasPermission('emails', 'read')}
         />
       </div>
     </div>
@@ -143,30 +196,30 @@ const AppSidebar = ({ isCollapsed = false }) => {
   const mainLinks = (
     <div className="mt-6">
       <div className="space-y-1">
-        <NavItem to="/" icon={LayoutDashboard} label="Dashboard" />
+        <NavItem to="/app" icon={LayoutDashboard} label="Dashboard" hasPermissionCheck={true} />
         <NavItem 
-          to="/obras" 
+          to="/app/obras" 
           icon={Building} 
           label="Obras" 
-          hasPermission={hasSpecificPermission('obras', 'read')}
+          hasPermissionCheck={hasPermission('obras', 'read')}
         />
         <NavItem 
-          to="/frota" 
+          to="/app/frota" 
           icon={Truck} 
           label="Frota" 
-          hasPermission={hasSpecificPermission('frota', 'read')}
+          hasPermissionCheck={hasPermission('frota', 'read')}
         />
         <NavItem 
-          to="/patrimonio" 
+          to="/app/patrimonio" 
           icon={Briefcase} 
           label="Patrimônio" 
-          hasPermission={hasSpecificPermission('patrimonio', 'read')}
+          hasPermissionCheck={hasPermission('patrimonio', 'read')}
         />
         <NavItem 
-          to="/financeiro" 
+          to="/app/financeiro" 
           icon={FileText} 
           label="Financeiro" 
-          hasPermission={hasSpecificPermission('financeiro', 'read')}
+          hasPermissionCheck={hasPermission('financeiro', 'read')}
         />
       </div>
     </div>
@@ -193,15 +246,15 @@ const AppSidebar = ({ isCollapsed = false }) => {
 
       {/* User info - always visible */}
       <div className="mt-auto border-t border-slate-700/50 p-4 bg-slate-800/30">
-        {user && (
+        {profile && (
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center font-medium text-white">
-              {user.name.charAt(0).toUpperCase()}
+              {profile.name.charAt(0).toUpperCase()}
             </div>
             {!isCollapsed && (
               <div>
-                <p className="font-medium text-white">{user.name}</p>
-                <p className="text-xs text-white/70">{user.email}</p>
+                <p className="font-medium text-white">{profile.name}</p>
+                <p className="text-xs text-white/70">{profile.email}</p>
               </div>
             )}
           </div>
