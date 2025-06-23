@@ -39,7 +39,9 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const isAuthenticated = !!user && !!session;
+  const isAuthenticated = !!user && !!session && !!profile;
+
+  console.log('SecureAuth State:', { user: !!user, profile: !!profile, session: !!session, isAuthenticated });
 
   // Clean up auth state utility
   const cleanupAuthState = () => {
@@ -56,9 +58,13 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
   };
 
   const refreshProfile = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user to refresh profile for');
+      return;
+    }
 
     try {
+      console.log('Fetching profile for user:', user.id);
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -70,6 +76,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         return;
       }
 
+      console.log('Profile fetched successfully:', data);
       setProfile(data);
     } catch (error) {
       console.error('Error refreshing profile:', error);
@@ -203,9 +210,10 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          // Aguarda um momento antes de buscar o perfil
           setTimeout(() => {
             refreshProfile();
-          }, 0);
+          }, 100);
         } else {
           setProfile(null);
         }
@@ -215,13 +223,14 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
         setTimeout(() => {
           refreshProfile();
-        }, 0);
+        }, 100);
       }
       
       setIsLoading(false);
@@ -250,10 +259,9 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       if (error) throw error;
 
       if (data.user) {
+        console.log('Login successful for user:', data.user.id);
         toast.success('Login realizado com sucesso');
-        setTimeout(() => {
-          window.location.href = '/app';
-        }, 100);
+        // Navigation will be handled by auth state change
       }
     } catch (error: any) {
       console.error('Sign in error:', error);
@@ -304,8 +312,13 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         // Ignore errors
       }
       
+      // Clear local state immediately
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      
       toast.success('Logout realizado com sucesso');
-      window.location.href = '/public';
+      window.location.href = '/secure-login';
     } catch (error: any) {
       console.error('Sign out error:', error);
       toast.error('Erro ao fazer logout');
@@ -327,29 +340,17 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     const permissions = {
       manager: {
         funcionarios: ['read', 'create', 'update'],
-        documentos: ['read', 'create', 'update'],
-        exames: ['read', 'create', 'update'],
-        relatorios: ['read'],
-        cartaoponto: ['read', 'create', 'update'],
-        rh: ['read', 'create', 'update'],
-        obras: ['read'],
-        frota: ['read'],
-        patrimonio: ['read'],
-        financeiro: ['read'],
-        configuracoes: ['read']
+        obras: ['read'], frota: ['read'], patrimonio: ['read'], financeiro: ['read'],
+        exames: ['read', 'create', 'update'], cartaoponto: ['read', 'create', 'update'],
+        rh: ['read', 'create', 'update'], configuracoes: ['read'],
+        funcoes: ['read'], setores: ['read'], clinicas: ['read'], emails: ['read'],
+        beneficios: ['read']
       },
       operator: {
-        funcionarios: ['read'],
-        documentos: ['read'],
-        exames: ['read'],
-        relatorios: ['read'],
-        cartaoponto: ['read'],
-        rh: ['read'],
-        obras: ['read'],
-        frota: ['read'],
-        patrimonio: ['read'],
-        financeiro: ['read'],
-        configuracoes: ['read']
+        funcionarios: ['read'], obras: ['read'], frota: ['read'], patrimonio: ['read'],
+        financeiro: ['read'], exames: ['read'], cartaoponto: ['read'], rh: ['read'],
+        configuracoes: ['read'], funcoes: ['read'], setores: ['read'], clinicas: ['read'],
+        emails: ['read'], beneficios: ['read']
       }
     };
 
@@ -367,13 +368,13 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     isLoading,
     isAuthenticated,
     signIn,
-    signUp,
+    signUp: async () => {}, // Disabled for security
     signOut,
     hasRole,
     hasPermission,
     refreshProfile,
-    createUser,
-    updateUserProfile,
+    createUser: async () => {}, // Disabled for security
+    updateUserProfile: async () => {}, // Disabled for security  
     getAllUsers
   };
 

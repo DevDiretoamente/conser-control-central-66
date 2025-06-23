@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Menu, Bell, Search, X, LogOut } from 'lucide-react';
+import { Menu, Bell, Search, X, LogOut, Check } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,9 +14,18 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useLocation } from 'react-router-dom';
 import { useSecureAuth } from '@/contexts/SecureAuthContext';
+import { toast } from 'sonner';
 
 interface HeaderProps {
   toggleSidebar: () => void;
+}
+
+interface Notification {
+  id: string;
+  title: string;
+  description: string;
+  isRead: boolean;
+  createdAt: string;
 }
 
 function getPageTitle(pathname: string): string {
@@ -40,7 +49,31 @@ function getPageTitle(pathname: string): string {
 }
 
 const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
-  const [showSearch, setShowSearch] = React.useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([
+    {
+      id: '1',
+      title: 'ASO próximo do vencimento',
+      description: 'João Silva - vence em 7 dias',
+      isRead: false,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: '2',
+      title: 'Manutenção preventiva',
+      description: 'Caminhão XYZ-1234 - agendada para amanhã',
+      isRead: false,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: '3',
+      title: 'Conta a pagar vencendo',
+      description: 'Fornecedor ABC - vence hoje',
+      isRead: false,
+      createdAt: new Date().toISOString()
+    }
+  ]);
+
   const location = useLocation();
   const pageTitle = getPageTitle(location.pathname);
   const { profile, signOut } = useSecureAuth();
@@ -63,6 +96,29 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
       default: return 'Usuário';
     }
   };
+
+  // Handle notification click
+  const handleNotificationClick = (notificationId: string) => {
+    setNotifications(prev => 
+      prev.map(notification => 
+        notification.id === notificationId 
+          ? { ...notification, isRead: true }
+          : notification
+      )
+    );
+    toast.success('Notificação marcada como lida');
+  };
+
+  // Mark all notifications as read
+  const markAllAsRead = () => {
+    setNotifications(prev => 
+      prev.map(notification => ({ ...notification, isRead: true }))
+    );
+    toast.success('Todas as notificações foram marcadas como lidas');
+  };
+
+  // Get unread notifications count
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center border-b bg-background px-4 md:px-6">
@@ -97,32 +153,59 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
               <span className="sr-only">Notificações</span>
-              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-conserv-danger text-[10px] font-medium text-white flex items-center justify-center">
-                3
-              </span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-conserv-danger text-[10px] font-medium text-white flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel>Notificações</DropdownMenuLabel>
+            <DropdownMenuLabel className="flex items-center justify-between">
+              Notificações
+              {unreadCount > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={markAllAsRead}
+                  className="text-xs h-6"
+                >
+                  <Check className="h-3 w-3 mr-1" />
+                  Marcar todas como lidas
+                </Button>
+              )}
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <div className="flex flex-col gap-1">
-                <p className="font-medium">ASO próximo do vencimento</p>
-                <p className="text-sm text-muted-foreground">João Silva - vence em 7 dias</p>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <div className="flex flex-col gap-1">
-                <p className="font-medium">Manutenção preventiva</p>
-                <p className="text-sm text-muted-foreground">Caminhão XYZ-1234 - agendada para amanhã</p>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <div className="flex flex-col gap-1">
-                <p className="font-medium">Conta a pagar vencendo</p>
-                <p className="text-sm text-muted-foreground">Fornecedor ABC - vence hoje</p>
-              </div>
-            </DropdownMenuItem>
+            {notifications.map((notification) => (
+              <DropdownMenuItem 
+                key={notification.id}
+                onClick={() => handleNotificationClick(notification.id)}
+                className={cn(
+                  "cursor-pointer",
+                  !notification.isRead && "bg-blue-50 border-l-2 border-l-blue-500"
+                )}
+              >
+                <div className="flex flex-col gap-1 w-full">
+                  <div className="flex items-center justify-between">
+                    <p className={cn(
+                      "font-medium text-sm",
+                      !notification.isRead && "font-semibold"
+                    )}>
+                      {notification.title}
+                    </p>
+                    {!notification.isRead && (
+                      <div className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0" />
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{notification.description}</p>
+                </div>
+              </DropdownMenuItem>
+            ))}
+            {notifications.length === 0 && (
+              <DropdownMenuItem disabled>
+                <p className="text-center text-muted-foreground">Nenhuma notificação</p>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem className="justify-center font-medium">
               Ver todas as notificações

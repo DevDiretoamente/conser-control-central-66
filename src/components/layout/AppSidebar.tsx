@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 import { useSecureAuth } from '@/contexts/SecureAuthContext';
 
-// Completely redesigned sidebar that's always visible
 const AppSidebar = ({ isCollapsed = false }) => {
   const { profile } = useSecureAuth();
 
@@ -51,7 +50,8 @@ const AppSidebar = ({ isCollapsed = false }) => {
         emails: ['read'],
         funcoes: ['read'],
         setores: ['read'],
-        clinicas: ['read']
+        clinicas: ['read'],
+        beneficios: ['read']
       },
       operator: {
         funcionarios: ['read'],
@@ -69,7 +69,8 @@ const AppSidebar = ({ isCollapsed = false }) => {
         emails: ['read'],
         funcoes: ['read'],
         setores: ['read'],
-        clinicas: ['read']
+        clinicas: ['read'],
+        beneficios: ['read']
       }
     };
 
@@ -80,9 +81,13 @@ const AppSidebar = ({ isCollapsed = false }) => {
     return resourcePermissions ? resourcePermissions.includes(action) : false;
   };
 
-  // Styled navigation link component
-  const NavItem = ({ to, icon: Icon, label, hasPermissionCheck = true }) => {
-    if (!hasPermissionCheck) return null;
+  // Styled navigation link component - CORRIGIDO: removido hasPermissionCheck
+  const NavItem = ({ to, icon: Icon, label, resource = null, action = 'read' }) => {
+    // Se não tem resource, sempre mostra (como Dashboard)
+    // Se tem resource, verifica permissão
+    const shouldShow = !resource || hasPermission(resource, action);
+    
+    if (!shouldShow) return null;
     
     return (
       <NavLink
@@ -108,123 +113,6 @@ const AppSidebar = ({ isCollapsed = false }) => {
     )
   );
 
-  // HR section
-  const rhSection = (
-    <div className="mt-2">
-      <SectionHeading>Recursos Humanos</SectionHeading>
-      <div className="space-y-1">
-        <NavItem 
-          to="/app/funcionarios" 
-          icon={Users} 
-          label="Funcionários" 
-          hasPermissionCheck={hasPermission('funcionarios', 'read')} 
-        />
-        <NavItem 
-          to="/app/funcionarios/exames" 
-          icon={Stethoscope} 
-          label="Exames Médicos" 
-          hasPermissionCheck={hasPermission('exames', 'read')}
-        />
-        <NavItem 
-          to="/app/rh/cartao-ponto" 
-          icon={Clock} 
-          label="Cartão Ponto" 
-          hasPermissionCheck={hasPermission('cartaoponto', 'read')}
-        />
-        <NavItem 
-          to="/app/beneficios" 
-          icon={CreditCard} 
-          label="Benefícios" 
-          hasPermissionCheck={hasPermission('cartaoponto', 'read')}
-        />
-        <NavItem 
-          to="/app/rh/relatorios" 
-          icon={FileText} 
-          label="Relatórios" 
-          hasPermissionCheck={hasPermission('cartaoponto', 'read')}
-        />
-      </div>
-    </div>
-  );
-
-  // Config section
-  const configSection = (
-    <div className="mt-2">
-      <SectionHeading>Configurações</SectionHeading>
-      <div className="space-y-1">
-        <NavItem 
-          to="/app/funcoes" 
-          icon={Briefcase} 
-          label="Funções" 
-          hasPermissionCheck={hasPermission('funcoes', 'read')}
-        />
-        <NavItem 
-          to="/app/setores" 
-          icon={Building} 
-          label="Setores" 
-          hasPermissionCheck={hasPermission('setores', 'read')}
-        />
-        <NavItem 
-          to="/app/clinicas" 
-          icon={Building2} 
-          label="Clínicas" 
-          hasPermissionCheck={hasPermission('clinicas', 'read')}
-        />
-        <NavItem 
-          to="/app/exames" 
-          icon={BadgeCheck} 
-          label="Exames" 
-          hasPermissionCheck={hasPermission('exames', 'read')}
-        />
-        <NavItem 
-          to="/app/configuracoes/usuarios" 
-          icon={UserCog} 
-          label="Usuários" 
-          hasPermissionCheck={hasPermission('usuarios', 'read')}
-        />
-        <NavItem 
-          to="/app/configuracoes/emails" 
-          icon={Mail} 
-          label="E-mails" 
-          hasPermissionCheck={hasPermission('emails', 'read')}
-        />
-      </div>
-    </div>
-  );
-
-  // Main dashboard links
-  const mainLinks = (
-    <div className="mt-6">
-      <div className="space-y-1">
-        <NavItem to="/app" icon={LayoutDashboard} label="Dashboard" hasPermissionCheck={true} />
-        <NavItem 
-          to="/app/obras" 
-          icon={Building} 
-          label="Obras" 
-          hasPermissionCheck={hasPermission('obras', 'read')}
-        />
-        <NavItem 
-          to="/app/frota" 
-          icon={Truck} 
-          label="Frota" 
-          hasPermissionCheck={hasPermission('frota', 'read')}
-        />
-        <NavItem 
-          to="/app/patrimonio" 
-          icon={Briefcase} 
-          label="Patrimônio" 
-          hasPermissionCheck={hasPermission('patrimonio', 'read')}
-        />
-        <NavItem 
-          to="/app/financeiro" 
-          icon={FileText} 
-          label="Financeiro" 
-          hasPermissionCheck={hasPermission('financeiro', 'read')}
-        />
-      </div>
-    </div>
-  );
-
   return (
     <div 
       className={cn(
@@ -237,14 +125,46 @@ const AppSidebar = ({ isCollapsed = false }) => {
         <Logo />
       </div>
       
-      {/* Navigation sections - always visible */}
+      {/* Navigation sections */}
       <nav className="flex-1 space-y-2 px-2 py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-sidebar-accent scrollbar-track-transparent">
-        {mainLinks}
-        {rhSection}
-        {configSection}
+        {/* Main Links */}
+        <div className="mt-6">
+          <div className="space-y-1">
+            <NavItem to="/app" icon={LayoutDashboard} label="Dashboard" />
+            <NavItem to="/app/obras" icon={Building} label="Obras" resource="obras" />
+            <NavItem to="/app/frota" icon={Truck} label="Frota" resource="frota" />
+            <NavItem to="/app/patrimonio" icon={Briefcase} label="Patrimônio" resource="patrimonio" />
+            <NavItem to="/app/financeiro" icon={FileText} label="Financeiro" resource="financeiro" />
+          </div>
+        </div>
+
+        {/* RH Section */}
+        <div className="mt-2">
+          <SectionHeading>Recursos Humanos</SectionHeading>
+          <div className="space-y-1">
+            <NavItem to="/app/funcionarios" icon={Users} label="Funcionários" resource="funcionarios" />
+            <NavItem to="/app/funcionarios/exames" icon={Stethoscope} label="Exames Médicos" resource="exames" />
+            <NavItem to="/app/rh/cartao-ponto" icon={Clock} label="Cartão Ponto" resource="cartaoponto" />
+            <NavItem to="/app/beneficios" icon={CreditCard} label="Benefícios" resource="beneficios" />
+            <NavItem to="/app/rh/relatorios" icon={FileText} label="Relatórios" resource="rh" />
+          </div>
+        </div>
+
+        {/* Config Section */}
+        <div className="mt-2">
+          <SectionHeading>Configurações</SectionHeading>
+          <div className="space-y-1">
+            <NavItem to="/app/funcoes" icon={Briefcase} label="Funções" resource="funcoes" />
+            <NavItem to="/app/setores" icon={Building} label="Setores" resource="setores" />
+            <NavItem to="/app/clinicas" icon={Building2} label="Clínicas" resource="clinicas" />
+            <NavItem to="/app/exames" icon={BadgeCheck} label="Exames" resource="exames" />
+            <NavItem to="/app/configuracoes/usuarios" icon={UserCog} label="Usuários" resource="usuarios" />
+            <NavItem to="/app/configuracoes/emails" icon={Mail} label="E-mails" resource="emails" />
+          </div>
+        </div>
       </nav>
 
-      {/* User info - always visible */}
+      {/* User info - sempre visível quando tem profile */}
       <div className="mt-auto border-t border-slate-700/50 p-4 bg-slate-800/30">
         {profile && (
           <div className="flex items-center gap-3">
@@ -253,7 +173,7 @@ const AppSidebar = ({ isCollapsed = false }) => {
             </div>
             {!isCollapsed && (
               <div>
-                <p className="font-medium text-white">{profile.name}</p>
+                <p className="font-medium text-white text-sm">{profile.name}</p>
                 <p className="text-xs text-white/70">{profile.email}</p>
               </div>
             )}
