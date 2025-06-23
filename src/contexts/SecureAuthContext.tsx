@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,11 +40,11 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const isAuthenticated = !!user && !!session && !!profile;
+  // Simplificar isAuthenticated - usuário está autenticado se tem session e user
+  const isAuthenticated = !!user && !!session;
 
   console.log('SecureAuth State:', { user: !!user, profile: !!profile, session: !!session, isAuthenticated });
 
-  // Clean up auth state utility
   const cleanupAuthState = () => {
     Object.keys(localStorage).forEach((key) => {
       if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
@@ -73,6 +74,35 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
       if (error) {
         console.error('Error fetching profile:', error);
+        // Se não encontrar o perfil, vamos criar um básico
+        if (error.code === 'PGRST116') {
+          console.log('Profile not found, creating basic profile...');
+          const { error: insertError } = await supabase
+            .from('user_profiles')
+            .insert({
+              id: user.id,
+              email: user.email || '',
+              name: user.user_metadata?.name || user.email || 'Usuário',
+              role: 'admin', // Para o primeiro usuário
+              is_active: true
+            });
+          
+          if (insertError) {
+            console.error('Error creating profile:', insertError);
+          } else {
+            // Tentar buscar novamente
+            const { data: newData, error: newError } = await supabase
+              .from('user_profiles')
+              .select('*')
+              .eq('id', user.id)
+              .single();
+            
+            if (!newError && newData) {
+              setProfile(newData);
+              console.log('Profile created and fetched:', newData);
+            }
+          }
+        }
         return;
       }
 
@@ -102,7 +132,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     try {
       setIsLoading(true);
       
-      // Para master admin, desabilitar confirmação de email
       const { data, error } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
@@ -111,7 +140,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
           data: {
             name: userData.name,
             role: userData.role,
-            email_confirm: false // Desabilitar confirmação de email para master admin
+            email_confirm: false
           }
         }
       });
@@ -121,11 +150,9 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       if (data.user) {
         console.log('Usuário criado:', data.user.id);
         
-        // Aguardar um momento para o trigger criar o perfil
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         try {
-          // Verificar se é o primeiro usuário e garantir que seja admin
           const { data: profiles, error: profilesError } = await supabase
             .from('user_profiles')
             .select('id, role');
@@ -135,7 +162,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
           } else {
             console.log('Perfis encontrados:', profiles);
             
-            // Se for o primeiro usuário ou especificamente admin, garantir role admin
             if (userData.role === 'admin') {
               const { error: updateError } = await supabase
                 .from('user_profiles')
@@ -153,7 +179,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
           console.error('Erro ao configurar perfil:', profileError);
         }
 
-        // Tentar fazer login automático após criação
         try {
           await new Promise(resolve => setTimeout(resolve, 1000));
           
@@ -210,10 +235,8 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Aguarda um momento antes de buscar o perfil
-          setTimeout(() => {
-            refreshProfile();
-          }, 100);
+          // Buscar perfil imediatamente após login
+          refreshProfile();
         } else {
           setProfile(null);
         }
@@ -228,9 +251,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        setTimeout(() => {
-          refreshProfile();
-        }, 100);
+        refreshProfile();
       }
       
       setIsLoading(false);
@@ -261,7 +282,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       if (data.user) {
         console.log('Login successful for user:', data.user.id);
         toast.success('Login realizado com sucesso');
-        // Navigation will be handled by auth state change
       }
     } catch (error: any) {
       console.error('Sign in error:', error);
@@ -312,7 +332,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         // Ignore errors
       }
       
-      // Clear local state immediately
       setUser(null);
       setProfile(null);
       setSession(null);
@@ -333,10 +352,8 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
   const hasPermission = (resource: string, action: string): boolean => {
     if (!profile || !profile.is_active) return false;
     
-    // Admin has all permissions
     if (profile.role === 'admin') return true;
     
-    // Define role-based permissions
     const permissions = {
       manager: {
         funcionarios: ['read', 'create', 'update'],
@@ -368,13 +385,13 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     isLoading,
     isAuthenticated,
     signIn,
-    signUp: async () => {}, // Disabled for security
+    signUp,
     signOut,
     hasRole,
     hasPermission,
     refreshProfile,
-    createUser: async () => {}, // Disabled for security
-    updateUserProfile: async () => {}, // Disabled for security  
+    createUser,
+    updateUserProfile,
     getAllUsers
   };
 

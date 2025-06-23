@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -76,7 +77,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
 
   const location = useLocation();
   const pageTitle = getPageTitle(location.pathname);
-  const { profile, signOut } = useSecureAuth();
+  const { profile, signOut, isLoading } = useSecureAuth();
 
   // Get user initials for avatar
   const getInitials = () => {
@@ -154,7 +155,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               <Bell className="h-5 w-5" />
               <span className="sr-only">Notificações</span>
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-conserv-danger text-[10px] font-medium text-white flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] font-medium text-white flex items-center justify-center">
                   {unreadCount}
                 </span>
               )}
@@ -214,7 +215,9 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         </DropdownMenu>
         
         {/* User menu */}
-        {profile && (
+        {isLoading ? (
+          <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
+        ) : profile ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -244,7 +247,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
+        ) : null}
       </div>
     </header>
   );

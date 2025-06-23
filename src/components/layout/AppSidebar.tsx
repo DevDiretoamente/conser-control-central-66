@@ -23,13 +23,16 @@ import {
 import { useSecureAuth } from '@/contexts/SecureAuthContext';
 
 const AppSidebar = ({ isCollapsed = false }) => {
-  const { profile } = useSecureAuth();
+  const { profile, isLoading } = useSecureAuth();
 
-  // Helper function to check permissions using the SecureAuth context
+  // Helper function to check permissions
   const hasPermission = (resource: string, action: string = 'read') => {
+    // Se ainda está carregando o perfil, não mostra nada sensível
+    if (isLoading) return false;
+    
     if (!profile) return false;
     
-    // Admin has all permissions
+    // Admin tem todas as permissões
     if (profile.role === 'admin') return true;
     
     // Define role-based permissions
@@ -81,7 +84,7 @@ const AppSidebar = ({ isCollapsed = false }) => {
     return resourcePermissions ? resourcePermissions.includes(action) : false;
   };
 
-  // Styled navigation link component - CORRIGIDO: removido hasPermissionCheck
+  // Styled navigation link component
   const NavItem = ({ to, icon: Icon, label, resource = null, action = 'read' }) => {
     // Se não tem resource, sempre mostra (como Dashboard)
     // Se tem resource, verifica permissão
@@ -127,46 +130,61 @@ const AppSidebar = ({ isCollapsed = false }) => {
       
       {/* Navigation sections */}
       <nav className="flex-1 space-y-2 px-2 py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-sidebar-accent scrollbar-track-transparent">
-        {/* Main Links */}
+        {/* Loading state */}
+        {isLoading && !isCollapsed && (
+          <div className="px-4 py-2 text-white/70 text-sm">
+            Carregando menus...
+          </div>
+        )}
+        
+        {/* Main Links - sempre mostra Dashboard */}
         <div className="mt-6">
           <div className="space-y-1">
             <NavItem to="/app" icon={LayoutDashboard} label="Dashboard" />
-            <NavItem to="/app/obras" icon={Building} label="Obras" resource="obras" />
-            <NavItem to="/app/frota" icon={Truck} label="Frota" resource="frota" />
-            <NavItem to="/app/patrimonio" icon={Briefcase} label="Patrimônio" resource="patrimonio" />
-            <NavItem to="/app/financeiro" icon={FileText} label="Financeiro" resource="financeiro" />
+            {!isLoading && (
+              <>
+                <NavItem to="/app/obras" icon={Building} label="Obras" resource="obras" />
+                <NavItem to="/app/frota" icon={Truck} label="Frota" resource="frota" />
+                <NavItem to="/app/patrimonio" icon={Briefcase} label="Patrimônio" resource="patrimonio" />
+                <NavItem to="/app/financeiro" icon={FileText} label="Financeiro" resource="financeiro" />
+              </>
+            )}
           </div>
         </div>
 
         {/* RH Section */}
-        <div className="mt-2">
-          <SectionHeading>Recursos Humanos</SectionHeading>
-          <div className="space-y-1">
-            <NavItem to="/app/funcionarios" icon={Users} label="Funcionários" resource="funcionarios" />
-            <NavItem to="/app/funcionarios/exames" icon={Stethoscope} label="Exames Médicos" resource="exames" />
-            <NavItem to="/app/rh/cartao-ponto" icon={Clock} label="Cartão Ponto" resource="cartaoponto" />
-            <NavItem to="/app/beneficios" icon={CreditCard} label="Benefícios" resource="beneficios" />
-            <NavItem to="/app/rh/relatorios" icon={FileText} label="Relatórios" resource="rh" />
+        {!isLoading && (
+          <div className="mt-2">
+            <SectionHeading>Recursos Humanos</SectionHeading>
+            <div className="space-y-1">
+              <NavItem to="/app/funcionarios" icon={Users} label="Funcionários" resource="funcionarios" />
+              <NavItem to="/app/funcionarios/exames" icon={Stethoscope} label="Exames Médicos" resource="exames" />
+              <NavItem to="/app/rh/cartao-ponto" icon={Clock} label="Cartão Ponto" resource="cartaoponto" />
+              <NavItem to="/app/beneficios" icon={CreditCard} label="Benefícios" resource="beneficios" />
+              <NavItem to="/app/rh/relatorios" icon={FileText} label="Relatórios" resource="rh" />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Config Section */}
-        <div className="mt-2">
-          <SectionHeading>Configurações</SectionHeading>
-          <div className="space-y-1">
-            <NavItem to="/app/funcoes" icon={Briefcase} label="Funções" resource="funcoes" />
-            <NavItem to="/app/setores" icon={Building} label="Setores" resource="setores" />
-            <NavItem to="/app/clinicas" icon={Building2} label="Clínicas" resource="clinicas" />
-            <NavItem to="/app/exames" icon={BadgeCheck} label="Exames" resource="exames" />
-            <NavItem to="/app/configuracoes/usuarios" icon={UserCog} label="Usuários" resource="usuarios" />
-            <NavItem to="/app/configuracoes/emails" icon={Mail} label="E-mails" resource="emails" />
+        {!isLoading && (
+          <div className="mt-2">
+            <SectionHeading>Configurações</SectionHeading>
+            <div className="space-y-1">
+              <NavItem to="/app/funcoes" icon={Briefcase} label="Funções" resource="funcoes" />
+              <NavItem to="/app/setores" icon={Building} label="Setores" resource="setores" />
+              <NavItem to="/app/clinicas" icon={Building2} label="Clínicas" resource="clinicas" />
+              <NavItem to="/app/exames" icon={BadgeCheck} label="Exames" resource="exames" />
+              <NavItem to="/app/configuracoes/usuarios" icon={UserCog} label="Usuários" resource="usuarios" />
+              <NavItem to="/app/configuracoes/emails" icon={Mail} label="E-mails" resource="emails" />
+            </div>
           </div>
-        </div>
+        )}
       </nav>
 
       {/* User info - sempre visível quando tem profile */}
       <div className="mt-auto border-t border-slate-700/50 p-4 bg-slate-800/30">
-        {profile && (
+        {profile ? (
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center font-medium text-white">
               {profile.name.charAt(0).toUpperCase()}
@@ -178,7 +196,17 @@ const AppSidebar = ({ isCollapsed = false }) => {
               </div>
             )}
           </div>
-        )}
+        ) : isLoading ? (
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-slate-700 animate-pulse"></div>
+            {!isCollapsed && (
+              <div>
+                <div className="h-4 bg-slate-700 rounded animate-pulse mb-1"></div>
+                <div className="h-3 bg-slate-700 rounded animate-pulse w-20"></div>
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
     </div>
   );
