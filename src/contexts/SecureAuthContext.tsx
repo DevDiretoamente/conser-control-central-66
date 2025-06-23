@@ -94,37 +94,60 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
   const createUser = async (userData: { email: string; password: string; name: string; role: 'admin' | 'manager' | 'operator' }) => {
     try {
-      // Create user in Auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      setIsLoading(true);
+      
+      // Use signUp instead of admin.createUser
+      const redirectUrl = `${window.location.origin}/app`;
+      
+      const { data, error } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
-        user_metadata: {
-          name: userData.name,
-          role: userData.role
-        },
-        email_confirm: true
-      });
-
-      if (authError) throw authError;
-
-      if (authData.user) {
-        // Create profile manually since we're using admin.createUser
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .insert([{
-            id: authData.user.id,
-            email: userData.email,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
             name: userData.name,
             role: userData.role
-          }]);
+          }
+        }
+      });
 
-        if (profileError) throw profileError;
-        toast.success('Usuário criado com sucesso!');
+      if (error) throw error;
+
+      if (data.user) {
+        // Wait a moment for the trigger to create the profile
+        setTimeout(async () => {
+          try {
+            // Check if this is the first user and update role if needed
+            const { data: profiles, error: profilesError } = await supabase
+              .from('user_profiles')
+              .select('id');
+
+            if (profilesError) throw profilesError;
+
+            // If this is the first user, ensure they are admin
+            if (profiles && profiles.length <= 1) {
+              const { error: updateError } = await supabase
+                .from('user_profiles')
+                .update({ role: 'admin' })
+                .eq('id', data.user.id);
+
+              if (updateError) {
+                console.error('Error updating user role to admin:', updateError);
+              }
+            }
+          } catch (error) {
+            console.error('Error checking/updating user role:', error);
+          }
+        }, 1000);
+
+        toast.success('Master Admin criado com sucesso! Verifique seu email se necessário.');
       }
     } catch (error: any) {
       console.error('Error creating user:', error);
       toast.error(error.message || 'Erro ao criar usuário');
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
