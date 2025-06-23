@@ -40,7 +40,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simplificar isAuthenticated - usuário está autenticado se tem session e user
+  // Usuário está autenticado se tem session e user
   const isAuthenticated = !!user && !!session;
 
   console.log('SecureAuth State:', { user: !!user, profile: !!profile, session: !!session, isAuthenticated });
@@ -74,7 +74,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
       if (error) {
         console.error('Error fetching profile:', error);
-        // Se não encontrar o perfil, vamos criar um básico
+        // Se não encontrar o perfil, criar um básico
         if (error.code === 'PGRST116') {
           console.log('Profile not found, creating basic profile...');
           const { error: insertError } = await supabase
@@ -83,7 +83,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
               id: user.id,
               email: user.email || '',
               name: user.user_metadata?.name || user.email || 'Usuário',
-              role: 'admin', // Para o primeiro usuário
+              role: 'admin',
               is_active: true
             });
           
@@ -150,55 +150,18 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       if (data.user) {
         console.log('Usuário criado:', data.user.id);
         
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        try {
-          const { data: profiles, error: profilesError } = await supabase
-            .from('user_profiles')
-            .select('id, role');
+        // Login automático após criação
+        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+          email: userData.email,
+          password: userData.password,
+        });
 
-          if (profilesError) {
-            console.error('Erro ao buscar perfis:', profilesError);
-          } else {
-            console.log('Perfis encontrados:', profiles);
-            
-            if (userData.role === 'admin') {
-              const { error: updateError } = await supabase
-                .from('user_profiles')
-                .update({ role: 'admin', is_active: true })
-                .eq('id', data.user.id);
-
-              if (updateError) {
-                console.error('Erro ao atualizar role para admin:', updateError);
-              } else {
-                console.log('Role atualizada para admin com sucesso');
-              }
-            }
-          }
-        } catch (profileError) {
-          console.error('Erro ao configurar perfil:', profileError);
-        }
-
-        try {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-            email: userData.email,
-            password: userData.password,
-          });
-
-          if (loginError) {
-            console.error('Erro no login automático:', loginError);
-            toast.success('Master Admin criado! Use as credenciais para fazer login.');
-          } else if (loginData.user) {
-            toast.success('Master Admin criado e login realizado com sucesso!');
-            setTimeout(() => {
-              window.location.href = '/app';
-            }, 1000);
-          }
-        } catch (loginError) {
+        if (loginError) {
           console.error('Erro no login automático:', loginError);
           toast.success('Master Admin criado! Use as credenciais para fazer login.');
+        } else if (loginData.user) {
+          toast.success('Master Admin criado e login realizado com sucesso!');
+          // Redirecionamento será feito pelo onAuthStateChange
         }
       }
     } catch (error: any) {
@@ -234,10 +197,13 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
-          // Buscar perfil imediatamente após login
-          refreshProfile();
-        } else {
+        if (session?.user && event === 'SIGNED_IN') {
+          console.log('User signed in, fetching profile...');
+          // Defer profile fetch to avoid deadlocks
+          setTimeout(() => {
+            refreshProfile();
+          }, 100);
+        } else if (!session) {
           setProfile(null);
         }
         
@@ -245,13 +211,16 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       }
     );
 
+    // Verificar sessão inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Initial session:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        refreshProfile();
+        setTimeout(() => {
+          refreshProfile();
+        }, 100);
       }
       
       setIsLoading(false);
@@ -269,7 +238,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
-        // Continue even if this fails
+        // Continue mesmo se falhar
       }
 
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -282,6 +251,12 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       if (data.user) {
         console.log('Login successful for user:', data.user.id);
         toast.success('Login realizado com sucesso');
+        
+        // Redirecionamento explícito após login bem-sucedido
+        setTimeout(() => {
+          console.log('Redirecting to /app after successful login');
+          window.location.href = '/app';
+        }, 500);
       }
     } catch (error: any) {
       console.error('Sign in error:', error);
