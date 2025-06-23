@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, AlertCircle, Shield, Crown } from 'lucide-react';
+import { Loader2, AlertCircle, Shield } from 'lucide-react';
 import Logo from '@/components/Logo';
 
 const SecureLogin: React.FC = () => {
@@ -42,9 +42,9 @@ const SecureLogin: React.FC = () => {
           </div>
           <div className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
-            <CardTitle className="text-2xl">Acesso ao Sistema</CardTitle>
+            <CardTitle className="text-2xl">Acesso Seguro</CardTitle>
           </div>
-          <CardDescription>Entre com suas credenciais para acessar o sistema</CardDescription>
+          <CardDescription>Sistema protegido com autenticação Supabase</CardDescription>
         </CardHeader>
         
         <CardContent>
@@ -92,20 +92,8 @@ const SecureLogin: React.FC = () => {
         </CardContent>
         
         <CardFooter className="flex flex-col space-y-4">
-          <div className="w-full border-t pt-4">
-            <Button 
-              variant="outline" 
-              className="w-full" 
-              onClick={() => navigate('/master-admin-setup')}
-            >
-              <Crown className="mr-2 h-4 w-4" />
-              Configuração Inicial (Master Admin)
-            </Button>
-          </div>
-          
           <div className="text-sm text-center text-muted-foreground">
-            <p>Não tem acesso? Entre em contato com o administrador do sistema.</p>
-            <p className="mt-2 text-xs">Sistema seguro com autenticação Supabase</p>
+            <p>Sistema seguro com Row-Level Security (RLS) habilitado</p>
           </div>
         </CardFooter>
       </Card>
