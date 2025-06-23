@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -96,17 +95,16 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     try {
       setIsLoading(true);
       
-      // Use signUp instead of admin.createUser
-      const redirectUrl = `${window.location.origin}/app`;
-      
+      // Para master admin, desabilitar confirmação de email
       const { data, error } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
         options: {
-          emailRedirectTo: redirectUrl,
+          emailRedirectTo: `${window.location.origin}/app`,
           data: {
             name: userData.name,
-            role: userData.role
+            role: userData.role,
+            email_confirm: false // Desabilitar confirmação de email para master admin
           }
         }
       });
@@ -114,36 +112,65 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       if (error) throw error;
 
       if (data.user) {
-        // Wait a moment for the trigger to create the profile
-        setTimeout(async () => {
-          try {
-            // Check if this is the first user and update role if needed
-            const { data: profiles, error: profilesError } = await supabase
-              .from('user_profiles')
-              .select('id');
+        console.log('Usuário criado:', data.user.id);
+        
+        // Aguardar um momento para o trigger criar o perfil
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        try {
+          // Verificar se é o primeiro usuário e garantir que seja admin
+          const { data: profiles, error: profilesError } = await supabase
+            .from('user_profiles')
+            .select('id, role');
 
-            if (profilesError) throw profilesError;
-
-            // If this is the first user, ensure they are admin
-            if (profiles && profiles.length <= 1) {
+          if (profilesError) {
+            console.error('Erro ao buscar perfis:', profilesError);
+          } else {
+            console.log('Perfis encontrados:', profiles);
+            
+            // Se for o primeiro usuário ou especificamente admin, garantir role admin
+            if (userData.role === 'admin') {
               const { error: updateError } = await supabase
                 .from('user_profiles')
-                .update({ role: 'admin' })
+                .update({ role: 'admin', is_active: true })
                 .eq('id', data.user.id);
 
               if (updateError) {
-                console.error('Error updating user role to admin:', updateError);
+                console.error('Erro ao atualizar role para admin:', updateError);
+              } else {
+                console.log('Role atualizada para admin com sucesso');
               }
             }
-          } catch (error) {
-            console.error('Error checking/updating user role:', error);
           }
-        }, 1000);
+        } catch (profileError) {
+          console.error('Erro ao configurar perfil:', profileError);
+        }
 
-        toast.success('Master Admin criado com sucesso! Verifique seu email se necessário.');
+        // Tentar fazer login automático após criação
+        try {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+            email: userData.email,
+            password: userData.password,
+          });
+
+          if (loginError) {
+            console.error('Erro no login automático:', loginError);
+            toast.success('Master Admin criado! Use as credenciais para fazer login.');
+          } else if (loginData.user) {
+            toast.success('Master Admin criado e login realizado com sucesso!');
+            setTimeout(() => {
+              window.location.href = '/app';
+            }, 1000);
+          }
+        } catch (loginError) {
+          console.error('Erro no login automático:', loginError);
+          toast.success('Master Admin criado! Use as credenciais para fazer login.');
+        }
       }
     } catch (error: any) {
-      console.error('Error creating user:', error);
+      console.error('Erro ao criar usuário:', error);
       toast.error(error.message || 'Erro ao criar usuário');
       throw error;
     } finally {
