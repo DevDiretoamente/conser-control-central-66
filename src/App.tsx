@@ -1,4 +1,3 @@
-
 import React from 'react';
 import './App.css';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
@@ -11,6 +10,7 @@ import AppLayout from './components/layout/AppLayout';
 import NotFound from './pages/NotFound';
 import AccessDenied from './pages/AccessDenied';
 import InactiveAccount from './pages/InactiveAccount';
+import AuthRedirect from './components/auth/AuthRedirect';
 
 // Main content pages
 import ListaFuncionarios from './pages/funcionarios/ListaFuncionarios';
@@ -46,6 +46,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Root redirect - check auth and redirect appropriately */}
+        <Route path="/" element={<AuthRedirect />} />
+        
         {/* Public routes */}
         <Route path="/public" element={<PublicLanding />} />
         <Route path="/secure-login" element={<SecureLogin />} />
@@ -209,8 +212,6 @@ function App() {
           } />
         </Route>
         
-        {/* Root redirect logic */}
-        <Route path="/" element={<Navigate to="/public" replace />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

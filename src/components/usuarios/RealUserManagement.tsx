@@ -8,10 +8,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, AlertTriangle, Shield, UserCheck, UserX } from 'lucide-react';
+import { Plus, Pencil, Trash2, AlertTriangle, Shield, UserCheck, UserX, Copy, Eye, EyeOff } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useSecureAuth } from '@/contexts/SecureAuthContext';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface UserProfile {
   id: string;
@@ -29,7 +30,6 @@ const RealUserManagement: React.FC = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [newUser, setNewUser] = useState({
     name: '',
@@ -37,6 +37,8 @@ const RealUserManagement: React.FC = () => {
     password: '',
     role: 'operator' as 'admin' | 'manager' | 'operator'
   });
+  const [generatedPassword, setGeneratedPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const isAdmin = profile?.role === 'admin';
 
@@ -56,6 +58,28 @@ const RealUserManagement: React.FC = () => {
   useEffect(() => {
     loadUsers();
   }, []);
+
+  const generateSecurePassword = () => {
+    const length = 12;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    let password = "";
+    for (let i = 0; i < length; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    return password;
+  };
+
+  const handleGeneratePassword = () => {
+    const password = generateSecurePassword();
+    setGeneratedPassword(password);
+    setNewUser({...newUser, password});
+    setShowPassword(true);
+  };
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copiado para a área de transferência`);
+  };
 
   const handleAddUser = async () => {
     if (!newUser.name || !newUser.email || !newUser.password) {
@@ -80,7 +104,15 @@ const RealUserManagement: React.FC = () => {
     
     try {
       await createUser(newUser);
+      
+      // Show success message with login credentials
+      toast.success(`Usuário criado com sucesso! Email: ${newUser.email}`, {
+        duration: 5000
+      });
+      
       setNewUser({ name: '', email: '', password: '', role: 'operator' });
+      setGeneratedPassword('');
+      setShowPassword(false);
       setIsAddDialogOpen(false);
       await loadUsers();
     } catch (error) {
@@ -142,7 +174,7 @@ const RealUserManagement: React.FC = () => {
           <h3 className="text-lg font-medium">Usuários do Sistema</h3>
           <p className="text-sm text-muted-foreground">
             {isAdmin 
-              ? "Gerencie os usuários que têm acesso ao sistema" 
+              ? "Gerencie os usuários que têm acesso ao sistema. Novos usuários criados aqui receberão credenciais para primeiro acesso." 
               : "Visualize os usuários que têm acesso ao sistema"}
           </p>
         </div>
@@ -154,6 +186,16 @@ const RealUserManagement: React.FC = () => {
           </Button>
         )}
       </div>
+
+      {isAdmin && (
+        <Alert>
+          <Shield className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Importante:</strong> Após criar um usuário, compartilhe as credenciais de acesso com segurança. 
+            O sistema não permite cadastro público - apenas administradores podem criar novos usuários.
+          </AlertDescription>
+        </Alert>
+      )}
       
       <Card>
         <CardContent>
@@ -173,7 +215,20 @@ const RealUserManagement: React.FC = () => {
                 {users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {user.email}
+                        {isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyToClipboard(user.email, 'Email')}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {isAdmin ? (
                         <Select
@@ -230,7 +285,6 @@ const RealUserManagement: React.FC = () => {
                             size="icon" 
                             onClick={() => {
                               setSelectedUser(user);
-                              setIsDeleteDialogOpen(true);
                             }}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -258,9 +312,9 @@ const RealUserManagement: React.FC = () => {
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Adicionar Novo Usuário</DialogTitle>
+            <DialogTitle>Criar Novo Usuário</DialogTitle>
             <DialogDescription>
-              Crie um novo usuário para acessar o sistema.
+              Crie um novo usuário para acessar o sistema. As credenciais de acesso serão exibidas após a criação.
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh] p-1">
@@ -286,15 +340,45 @@ const RealUserManagement: React.FC = () => {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="password">Senha*</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={newUser.password}
-                  onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-                  placeholder="Mínimo 6 caracteres"
-                  minLength={6}
-                />
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="password">Senha*</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGeneratePassword}
+                  >
+                    Gerar Senha Segura
+                  </Button>
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                    placeholder="Mínimo 6 caracteres"
+                    minLength={6}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                  {newUser.password && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => copyToClipboard(newUser.password, 'Senha')}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="role">Função*</Label>
@@ -314,13 +398,25 @@ const RealUserManagement: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
+              
+              {newUser.email && newUser.password && (
+                <Alert>
+                  <Shield className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Credenciais de acesso:</strong><br />
+                    Email: {newUser.email}<br />
+                    Senha: {newUser.password}<br />
+                    <em>Anote essas informações para compartilhar com o usuário.</em>
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
           </ScrollArea>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleAddUser}>Adicionar</Button>
+            <Button onClick={handleAddUser}>Criar Usuário</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

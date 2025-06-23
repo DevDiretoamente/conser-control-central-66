@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Users, Settings, Crown } from 'lucide-react';
+import { Shield, Users, Settings, Crown, Lock } from 'lucide-react';
 import Logo from '@/components/Logo';
 
 const PublicLanding: React.FC = () => {
@@ -56,6 +57,20 @@ const PublicLanding: React.FC = () => {
             </Card>
           </div>
 
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Lock className="h-5 w-5 text-amber-600" />
+              <h3 className="font-medium text-amber-800">Sistema Restrito</h3>
+            </div>
+            <p className="text-amber-700 mb-4">
+              Este é um sistema corporativo com acesso controlado. Novos usuários são criados 
+              exclusivamente por administradores do sistema.
+            </p>
+            <p className="text-sm text-amber-600">
+              Se você precisa de acesso, entre em contato com o administrador da sua empresa.
+            </p>
+          </div>
+
           <div className="text-center space-y-4">
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
@@ -74,12 +89,12 @@ const PublicLanding: React.FC = () => {
                 className="px-8"
               >
                 <Crown className="mr-2 h-5 w-5" />
-                Setup Inicial (Master Admin)
+                Configuração Inicial (Master Admin)
               </Button>
             </div>
             
             <p className="text-sm text-gray-500 mt-4">
-              Primeira vez? Use "Setup Inicial" para criar o administrador master do sistema.
+              Primeira instalação? Use "Configuração Inicial" para criar o administrador master do sistema.
             </p>
           </div>
         </div>
