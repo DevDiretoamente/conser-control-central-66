@@ -90,7 +90,8 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
 
   // Get role display name
   const getRoleDisplay = () => {
-    switch (profile?.role) {
+    if (!profile) return 'Usuário';
+    switch (profile.role) {
       case 'admin': return 'Administrador';
       case 'manager': return 'Gerente';
       case 'operator': return 'Operador';
@@ -198,7 +199,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                       <div className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0" />
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground">{notification.description}</p>
+                  <p className="text-sm text-muted-foreground">{notification.description}z</p>
                 </div>
               </DropdownMenuItem>
             ))}
@@ -215,39 +216,37 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         </DropdownMenu>
         
         {/* User menu */}
-        {isLoading ? (
-          <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
-        ) : profile ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {getInitials()}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{profile.name}</p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {profile.email}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground mt-1">
-                    {getRoleDisplay()}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={signOut} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Sair</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : null}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  {getInitials()}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">
+                  {profile?.name || (isLoading ? 'Carregando...' : 'Usuário')}
+                </p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {profile?.email || (isLoading ? 'Carregando...' : 'Email')}
+                </p>
+                <p className="text-xs leading-none text-muted-foreground mt-1">
+                  {getRoleDisplay()}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={signOut} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Sair</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

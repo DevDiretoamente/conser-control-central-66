@@ -18,79 +18,19 @@ import {
   Mail,
   Stethoscope,
   CreditCard,
-  Download
 } from 'lucide-react';
 import { useSecureAuth } from '@/contexts/SecureAuthContext';
 
 const AppSidebar = ({ isCollapsed = false }) => {
-  const { profile, isLoading } = useSecureAuth();
-
-  // Helper function to check permissions
-  const hasPermission = (resource: string, action: string = 'read') => {
-    // Se ainda está carregando o perfil, não mostra nada sensível
-    if (isLoading) return false;
-    
-    if (!profile) return false;
-    
-    // Admin tem todas as permissões
-    if (profile.role === 'admin') return true;
-    
-    // Define role-based permissions
-    const permissions = {
-      manager: {
-        funcionarios: ['read', 'create', 'update'],
-        documentos: ['read', 'create', 'update'],
-        exames: ['read', 'create', 'update'],
-        relatorios: ['read'],
-        cartaoponto: ['read', 'create', 'update'],
-        rh: ['read', 'create', 'update'],
-        obras: ['read'],
-        frota: ['read'],
-        patrimonio: ['read'],
-        financeiro: ['read'],
-        configuracoes: ['read'],
-        usuarios: ['read'],
-        emails: ['read'],
-        funcoes: ['read'],
-        setores: ['read'],
-        clinicas: ['read'],
-        beneficios: ['read']
-      },
-      operator: {
-        funcionarios: ['read'],
-        documentos: ['read'],
-        exames: ['read'],
-        relatorios: ['read'],
-        cartaoponto: ['read'],
-        rh: ['read'],
-        obras: ['read'],
-        frota: ['read'],
-        patrimonio: ['read'],
-        financeiro: ['read'],
-        configuracoes: ['read'],
-        usuarios: [],
-        emails: ['read'],
-        funcoes: ['read'],
-        setores: ['read'],
-        clinicas: ['read'],
-        beneficios: ['read']
-      }
-    };
-
-    const rolePermissions = permissions[profile.role as keyof typeof permissions];
-    if (!rolePermissions) return false;
-
-    const resourcePermissions = rolePermissions[resource as keyof typeof rolePermissions];
-    return resourcePermissions ? resourcePermissions.includes(action) : false;
-  };
+  const { profile, isLoading, hasPermission } = useSecureAuth();
 
   // Styled navigation link component
   const NavItem = ({ to, icon: Icon, label, resource = null, action = 'read' }) => {
     // Se não tem resource, sempre mostra (como Dashboard)
-    // Se tem resource, verifica permissão
-    const shouldShow = !resource || hasPermission(resource, action);
+    // Se tem resource, verifica permissão (mas só se não estiver carregando)
+    const shouldShow = !resource || (!isLoading && hasPermission(resource, action));
     
-    if (!shouldShow) return null;
+    if (!shouldShow && !isLoading) return null;
     
     return (
       <NavLink
@@ -141,48 +81,40 @@ const AppSidebar = ({ isCollapsed = false }) => {
         <div className="mt-6">
           <div className="space-y-1">
             <NavItem to="/app" icon={LayoutDashboard} label="Dashboard" />
-            {!isLoading && (
-              <>
-                <NavItem to="/app/obras" icon={Building} label="Obras" resource="obras" />
-                <NavItem to="/app/frota" icon={Truck} label="Frota" resource="frota" />
-                <NavItem to="/app/patrimonio" icon={Briefcase} label="Patrimônio" resource="patrimonio" />
-                <NavItem to="/app/financeiro" icon={FileText} label="Financeiro" resource="financeiro" />
-              </>
-            )}
+            <NavItem to="/app/obras" icon={Building} label="Obras" resource="obras" />
+            <NavItem to="/app/frota" icon={Truck} label="Frota" resource="frota" />
+            <NavItem to="/app/patrimonio" icon={Briefcase} label="Patrimônio" resource="patrimonio" />
+            <NavItem to="/app/financeiro" icon={FileText} label="Financeiro" resource="financeiro" />
           </div>
         </div>
 
         {/* RH Section */}
-        {!isLoading && (
-          <div className="mt-2">
-            <SectionHeading>Recursos Humanos</SectionHeading>
-            <div className="space-y-1">
-              <NavItem to="/app/funcionarios" icon={Users} label="Funcionários" resource="funcionarios" />
-              <NavItem to="/app/funcionarios/exames" icon={Stethoscope} label="Exames Médicos" resource="exames" />
-              <NavItem to="/app/rh/cartao-ponto" icon={Clock} label="Cartão Ponto" resource="cartaoponto" />
-              <NavItem to="/app/beneficios" icon={CreditCard} label="Benefícios" resource="beneficios" />
-              <NavItem to="/app/rh/relatorios" icon={FileText} label="Relatórios" resource="rh" />
-            </div>
+        <div className="mt-2">
+          <SectionHeading>Recursos Humanos</SectionHeading>
+          <div className="space-y-1">
+            <NavItem to="/app/funcionarios" icon={Users} label="Funcionários" resource="funcionarios" />
+            <NavItem to="/app/funcionarios/exames" icon={Stethoscope} label="Exames Médicos" resource="exames" />
+            <NavItem to="/app/rh/cartao-ponto" icon={Clock} label="Cartão Ponto" resource="cartaoponto" />
+            <NavItem to="/app/beneficios" icon={CreditCard} label="Benefícios" resource="beneficios" />
+            <NavItem to="/app/rh/relatorios" icon={FileText} label="Relatórios" resource="rh" />
           </div>
-        )}
+        </div>
 
         {/* Config Section */}
-        {!isLoading && (
-          <div className="mt-2">
-            <SectionHeading>Configurações</SectionHeading>
-            <div className="space-y-1">
-              <NavItem to="/app/funcoes" icon={Briefcase} label="Funções" resource="funcoes" />
-              <NavItem to="/app/setores" icon={Building} label="Setores" resource="setores" />
-              <NavItem to="/app/clinicas" icon={Building2} label="Clínicas" resource="clinicas" />
-              <NavItem to="/app/exames" icon={BadgeCheck} label="Exames" resource="exames" />
-              <NavItem to="/app/configuracoes/usuarios" icon={UserCog} label="Usuários" resource="usuarios" />
-              <NavItem to="/app/configuracoes/emails" icon={Mail} label="E-mails" resource="emails" />
-            </div>
+        <div className="mt-2">
+          <SectionHeading>Configurações</SectionHeading>
+          <div className="space-y-1">
+            <NavItem to="/app/funcoes" icon={Briefcase} label="Funções" resource="funcoes" />
+            <NavItem to="/app/setores" icon={Building} label="Setores" resource="setores" />
+            <NavItem to="/app/clinicas" icon={Building2} label="Clínicas" resource="clinicas" />
+            <NavItem to="/app/exames" icon={BadgeCheck} label="Exames" resource="exames" />
+            <NavItem to="/app/configuracoes/usuarios" icon={UserCog} label="Usuários" resource="usuarios" />
+            <NavItem to="/app/configuracoes/emails" icon={Mail} label="E-mails" resource="emails" />
           </div>
-        )}
+        </div>
       </nav>
 
-      {/* User info - sempre visível quando tem profile */}
+      {/* User info */}
       <div className="mt-auto border-t border-slate-700/50 p-4 bg-slate-800/30">
         {profile ? (
           <div className="flex items-center gap-3">
@@ -206,7 +138,19 @@ const AppSidebar = ({ isCollapsed = false }) => {
               </div>
             )}
           </div>
-        ) : null}
+        ) : (
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center font-medium text-white">
+              U
+            </div>
+            {!isCollapsed && (
+              <div>
+                <p className="font-medium text-white text-sm">Usuário</p>
+                <p className="text-xs text-white/70">Carregando...</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

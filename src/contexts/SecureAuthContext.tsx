@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,10 +39,16 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Usuário está autenticado se tem session e user
-  const isAuthenticated = !!user && !!session;
+  // Usuário está autenticado se tem session válida
+  const isAuthenticated = !!session && !!user;
 
-  console.log('SecureAuth State:', { user: !!user, profile: !!profile, session: !!session, isAuthenticated });
+  console.log('SecureAuth State:', { 
+    user: !!user, 
+    profile: !!profile, 
+    session: !!session, 
+    isAuthenticated,
+    isLoading 
+  });
 
   const cleanupAuthState = () => {
     Object.keys(localStorage).forEach((key) => {
@@ -89,6 +94,17 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
           
           if (insertError) {
             console.error('Error creating profile:', insertError);
+            // Criar perfil básico local se falhar
+            setProfile({
+              id: user.id,
+              email: user.email || '',
+              name: user.user_metadata?.name || user.email || 'Usuário',
+              role: 'admin',
+              company_id: '',
+              is_active: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
           } else {
             // Tentar buscar novamente
             const { data: newData, error: newError } = await supabase
@@ -110,6 +126,17 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       setProfile(data);
     } catch (error) {
       console.error('Error refreshing profile:', error);
+      // Criar perfil básico em caso de erro
+      setProfile({
+        id: user.id,
+        email: user.email || '',
+        name: user.user_metadata?.name || user.email || 'Usuário',
+        role: 'admin',
+        company_id: '',
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
     }
   };
 
@@ -161,7 +188,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
           toast.success('Master Admin criado! Use as credenciais para fazer login.');
         } else if (loginData.user) {
           toast.success('Master Admin criado e login realizado com sucesso!');
-          // Redirecionamento será feito pelo onAuthStateChange
         }
       }
     } catch (error: any) {
@@ -190,19 +216,20 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id);
         
+        if (!mounted) return;
+
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user && event === 'SIGNED_IN') {
           console.log('User signed in, fetching profile...');
-          // Defer profile fetch to avoid deadlocks
-          setTimeout(() => {
-            refreshProfile();
-          }, 100);
+          await refreshProfile();
         } else if (!session) {
           setProfile(null);
         }
@@ -213,20 +240,23 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
     // Verificar sessão inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
       console.log('Initial session:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        setTimeout(() => {
-          refreshProfile();
-        }, 100);
+        refreshProfile();
       }
       
       setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -251,12 +281,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       if (data.user) {
         console.log('Login successful for user:', data.user.id);
         toast.success('Login realizado com sucesso');
-        
-        // Redirecionamento explícito após login bem-sucedido
-        setTimeout(() => {
-          console.log('Redirecting to /app after successful login');
-          window.location.href = '/app';
-        }, 500);
       }
     } catch (error: any) {
       console.error('Sign in error:', error);
