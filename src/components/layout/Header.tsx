@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -21,20 +21,20 @@ interface HeaderProps {
 
 function getPageTitle(pathname: string): string {
   switch (pathname) {
-    case '/':
+    case '/app':
       return 'Dashboard';
-    case '/obras':
+    case '/app/obras':
       return 'Obras';
-    case '/frota':
+    case '/app/frota':
       return 'Frota';
-    case '/patrimonio':
+    case '/app/patrimonio':
       return 'Patrimônio';
-    case '/financeiro':
+    case '/app/financeiro':
       return 'Financeiro';
-    case '/configuracoes':
+    case '/app/configuracoes':
       return 'Configurações';
     default:
-      if (pathname.startsWith('/funcionarios')) return 'Funcionários';
+      if (pathname.startsWith('/app/funcionarios')) return 'Funcionários';
       return 'Painel de Controle';
   }
 }
@@ -43,20 +43,20 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const [showSearch, setShowSearch] = React.useState(false);
   const location = useLocation();
   const pageTitle = getPageTitle(location.pathname);
-  const { user, logout } = useAuth();
+  const { profile, signOut } = useSecureAuth();
 
   // Get user initials for avatar
   const getInitials = () => {
-    if (!user || !user.name) return 'U';
+    if (!profile || !profile.name) return 'U';
     
-    const names = user.name.split(' ');
+    const names = profile.name.split(' ');
     if (names.length === 1) return names[0].charAt(0).toUpperCase();
     return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
   };
 
   // Get role display name
   const getRoleDisplay = () => {
-    switch (user?.role) {
+    switch (profile?.role) {
       case 'admin': return 'Administrador';
       case 'manager': return 'Gerente';
       case 'operator': return 'Operador';
@@ -131,7 +131,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         </DropdownMenu>
         
         {/* User menu */}
-        {user && (
+        {profile && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -145,9 +145,9 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user.name}</p>
+                  <p className="text-sm font-medium leading-none">{profile.name}</p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    {user.email}
+                    {profile.email}
                   </p>
                   <p className="text-xs leading-none text-muted-foreground mt-1">
                     {getRoleDisplay()}
@@ -155,7 +155,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+              <DropdownMenuItem onClick={signOut} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Sair</span>
               </DropdownMenuItem>
