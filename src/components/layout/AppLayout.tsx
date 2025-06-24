@@ -1,22 +1,40 @@
 
 import React, { useState, useEffect } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import AppSidebar from './AppSidebar';
 import Header from './Header';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
+import { Loader2 } from 'lucide-react';
 
 const AppLayout: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
+  const { isLoading, isAuthenticated } = useSecureAuth();
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
-  // Ensure all links work correctly by handling direct navigation
   useEffect(() => {
-    console.log('Current route:', location.pathname);
+    console.log('AppLayout - Current route:', location.pathname);
   }, [location]);
+
+  // Se ainda está carregando a autenticação, mostra loading
+  if (isLoading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Se não está autenticado, não renderiza o layout
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen bg-background overflow-hidden">

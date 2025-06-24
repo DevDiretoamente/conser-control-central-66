@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -82,6 +81,8 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const location = useLocation();
   const pageTitle = getPageTitle(location.pathname);
   const { profile, signOut, isLoading } = useSecureAuth();
+
+  console.log('Header - profile:', profile, 'isLoading:', isLoading);
 
   // Get user initials for avatar
   const getInitials = () => {

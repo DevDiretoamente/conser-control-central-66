@@ -24,11 +24,13 @@ import { useSecureAuth } from '@/contexts/SecureAuthContext';
 const AppSidebar = ({ isCollapsed = false }) => {
   const { profile, isLoading, hasPermission } = useSecureAuth();
 
+  console.log('AppSidebar - profile:', profile, 'isLoading:', isLoading);
+
   // Styled navigation link component
   const NavItem = ({ to, icon: Icon, label, resource = null, action = 'read' }) => {
     // Se não tem resource, sempre mostra (como Dashboard)
-    // Se tem resource, verifica permissão
-    const shouldShow = !resource || hasPermission(resource, action);
+    // Se tem resource, verifica permissão - mas para admin sempre mostra
+    const shouldShow = !resource || (profile?.role === 'admin') || hasPermission(resource, action);
     
     if (!shouldShow) return null;
     

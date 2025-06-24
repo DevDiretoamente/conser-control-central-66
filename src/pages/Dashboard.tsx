@@ -23,7 +23,7 @@ const Dashboard = () => {
           title="Recursos Humanos"
           description="Gestão de funcionários"
           icon={<Users size={24} />}
-          to="/funcionarios"
+          to="/app/funcionarios"
           value="26"
           color="primary"
           footer="8 ASOs a vencer nos próximos 30 dias"
@@ -33,7 +33,7 @@ const Dashboard = () => {
           title="Obras"
           description="Projetos e licitações"
           icon={<Building size={24} />}
-          to="/obras"
+          to="/app/obras"
           value="5"
           color="accent"
           footer="3 obras em andamento, 2 licitações pendentes"
@@ -43,7 +43,7 @@ const Dashboard = () => {
           title="Frota"
           description="Veículos e equipamentos"
           icon={<Truck size={24} />}
-          to="/frota"
+          to="/app/frota"
           value="12"
           color="success"
           footer="2 manutenções preventivas agendadas"
@@ -53,7 +53,7 @@ const Dashboard = () => {
           title="Financeiro"
           description="Contas a pagar e receber"
           icon={<FileText size={24} />}
-          to="/financeiro"
+          to="/app/financeiro"
           value="R$ 125.450,00"
           color="info"
           footer="Próximo vencimento em 3 dias"

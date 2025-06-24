@@ -90,6 +90,18 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
               console.log('Profile created and fetched:', newData);
             }
           }
+        } else {
+          // Criar perfil padrão em caso de erro
+          setProfile({
+            id: user.id,
+            email: user.email || '',
+            name: user.user_metadata?.name || user.email || 'Usuário',
+            role: 'admin',
+            company_id: '',
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
         }
         return;
       }
@@ -98,6 +110,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       setProfile(data);
     } catch (error) {
       console.error('Error refreshing profile:', error);
+      // Criar perfil padrão em caso de erro
       setProfile({
         id: user.id,
         email: user.email || '',
@@ -125,7 +138,12 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         
         if (session?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
           console.log('User authenticated, fetching profile...');
-          await refreshProfile();
+          // Use setTimeout para evitar problemas de concorrência
+          setTimeout(() => {
+            if (mounted) {
+              refreshProfile();
+            }
+          }, 100);
         } else if (!session) {
           setProfile(null);
         }
@@ -142,7 +160,11 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        refreshProfile();
+        setTimeout(() => {
+          if (mounted) {
+            refreshProfile();
+          }
+        }, 100);
       }
       
       setIsLoading(false);
