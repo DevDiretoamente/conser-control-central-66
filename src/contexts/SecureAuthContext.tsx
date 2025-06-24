@@ -47,7 +47,8 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     session: !!session, 
     isAuthenticated,
     isLoading,
-    userId: user?.id
+    userId: user?.id,
+    profileRole: profile?.role
   });
 
   const refreshProfile = async () => {
@@ -66,42 +67,37 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
       if (error) {
         console.error('Error fetching profile:', error);
+        
+        // Criar perfil padrão como admin para qualquer erro
+        const defaultProfile: UserProfile = {
+          id: user.id,
+          email: user.email || '',
+          name: user.user_metadata?.name || user.email || 'Admin',
+          role: 'admin',
+          company_id: '',
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        console.log('Setting default admin profile:', defaultProfile);
+        setProfile(defaultProfile);
+        
+        // Tentar criar o perfil no banco se não existir
         if (error.code === 'PGRST116') {
-          console.log('Profile not found, creating basic profile...');
           const { error: insertError } = await supabase
             .from('user_profiles')
             .insert({
               id: user.id,
               email: user.email || '',
-              name: user.user_metadata?.name || user.email || 'Usuário',
+              name: user.user_metadata?.name || user.email || 'Admin',
               role: 'admin',
               is_active: true
             });
           
           if (!insertError) {
-            const { data: newData } = await supabase
-              .from('user_profiles')
-              .select('*')
-              .eq('id', user.id)
-              .single();
-            
-            if (newData) {
-              setProfile(newData);
-              console.log('Profile created and fetched:', newData);
-            }
+            console.log('Profile created successfully in database');
           }
-        } else {
-          // Criar perfil padrão em caso de erro
-          setProfile({
-            id: user.id,
-            email: user.email || '',
-            name: user.user_metadata?.name || user.email || 'Usuário',
-            role: 'admin',
-            company_id: '',
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
         }
         return;
       }
@@ -110,17 +106,21 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       setProfile(data);
     } catch (error) {
       console.error('Error refreshing profile:', error);
-      // Criar perfil padrão em caso de erro
-      setProfile({
+      
+      // Fallback para perfil admin
+      const fallbackProfile: UserProfile = {
         id: user.id,
         email: user.email || '',
-        name: user.user_metadata?.name || user.email || 'Usuário',
+        name: user.user_metadata?.name || user.email || 'Admin',
         role: 'admin',
         company_id: '',
         is_active: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      });
+      };
+      
+      console.log('Setting fallback admin profile:', fallbackProfile);
+      setProfile(fallbackProfile);
     }
   };
 
@@ -136,15 +136,16 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+        if (session?.user) {
           console.log('User authenticated, fetching profile...');
-          // Use setTimeout para evitar problemas de concorrência
+          
+          // Aguardar um pouco antes de buscar o perfil para evitar problemas de timing
           setTimeout(() => {
             if (mounted) {
               refreshProfile();
             }
-          }, 100);
-        } else if (!session) {
+          }, 200);
+        } else {
           setProfile(null);
         }
         
@@ -152,6 +153,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       }
     );
 
+    // Verificar sessão inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
       
@@ -164,7 +166,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
           if (mounted) {
             refreshProfile();
           }
-        }, 100);
+        }, 200);
       }
       
       setIsLoading(false);
@@ -245,15 +247,29 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
   };
 
   const hasRole = (role: string): boolean => {
-    if (!profile) return false;
-    return profile.role === role || profile.role === 'admin';
+    if (!profile) {
+      console.log('hasRole: No profile available');
+      return false;
+    }
+    
+    const hasRoleResult = profile.role === role || profile.role === 'admin';
+    console.log('hasRole check:', { userRole: profile.role, requiredRole: role, result: hasRoleResult });
+    return hasRoleResult;
   };
 
   const hasPermission = (resource: string, action: string): boolean => {
-    if (!profile || !profile.is_active) return false;
+    if (!profile || !profile.is_active) {
+      console.log('hasPermission: No profile or inactive user');
+      return false;
+    }
     
-    if (profile.role === 'admin') return true;
+    // Admin sempre tem permissão
+    if (profile.role === 'admin') {
+      console.log('hasPermission: Admin user, allowing access to', resource);
+      return true;
+    }
     
+    // Para outros roles, implementar lógica específica conforme necessário
     const permissions = {
       manager: {
         funcionarios: ['read', 'create', 'update'],
@@ -275,7 +291,17 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     if (!rolePermissions) return false;
 
     const resourcePermissions = rolePermissions[resource as keyof typeof rolePermissions];
-    return resourcePermissions ? resourcePermissions.includes(action) : false;
+    const hasPermissionResult = resourcePermissions ? resourcePermissions.includes(action) : false;
+    
+    console.log('hasPermission check:', { 
+      userRole: profile.role, 
+      resource, 
+      action, 
+      resourcePermissions, 
+      result: hasPermissionResult 
+    });
+    
+    return hasPermissionResult;
   };
 
   const createUser = async (userData: { email: string; password: string; name: string; role: 'admin' | 'manager' | 'operator' }) => {
