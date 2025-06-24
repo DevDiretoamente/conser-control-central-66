@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,30 +13,29 @@ import Logo from '@/components/Logo';
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, isLoading, error } = useAuth();
+  const [error, setError] = useState<string>('');
+  const { signIn, isLoading } = useSecureAuth();
   
   const navigate = useNavigate();
   const location = useLocation();
   
   // Get the previous location or default to home
-  const from = location.state?.from?.pathname || '/';
+  const from = location.state?.from?.pathname || '/app';
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(email, password);
+    setError('');
     
-    // Navigation will be handled in the useEffect in AuthContext after successful login
-    setTimeout(() => {
-      if (!error) {
-        navigate(from, { replace: true });
-      }
-    }, 100);
+    try {
+      await signIn(email, password);
+      navigate(from, { replace: true });
+    } catch (err: any) {
+      setError(err.message || 'Erro ao fazer login');
+    }
   };
 
   const demoAccounts = [
-    { role: 'Admin', email: 'admin@conservias.com', password: 'admin123' },
-    { role: 'Gerente', email: 'gerente@conservias.com', password: 'gerente123' },
-    { role: 'Operador', email: 'operador@conservias.com', password: 'operador123' }
+    { role: 'Admin', email: 'suporte@conserviaspg.com.br', password: 'sua_senha_aqui' },
   ];
 
   const setDemoAccount = (email: string, password: string) => {
@@ -101,7 +100,7 @@ const Login: React.FC = () => {
         
         <CardFooter className="flex flex-col">
           <div className="text-sm text-center text-muted-foreground mt-2 mb-4">
-            Para demonstração, use uma das contas abaixo:
+            Para demonstração, use a conta admin:
           </div>
           <div className="grid grid-cols-1 gap-2 w-full">
             {demoAccounts.map((account) => (
@@ -112,7 +111,7 @@ const Login: React.FC = () => {
                 className="text-xs justify-start gap-2"
                 onClick={() => setDemoAccount(account.email, account.password)}
               >
-                <strong>{account.role}:</strong> {account.email} / {account.password}
+                <strong>{account.role}:</strong> {account.email}
               </Button>
             ))}
           </div>

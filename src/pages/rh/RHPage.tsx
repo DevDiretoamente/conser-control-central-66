@@ -4,18 +4,18 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, Stethoscope, FileText, BadgeCheck, Clock, Award } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
 
 const RHPage: React.FC = () => {
   const navigate = useNavigate();
-  const { hasSpecificPermission } = useAuth();
+  const { hasPermission } = useSecureAuth();
 
   const mostraTelas = {
-    funcionarios: hasSpecificPermission('funcionarios', 'read'),
-    exames: hasSpecificPermission('exames', 'read'),
-    documentos: hasSpecificPermission('documentos', 'read'),
-    certificacoes: hasSpecificPermission('documentos', 'read'),
-    cartaoPonto: hasSpecificPermission('cartaoponto', 'read'),
+    funcionarios: hasPermission('funcionarios', 'read'),
+    exames: hasPermission('exames', 'read'),
+    documentos: hasPermission('documentos', 'read'),
+    certificacoes: hasPermission('documentos', 'read'),
+    cartaoPonto: hasPermission('cartaoponto', 'read'),
   };
 
   return (

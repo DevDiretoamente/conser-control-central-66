@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { User } from '@/types/auth';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import { Switch } from '@/components/ui/switch';
 import { 
   AlertDialog,
@@ -15,42 +14,54 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ShieldAlert, CheckCircle, XCircle } from 'lucide-react';
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  is_active: boolean;
+}
+
 interface UserActivationToggleProps {
   user: User;
   disabled?: boolean;
 }
 
 const UserActivationToggle: React.FC<UserActivationToggleProps> = ({ user, disabled = false }) => {
-  const { toggleUserActivation } = useAuth();
+  const { updateUserProfile } = useSecureAuth();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [newStatus, setNewStatus] = React.useState<boolean>(user.isActive);
+  const [newStatus, setNewStatus] = React.useState<boolean>(user.is_active);
 
   const handleToggle = (checked: boolean) => {
     setNewStatus(checked);
     setIsDialogOpen(true);
   };
 
-  const handleConfirm = () => {
-    toggleUserActivation(user.id, newStatus);
-    setIsDialogOpen(false);
+  const handleConfirm = async () => {
+    try {
+      await updateUserProfile(user.id, { is_active: newStatus });
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error('Error updating user status:', error);
+    }
   };
 
   return (
     <>
       <div className="flex items-center space-x-2">
-        {user.isActive ? (
+        {user.is_active ? (
           <CheckCircle className="h-4 w-4 text-green-500" />
         ) : (
           <XCircle className="h-4 w-4 text-red-500" />
         )}
         <Switch 
-          checked={user.isActive} 
+          checked={user.is_active} 
           onCheckedChange={handleToggle}
           disabled={disabled}
           aria-label={`Ativar ou desativar usuário ${user.name}`}
         />
         <span className="text-sm">
-          {user.isActive ? 'Ativo' : 'Inativo'}
+          {user.is_active ? 'Ativo' : 'Inativo'}
         </span>
       </div>
 

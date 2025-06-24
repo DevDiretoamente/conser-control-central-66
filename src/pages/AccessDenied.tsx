@@ -4,11 +4,11 @@ import { Link } from 'react-router-dom';
 import { AlertCircle, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import { useLocation } from 'react-router-dom';
 
 const AccessDenied: React.FC = () => {
-  const { user } = useAuth();
+  const { profile } = useSecureAuth();
   const location = useLocation();
   
   // Try to determine which resource was being accessed
@@ -40,12 +40,12 @@ const AccessDenied: React.FC = () => {
             </div>
             <h2 className="text-2xl font-bold">Permissão Insuficiente</h2>
             <p className="text-muted-foreground">
-              {user ? (
+              {profile ? (
                 <>
-                  Olá <span className="font-medium">{user.name}</span>, você não tem permissão para acessar <span className="font-medium">{resourceName}</span>.
+                  Olá <span className="font-medium">{profile.name}</span>, você não tem permissão para acessar <span className="font-medium">{resourceName}</span>.
                   <div className="mt-2">
-                    Seu perfil atual (<span className="font-medium">{user.role === 'admin' ? 'Administrador' : 
-                      user.role === 'manager' ? 'Gerente' : 'Operador'}</span>) não possui as permissões necessárias para esta operação.
+                    Seu perfil atual (<span className="font-medium">{profile.role === 'admin' ? 'Administrador' : 
+                      profile.role === 'manager' ? 'Gerente' : 'Operador'}</span>) não possui as permissões necessárias para esta operação.
                   </div>
                   <div className="mt-4 text-sm">
                     Para solicitar acesso, entre em contato com o administrador do sistema.

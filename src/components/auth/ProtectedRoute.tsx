@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import { UserRole, PermissionArea, PermissionLevel } from '@/types/auth';
 import { Loader2 } from 'lucide-react';
 
@@ -19,7 +19,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredRole,
   requiredPermission
 }) => {
-  const { isAuthenticated, isLoading, user, hasPermission, hasSpecificPermission } = useAuth();
+  const { isAuthenticated, isLoading, profile, hasRole, hasPermission } = useSecureAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -32,24 +32,24 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (!isAuthenticated) {
     // Redirect to login page but save the current location
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/secure-login" state={{ from: location }} replace />;
   }
 
   // Check if the user is active
-  if (user && !user.isActive) {
+  if (profile && !profile.is_active) {
     return <Navigate to="/conta-inativa" replace />;
   }
 
   // If a specific role is required, check if the user has permission
-  if (requiredRole && user && !hasPermission(requiredRole)) {
+  if (requiredRole && profile && !hasRole(requiredRole)) {
     return <Navigate to="/acesso-negado" replace />;
   }
 
   // If a specific permission is required, check if the user has it
-  if (requiredPermission && user && 
-      !hasSpecificPermission(
+  if (requiredPermission && profile && 
+      !hasPermission(
         requiredPermission.area, 
-        requiredPermission.level
+        requiredPermission.level || 'read'
       )) {
     return <Navigate to="/acesso-negado" replace />;
   }

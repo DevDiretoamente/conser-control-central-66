@@ -1,18 +1,18 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
 import Logo from '@/components/Logo';
 
 const InactiveAccount: React.FC = () => {
-  const { logout } = useAuth();
+  const { signOut } = useSecureAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();
-    navigate('/login');
+    signOut();
+    navigate('/secure-login');
   };
 
   return (
