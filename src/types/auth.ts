@@ -41,6 +41,7 @@ export interface UserGroup {
   updatedBy?: string;
 }
 
+// Standardized User interface - this is the main one to use everywhere
 export interface User {
   id: string;
   name: string;
@@ -49,7 +50,8 @@ export interface User {
   avatar?: string;
   permissions?: Permission[];
   groupIds?: string[]; // Added group memberships
-  isActive: boolean;
+  is_active: boolean;
+  isActive: boolean; // Keep both for compatibility
   createdAt: string;
   lastLogin?: string;
   password?: string; // Adding password as optional field for auth purposes

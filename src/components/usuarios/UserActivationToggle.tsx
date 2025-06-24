@@ -13,14 +13,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ShieldAlert, CheckCircle, XCircle } from 'lucide-react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  is_active: boolean;
-}
+import { User } from '@/types/auth';
 
 interface UserActivationToggleProps {
   user: User;

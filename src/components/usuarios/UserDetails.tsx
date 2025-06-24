@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,21 +7,10 @@ import { Calendar, Clock, Mail, User as UserIcon } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import UserPermissionsSummary from './UserPermissionsSummary';
-
-interface LocalUser {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  is_active: boolean;
-  isActive?: boolean;
-  createdAt: string;
-  lastLogin?: string;
-  avatar?: string;
-}
+import { User } from '@/types/auth';
 
 interface UserDetailsProps {
-  user: LocalUser; // Use LocalUser instead of User from auth types
+  user: User;
   className?: string;
 }
 

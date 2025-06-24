@@ -10,32 +10,22 @@ import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, AlertTriangle, Shield, Mail, UserCheck, UserX } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSecureAuth } from '@/contexts/SecureAuthContext';
-import { UserRole } from '@/types/auth';
+import { UserRole, User } from '@/types/auth';
 import UserFilterToolbar from './UserFilterToolbar';
 import UserDetails from './UserDetails';
 import UserActivationToggle from './UserActivationToggle';
 import UserPermissionsDialog from './UserPermissionsDialog';
 
-interface LocalUser {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole; // Changed from string to UserRole
-  is_active: boolean;
-  isActive: boolean;
-  createdAt: string;
-}
-
 const GerenciamentoUsuarios: React.FC = () => {
   const { profile: currentUser, hasPermission, getAllUsers, createUser, updateUserProfile } = useSecureAuth();
-  const [users, setUsers] = useState<LocalUser[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUser, setSelectedUser] = useState<LocalUser | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [filteredUsers, setFilteredUsers] = useState<LocalUser[]>(users);
-  const [newUser, setNewUser] = useState<Partial<LocalUser>>({
+  const [filteredUsers, setFilteredUsers] = useState<User[]>(users);
+  const [newUser, setNewUser] = useState<Partial<User>>({
     name: '',
     email: '',
     role: 'operator',
@@ -59,11 +49,11 @@ const GerenciamentoUsuarios: React.FC = () => {
   const loadUsers = async () => {
     try {
       const userProfiles = await getAllUsers();
-      const mappedUsers = userProfiles.map(profile => ({
+      const mappedUsers: User[] = userProfiles.map(profile => ({
         id: profile.id,
         name: profile.name,
         email: profile.email,
-        role: profile.role as UserRole, // Ensure proper type casting
+        role: profile.role as UserRole,
         is_active: profile.is_active,
         isActive: profile.is_active,
         createdAt: profile.created_at
@@ -101,8 +91,8 @@ const GerenciamentoUsuarios: React.FC = () => {
     if (filters.sortField) {
       const direction = filters.sortDirection === 'asc' ? 1 : -1;
       results.sort((a, b) => {
-        const fieldA = a[filters.sortField as keyof LocalUser] || '';
-        const fieldB = b[filters.sortField as keyof LocalUser] || '';
+        const fieldA = a[filters.sortField as keyof User] || '';
+        const fieldB = b[filters.sortField as keyof User] || '';
         
         if (typeof fieldA === 'string' && typeof fieldB === 'string') {
           return fieldA.localeCompare(fieldB) * direction;
@@ -155,12 +145,12 @@ const GerenciamentoUsuarios: React.FC = () => {
     }
   };
 
-  const handleEditUser = (user: LocalUser) => {
+  const handleEditUser = (user: User) => {
     setSelectedUser(user);
     // In a real app, you might want to open an edit dialog here
   };
 
-  const handleDeleteUser = (user: LocalUser) => {
+  const handleDeleteUser = (user: User) => {
     setSelectedUser(user);
     setIsDeleteDialogOpen(true);
   };
@@ -181,7 +171,7 @@ const GerenciamentoUsuarios: React.FC = () => {
     }
   };
 
-  const handleOpenPermissions = (user: LocalUser) => {
+  const handleOpenPermissions = (user: User) => {
     setSelectedUser(user);
     setIsPermissionsDialogOpen(true);
   };

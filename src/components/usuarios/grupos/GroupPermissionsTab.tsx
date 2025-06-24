@@ -82,8 +82,8 @@ const GroupPermissionsTab: React.FC<GroupPermissionsTabProps> = ({
                       <Checkbox
                         id={`${area.id}-${level.id}`}
                         checked={hasPermission(area.id, level.id)}
-                        onCheckedChange={(checked) =>
-                          handlePermissionChange(area.id, level.id, checked === true)
+                        onCheckedChange={(checked: boolean) =>
+                          handlePermissionChange(area.id, level.id, checked)
                         }
                       />
                       <Label htmlFor={`${area.id}-${level.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
