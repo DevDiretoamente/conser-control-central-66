@@ -22,35 +22,15 @@ import {
 import { useSecureAuth } from '@/contexts/SecureAuthContext';
 
 const AppSidebar = ({ isCollapsed = false }) => {
-  const { profile, isLoading, hasPermission } = useSecureAuth();
+  const { profile, isLoading } = useSecureAuth();
 
   console.log('AppSidebar - Debug Info:', { 
     profile: profile ? { role: profile.role, active: profile.is_active } : null, 
-    isLoading, 
-    hasPermissionFunction: typeof hasPermission 
+    isLoading
   });
 
-  // Componente de item de navegação com verificação simplificada
-  const NavItem = ({ to, icon: Icon, label, resource = null, action = 'read' }) => {
-    // Se não tem profile ainda carregado, não mostra nada (aguarda carregamento)
-    if (!profile) {
-      console.log(`NavItem ${label}: No profile loaded yet`);
-      return null;
-    }
-    
-    // Para admin, sempre mostra todos os itens
-    if (profile.role === 'admin') {
-      console.log(`NavItem ${label}: Admin user, showing item`);
-    } else if (resource) {
-      // Para outros roles, verifica permissão apenas se tem resource definido
-      const shouldShow = hasPermission(resource, action);
-      console.log(`NavItem ${label}: Permission check for ${resource}:${action} = ${shouldShow}`);
-      
-      if (!shouldShow) {
-        return null;
-      }
-    }
-    
+  // Componente de item de navegação
+  const NavItem = ({ to, icon: Icon, label }) => {
     return (
       <NavLink
         to={to}
@@ -112,15 +92,15 @@ const AppSidebar = ({ isCollapsed = false }) => {
       
       {/* Navigation sections */}
       <nav className="flex-1 space-y-2 px-2 py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent">
-        {/* Main Links - sempre visível para admin */}
+        {/* Main Links */}
         <div className="mt-6">
           <div className="space-y-1">
             <NavItem to="/app" icon={LayoutDashboard} label="Dashboard" />
-            <NavItem to="/app/funcionarios" icon={Users} label="Funcionários" resource="funcionarios" />
-            <NavItem to="/app/obras" icon={Building} label="Obras" resource="obras" />
-            <NavItem to="/app/frota" icon={Truck} label="Frota" resource="frota" />
-            <NavItem to="/app/patrimonio" icon={Briefcase} label="Patrimônio" resource="patrimonio" />
-            <NavItem to="/app/financeiro" icon={FileText} label="Financeiro" resource="financeiro" />
+            <NavItem to="/app/funcionarios" icon={Users} label="Funcionários" />
+            <NavItem to="/app/obras" icon={Building} label="Obras" />
+            <NavItem to="/app/frota" icon={Truck} label="Frota" />
+            <NavItem to="/app/patrimonio" icon={Briefcase} label="Patrimônio" />
+            <NavItem to="/app/financeiro" icon={FileText} label="Financeiro" />
           </div>
         </div>
 
@@ -128,25 +108,31 @@ const AppSidebar = ({ isCollapsed = false }) => {
         <div className="mt-2">
           <SectionHeading>Recursos Humanos</SectionHeading>
           <div className="space-y-1">
-            <NavItem to="/app/funcionarios/exames" icon={Stethoscope} label="Exames Médicos" resource="exames" />
-            <NavItem to="/app/rh/cartao-ponto" icon={Clock} label="Cartão Ponto" resource="cartaoponto" />
-            <NavItem to="/app/beneficios" icon={CreditCard} label="Benefícios" resource="beneficios" />
-            <NavItem to="/app/rh/relatorios" icon={FileText} label="Relatórios" resource="rh" />
+            <NavItem to="/app/funcionarios/exames" icon={Stethoscope} label="Exames Médicos" />
+            <NavItem to="/app/rh/cartao-ponto" icon={Clock} label="Cartão Ponto" />
+            <NavItem to="/app/beneficios" icon={CreditCard} label="Benefícios" />
+            <NavItem to="/app/rh/relatorios" icon={FileText} label="Relatórios" />
           </div>
         </div>
 
-        {/* Config Section */}
-        <div className="mt-2">
-          <SectionHeading>Configurações</SectionHeading>
-          <div className="space-y-1">
-            <NavItem to="/app/funcoes" icon={Briefcase} label="Funções" resource="funcoes" />
-            <NavItem to="/app/setores" icon={Building} label="Setores" resource="setores" />
-            <NavItem to="/app/clinicas" icon={Building2} label="Clínicas" resource="clinicas" />
-            <NavItem to="/app/exames" icon={BadgeCheck} label="Exames" resource="exames" />
-            <NavItem to="/app/configuracoes/usuarios" icon={UserCog} label="Usuários" resource="usuarios" />
-            <NavItem to="/app/configuracoes/emails" icon={Mail} label="E-mails" resource="emails" />
+        {/* Config Section - Sempre mostra para admin, mas com verificação para outros roles */}
+        {(!profile || profile.role === 'admin' || profile.role === 'manager') && (
+          <div className="mt-2">
+            <SectionHeading>Configurações</SectionHeading>
+            <div className="space-y-1">
+              <NavItem to="/app/funcoes" icon={Briefcase} label="Funções" />
+              <NavItem to="/app/setores" icon={Building} label="Setores" />
+              <NavItem to="/app/clinicas" icon={Building2} label="Clínicas" />
+              <NavItem to="/app/exames" icon={BadgeCheck} label="Exames" />
+              {(!profile || profile.role === 'admin') && (
+                <>
+                  <NavItem to="/app/configuracoes/usuarios" icon={UserCog} label="Usuários" />
+                  <NavItem to="/app/configuracoes/emails" icon={Mail} label="E-mails" />
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </nav>
 
       {/* User info */}
@@ -160,7 +146,10 @@ const AppSidebar = ({ isCollapsed = false }) => {
               <div>
                 <p className="font-medium text-white text-sm">{profile.name}</p>
                 <p className="text-xs text-white/70">{profile.email}</p>
-                <p className="text-xs text-white/50 capitalize">{profile.role}</p>
+                <p className="text-xs text-white/50 capitalize">
+                  {profile.role === 'admin' ? 'Administrador' : 
+                   profile.role === 'manager' ? 'Gerente' : 'Operador'}
+                </p>
               </div>
             )}
           </div>

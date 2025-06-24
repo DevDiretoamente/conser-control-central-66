@@ -61,7 +61,12 @@ const SecureProtectedRoute: React.FC<SecureProtectedRouteProps> = ({
     );
   }
 
-  // Check role-based access
+  // Para admin, sempre permitir acesso (não verificar permissões específicas)
+  if (profile && profile.role === 'admin') {
+    return <>{children}</>;
+  }
+
+  // Check role-based access para não-admins
   if (requiredRole && !hasRole(requiredRole)) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-slate-50">
@@ -89,7 +94,7 @@ const SecureProtectedRoute: React.FC<SecureProtectedRouteProps> = ({
     );
   }
 
-  // Check resource-based permissions
+  // Check resource-based permissions para não-admins
   if (requiredResource && !hasPermission(requiredResource, requiredAction)) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-slate-50">

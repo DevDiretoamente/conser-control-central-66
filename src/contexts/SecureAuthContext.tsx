@@ -63,57 +63,51 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         .from('user_profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching profile:', error);
-        
-        // Criar perfil padrão como admin para qualquer erro
-        const defaultProfile: UserProfile = {
-          id: user.id,
-          email: user.email || '',
-          name: user.user_metadata?.name || user.email || 'Admin',
-          role: 'admin',
-          company_id: '',
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        
-        console.log('Setting default admin profile:', defaultProfile);
-        setProfile(defaultProfile);
-        
-        // Tentar criar o perfil no banco se não existir
-        if (error.code === 'PGRST116') {
-          const { error: insertError } = await supabase
-            .from('user_profiles')
-            .insert({
-              id: user.id,
-              email: user.email || '',
-              name: user.user_metadata?.name || user.email || 'Admin',
-              role: 'admin',
-              is_active: true
-            });
-          
-          if (!insertError) {
-            console.log('Profile created successfully in database');
-          }
+        throw error;
+      }
+
+      if (!data) {
+        console.log('No profile found, creating default admin profile');
+        // Criar perfil padrão como admin
+        const { data: newProfile, error: insertError } = await supabase
+          .from('user_profiles')
+          .insert({
+            id: user.id,
+            email: user.email || '',
+            name: user.user_metadata?.name || user.email || 'Admin',
+            role: 'admin',
+            is_active: true,
+            company_id: 'default'
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('Error creating profile:', insertError);
+          throw insertError;
         }
+
+        console.log('Profile created successfully:', newProfile);
+        setProfile(newProfile);
         return;
       }
 
       console.log('Profile fetched successfully:', data);
       setProfile(data);
     } catch (error) {
-      console.error('Error refreshing profile:', error);
+      console.error('Error in refreshProfile:', error);
       
-      // Fallback para perfil admin
+      // Em caso de erro, criar perfil admin como fallback
       const fallbackProfile: UserProfile = {
         id: user.id,
         email: user.email || '',
         name: user.user_metadata?.name || user.email || 'Admin',
         role: 'admin',
-        company_id: '',
+        company_id: 'default',
         is_active: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -136,16 +130,15 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
-          console.log('User authenticated, fetching profile...');
-          
-          // Aguardar um pouco antes de buscar o perfil para evitar problemas de timing
+        if (session?.user && event === 'SIGNED_IN') {
+          console.log('User signed in, fetching profile...');
+          // Aguardar um pouco antes de buscar o perfil
           setTimeout(() => {
             if (mounted) {
               refreshProfile();
             }
-          }, 200);
-        } else {
+          }, 500);
+        } else if (event === 'SIGNED_OUT') {
           setProfile(null);
         }
         
@@ -166,10 +159,10 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
           if (mounted) {
             refreshProfile();
           }
-        }, 200);
+        }, 500);
+      } else {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     });
 
     return () => {
@@ -252,7 +245,13 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       return false;
     }
     
-    const hasRoleResult = profile.role === role || profile.role === 'admin';
+    // Admin sempre tem acesso
+    if (profile.role === 'admin') {
+      console.log('hasRole: Admin user, always has access');
+      return true;
+    }
+    
+    const hasRoleResult = profile.role === role;
     console.log('hasRole check:', { userRole: profile.role, requiredRole: role, result: hasRoleResult });
     return hasRoleResult;
   };
@@ -263,7 +262,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       return false;
     }
     
-    // Admin sempre tem permissão
+    // Admin sempre tem permissão total
     if (profile.role === 'admin') {
       console.log('hasPermission: Admin user, allowing access to', resource);
       return true;
@@ -277,13 +276,13 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         exames: ['read', 'create', 'update'], cartaoponto: ['read', 'create', 'update'],
         rh: ['read', 'create', 'update'], configuracoes: ['read'],
         funcoes: ['read'], setores: ['read'], clinicas: ['read'], emails: ['read'],
-        beneficios: ['read']
+        beneficios: ['read'], usuarios: ['read']
       },
       operator: {
         funcionarios: ['read'], obras: ['read'], frota: ['read'], patrimonio: ['read'],
         financeiro: ['read'], exames: ['read'], cartaoponto: ['read'], rh: ['read'],
         configuracoes: ['read'], funcoes: ['read'], setores: ['read'], clinicas: ['read'],
-        emails: ['read'], beneficios: ['read']
+        emails: ['read'], beneficios: ['read'], usuarios: ['read']
       }
     };
 
