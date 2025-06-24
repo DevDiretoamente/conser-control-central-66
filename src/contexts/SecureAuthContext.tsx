@@ -39,7 +39,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Usuário está autenticado se tem session válida
   const isAuthenticated = !!session?.user;
 
   console.log('SecureAuth State:', { 
@@ -47,25 +46,13 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     profile: !!profile, 
     session: !!session, 
     isAuthenticated,
-    isLoading 
+    isLoading,
+    userId: user?.id
   });
 
-  const cleanupAuthState = () => {
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        localStorage.removeItem(key);
-      }
-    });
-    Object.keys(sessionStorage || {}).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        sessionStorage.removeItem(key);
-      }
-    });
-  };
-
   const refreshProfile = async () => {
-    if (!user) {
-      console.log('No user to refresh profile for');
+    if (!user?.id) {
+      console.log('No user ID for profile refresh');
       return;
     }
 
@@ -79,7 +66,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
       if (error) {
         console.error('Error fetching profile:', error);
-        // Se não encontrar o perfil, criar um básico
         if (error.code === 'PGRST116') {
           console.log('Profile not found, creating basic profile...');
           const { error: insertError } = await supabase
@@ -93,7 +79,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
             });
           
           if (!insertError) {
-            // Tentar buscar novamente
             const { data: newData } = await supabase
               .from('user_profiles')
               .select('*')
@@ -113,7 +98,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       setProfile(data);
     } catch (error) {
       console.error('Error refreshing profile:', error);
-      // Criar perfil básico em caso de erro
       setProfile({
         id: user.id,
         email: user.email || '',
@@ -124,81 +108,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
-    }
-  };
-
-  const getAllUsers = async (): Promise<UserProfile[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      return [];
-    }
-  };
-
-  const createUser = async (userData: { email: string; password: string; name: string; role: 'admin' | 'manager' | 'operator' }) => {
-    try {
-      setIsLoading(true);
-      
-      const { data, error } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/app`,
-          data: {
-            name: userData.name,
-            role: userData.role,
-            email_confirm: false
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        console.log('Usuário criado:', data.user.id);
-        
-        // Login automático após criação
-        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-          email: userData.email,
-          password: userData.password,
-        });
-
-        if (loginError) {
-          console.error('Erro no login automático:', loginError);
-          toast.success('Master Admin criado! Use as credenciais para fazer login.');
-        } else if (loginData.user) {
-          toast.success('Master Admin criado e login realizado com sucesso!');
-        }
-      }
-    } catch (error: any) {
-      console.error('Erro ao criar usuário:', error);
-      toast.error(error.message || 'Erro ao criar usuário');
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateUserProfile = async (userId: string, updates: Partial<UserProfile>) => {
-    try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .update(updates)
-        .eq('id', userId);
-
-      if (error) throw error;
-      toast.success('Perfil atualizado com sucesso!');
-    } catch (error: any) {
-      console.error('Error updating profile:', error);
-      toast.error(error.message || 'Erro ao atualizar perfil');
-      throw error;
     }
   };
 
@@ -214,11 +123,9 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user && event === 'SIGNED_IN') {
-          console.log('User signed in, fetching profile...');
-          setTimeout(() => {
-            refreshProfile();
-          }, 100);
+        if (session?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+          console.log('User authenticated, fetching profile...');
+          await refreshProfile();
         } else if (!session) {
           setProfile(null);
         }
@@ -227,18 +134,15 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       }
     );
 
-    // Verificar sessão inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
       
-      console.log('Initial session:', session?.user?.id);
+      console.log('Initial session check:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        setTimeout(() => {
-          refreshProfile();
-        }, 100);
+        refreshProfile();
       }
       
       setIsLoading(false);
@@ -254,14 +158,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     try {
       setIsLoading(true);
       
-      cleanupAuthState();
-      
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        // Continue mesmo se falhar
-      }
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -314,18 +210,10 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
   const signOut = async () => {
     try {
-      cleanupAuthState();
-      
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        // Ignore errors
-      }
-      
+      await supabase.auth.signOut({ scope: 'global' });
       setUser(null);
       setProfile(null);
       setSession(null);
-      
       toast.success('Logout realizado com sucesso');
       window.location.href = '/secure-login';
     } catch (error: any) {
@@ -368,6 +256,69 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     return resourcePermissions ? resourcePermissions.includes(action) : false;
   };
 
+  const createUser = async (userData: { email: string; password: string; name: string; role: 'admin' | 'manager' | 'operator' }) => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/app`,
+          data: {
+            name: userData.name,
+            role: userData.role,
+            email_confirm: false
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        console.log('Usuário criado:', data.user.id);
+        toast.success('Usuário criado com sucesso!');
+      }
+    } catch (error: any) {
+      console.error('Erro ao criar usuário:', error);
+      toast.error(error.message || 'Erro ao criar usuário');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateUserProfile = async (userId: string, updates: Partial<UserProfile>) => {
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update(updates)
+        .eq('id', userId);
+
+      if (error) throw error;
+      toast.success('Perfil atualizado com sucesso!');
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      toast.error(error.message || 'Erro ao atualizar perfil');
+      throw error;
+    }
+  };
+
+  const getAllUsers = async (): Promise<UserProfile[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      return [];
+    }
+  };
+
   const value = {
     user,
     profile,
@@ -380,78 +331,9 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     hasRole,
     hasPermission,
     refreshProfile,
-    createUser: async (userData: { email: string; password: string; name: string; role: 'admin' | 'manager' | 'operator' }) => {
-      try {
-        setIsLoading(true);
-        
-        const { data, error } = await supabase.auth.signUp({
-          email: userData.email,
-          password: userData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/app`,
-            data: {
-              name: userData.name,
-              role: userData.role,
-              email_confirm: false
-            }
-          }
-        });
-
-        if (error) throw error;
-
-        if (data.user) {
-          console.log('Usuário criado:', data.user.id);
-          
-          // Login automático após criação
-          const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-            email: userData.email,
-            password: userData.password,
-          });
-
-          if (loginError) {
-            console.error('Erro no login automático:', loginError);
-            toast.success('Master Admin criado! Use as credenciais para fazer login.');
-          } else if (loginData.user) {
-            toast.success('Master Admin criado e login realizado com sucesso!');
-          }
-        }
-      } catch (error: any) {
-        console.error('Erro ao criar usuário:', error);
-        toast.error(error.message || 'Erro ao criar usuário');
-        throw error;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    updateUserProfile: async (userId: string, updates: Partial<UserProfile>) => {
-      try {
-        const { error } = await supabase
-          .from('user_profiles')
-          .update(updates)
-          .eq('id', userId);
-
-        if (error) throw error;
-        toast.success('Perfil atualizado com sucesso!');
-      } catch (error: any) {
-        console.error('Error updating profile:', error);
-        toast.error(error.message || 'Erro ao atualizar perfil');
-        throw error;
-      }
-    },
-    getAllUsers: async (): Promise<UserProfile[]> => {
-      try {
-        const { data, error } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        return data || [];
-      } catch (error) {
-        console.error('Error fetching users:', error);
-        return [];
-      }
-    }
+    createUser,
+    updateUserProfile,
+    getAllUsers
   };
 
   return (

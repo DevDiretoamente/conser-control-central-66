@@ -33,6 +33,8 @@ function getPageTitle(pathname: string): string {
   switch (pathname) {
     case '/app':
       return 'Dashboard';
+    case '/app/funcionarios':
+      return 'Funcionários';
     case '/app/obras':
       return 'Obras';
     case '/app/frota':
@@ -45,6 +47,8 @@ function getPageTitle(pathname: string): string {
       return 'Configurações';
     default:
       if (pathname.startsWith('/app/funcionarios')) return 'Funcionários';
+      if (pathname.startsWith('/app/rh')) return 'Recursos Humanos';
+      if (pathname.startsWith('/app/configuracoes')) return 'Configurações';
       return 'Painel de Controle';
   }
 }
@@ -111,7 +115,6 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     toast.success('Notificação marcada como lida');
   };
 
-  // Mark all notifications as read
   const markAllAsRead = () => {
     setNotifications(prev => 
       prev.map(notification => ({ ...notification, isRead: true }))
@@ -119,7 +122,6 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     toast.success('Todas as notificações foram marcadas como lidas');
   };
 
-  // Get unread notifications count
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
@@ -230,10 +232,10 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">
-                  {profile?.name || (isLoading ? 'Carregando...' : 'Usuário')}
+                  {profile?.name || (isLoading ? 'Carregando...' : 'Admin')}
                 </p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  {profile?.email || (isLoading ? 'Carregando...' : 'Email')}
+                  {profile?.email || (isLoading ? 'Carregando...' : 'admin@sistema.com')}
                 </p>
                 <p className="text-xs leading-none text-muted-foreground mt-1">
                   {getRoleDisplay()}

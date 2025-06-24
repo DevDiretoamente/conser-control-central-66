@@ -70,10 +70,11 @@ const AppSidebar = ({ isCollapsed = false }) => {
       
       {/* Navigation sections */}
       <nav className="flex-1 space-y-2 px-2 py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent">
-        {/* Main Links - sempre mostra Dashboard */}
+        {/* Main Links */}
         <div className="mt-6">
           <div className="space-y-1">
             <NavItem to="/app" icon={LayoutDashboard} label="Dashboard" />
+            <NavItem to="/app/funcionarios" icon={Users} label="Funcionários" resource="funcionarios" />
             <NavItem to="/app/obras" icon={Building} label="Obras" resource="obras" />
             <NavItem to="/app/frota" icon={Truck} label="Frota" resource="frota" />
             <NavItem to="/app/patrimonio" icon={Briefcase} label="Patrimônio" resource="patrimonio" />
@@ -85,7 +86,6 @@ const AppSidebar = ({ isCollapsed = false }) => {
         <div className="mt-2">
           <SectionHeading>Recursos Humanos</SectionHeading>
           <div className="space-y-1">
-            <NavItem to="/app/funcionarios" icon={Users} label="Funcionários" resource="funcionarios" />
             <NavItem to="/app/funcionarios/exames" icon={Stethoscope} label="Exames Médicos" resource="exames" />
             <NavItem to="/app/rh/cartao-ponto" icon={Clock} label="Cartão Ponto" resource="cartaoponto" />
             <NavItem to="/app/beneficios" icon={CreditCard} label="Benefícios" resource="beneficios" />
@@ -134,12 +134,12 @@ const AppSidebar = ({ isCollapsed = false }) => {
         ) : (
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center font-medium text-white">
-              U
+              A
             </div>
             {!isCollapsed && (
               <div>
-                <p className="font-medium text-white text-sm">Usuário</p>
-                <p className="text-xs text-white/70">Administrador</p>
+                <p className="font-medium text-white text-sm">Admin</p>
+                <p className="text-xs text-white/70">Sistema</p>
               </div>
             )}
           </div>
