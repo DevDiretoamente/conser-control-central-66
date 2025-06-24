@@ -1,9 +1,17 @@
 
 import React from 'react';
-import { User, PermissionArea } from '@/types/auth';
+import { PermissionArea } from '@/types/auth';
 import { Card, CardContent } from '@/components/ui/card';
 import PermissionBadge from './PermissionBadge';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  is_active: boolean;
+}
 
 interface UserPermissionsSummaryProps {
   user: User;
@@ -25,7 +33,7 @@ const UserPermissionsSummary: React.FC<UserPermissionsSummaryProps> = ({
   compact = false,
   className = ''
 }) => {
-  const { getHighestPermissionForArea } = useAuth();
+  const { hasPermission } = useSecureAuth();
   
   if (!user) return null;
   
@@ -33,13 +41,13 @@ const UserPermissionsSummary: React.FC<UserPermissionsSummaryProps> = ({
     return (
       <div className={`flex flex-wrap gap-1 ${className}`}>
         {keyAreas.map(area => {
-          const permissionLevel = getHighestPermissionForArea(user, area.id);
-          if (!permissionLevel) return null;
+          const hasAreaPermission = hasPermission(area.id, 'read');
+          if (!hasAreaPermission) return null;
           
           return (
             <div key={area.id} className="flex items-center">
               <span className="text-xs mr-1">{area.label}:</span>
-              <PermissionBadge level={permissionLevel} showLabel={false} />
+              <PermissionBadge level="read" showLabel={false} />
             </div>
           );
         })}
@@ -53,13 +61,13 @@ const UserPermissionsSummary: React.FC<UserPermissionsSummaryProps> = ({
         <h4 className="text-sm font-medium mb-3">Principais Permissões</h4>
         <div className="space-y-2">
           {keyAreas.map(area => {
-            const permissionLevel = getHighestPermissionForArea(user, area.id);
+            const hasAreaPermission = hasPermission(area.id, 'read');
             
             return (
               <div key={area.id} className="flex justify-between items-center">
                 <span className="text-sm">{area.label}</span>
-                {permissionLevel ? (
-                  <PermissionBadge level={permissionLevel} />
+                {hasAreaPermission ? (
+                  <PermissionBadge level="read" />
                 ) : (
                   <span className="text-xs text-muted-foreground">Sem acesso</span>
                 )}

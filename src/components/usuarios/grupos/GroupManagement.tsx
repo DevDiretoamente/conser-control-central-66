@@ -1,17 +1,17 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { UserGroup } from '@/types/auth';
-import { Plus, Search } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { Plus, Search, Pencil, Trash2, Users, Shield } from 'lucide-react';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import GroupList from './GroupList';
 import GroupForm from './GroupForm';
 import { toast } from 'sonner';
 
 const GroupManagement: React.FC = () => {
-  const { groups, createGroup, hasSpecificPermission } = useAuth();
+  const { groups, createGroup, hasSpecificPermission } = useSecureAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<UserGroup | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);

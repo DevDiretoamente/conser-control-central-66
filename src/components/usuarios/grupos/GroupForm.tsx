@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { 
@@ -26,6 +25,7 @@ import {
 import { AlertTriangle, Shield, Trash2, Users } from 'lucide-react';
 import { UserGroup } from '@/types/auth';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import GroupPermissionsTab from './GroupPermissionsTab';
 import GroupMembersTab from './GroupMembersTab';
 

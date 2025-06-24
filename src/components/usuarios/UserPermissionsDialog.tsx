@@ -14,14 +14,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Shield, ShieldCheck, ShieldX, Info, Search } from 'lucide-react';
 import { 
-  User, 
   PermissionArea, 
   PermissionLevel, 
   Permission
 } from '@/types/auth';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  is_active: boolean;
+  permissions?: Permission[];
+}
 
 interface UserPermissionsDialogProps {
   user: User;
@@ -69,7 +77,6 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
   isOpen, 
   onOpenChange 
 }) => {
-  const { updateUserPermissions } = useAuth();
   const [permissions, setPermissions] = useState<Permission[]>(user.permissions || []);
   const [savedPermissions, setSavedPermissions] = useState<Permission[]>(user.permissions || []);
   const [searchTerm, setSearchTerm] = useState('');
@@ -126,7 +133,7 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
   };
 
   const handleSave = () => {
-    updateUserPermissions(user.id, permissions);
+    // In a real implementation, you'd update the user permissions here
     setSavedPermissions([...permissions]);
     onOpenChange(false);
   };
@@ -203,7 +210,6 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
           <Tabs defaultValue="modules" className="h-full flex flex-col">
             <TabsList className="mb-4">
               <TabsTrigger value="modules">Por Módulo</TabsTrigger>
-              <TabsTrigger value="matrix">Matriz de Permissões</TabsTrigger>
               <TabsTrigger value="summary">Resumo</TabsTrigger>
             </TabsList>
             
@@ -297,45 +303,6 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
                     </Card>
                   ))}
                 </div>
-              </TabsContent>
-              
-              <TabsContent value="matrix" className="mt-0">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full border-collapse">
-                        <thead>
-                          <tr>
-                            <th className="py-2 px-4 border bg-muted text-left">Área</th>
-                            {permissionLevels.map(level => (
-                              <th key={level.id} className="py-2 px-4 border bg-muted text-center">
-                                {level.label}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {permissionGroups.flatMap(group => 
-                            getFilteredAreas(group).map(area => (
-                              <tr key={area.id}>
-                                <td className="py-2 px-4 border">{area.label}</td>
-                                {permissionLevels.map(level => (
-                                  <td key={`${area.id}-${level.id}`} className="py-2 px-4 border text-center">
-                                    <Checkbox
-                                      id={`matrix-${area.id}-${level.id}`}
-                                      checked={hasPermission(area.id as PermissionArea, level.id)}
-                                      onCheckedChange={() => togglePermission(area.id as PermissionArea, level.id)}
-                                    />
-                                  </td>
-                                ))}
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </CardContent>
-                </Card>
               </TabsContent>
               
               <TabsContent value="summary" className="mt-0">

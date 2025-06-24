@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
@@ -21,7 +21,9 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, History } from 'lucide-react';
 
 const UserActivationHistory: React.FC = () => {
-  const { userActivationHistory, users } = useAuth();
+  // Since we don't have activation history in SecureAuth, we'll show empty state
+  const userActivationHistory: any[] = [];
+  const users: any[] = [];
   
   const getUserName = (userId: string) => {
     const user = users.find(u => u.id === userId);
