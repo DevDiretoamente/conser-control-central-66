@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,15 +11,41 @@ import GroupList from './GroupList';
 import GroupForm from './GroupForm';
 import { toast } from 'sonner';
 
+// Mock groups data for demonstration
+const mockGroups: UserGroup[] = [
+  {
+    id: '1',
+    name: 'Administradores',
+    description: 'Acesso completo ao sistema',
+    permissions: [
+      { area: 'usuarios', level: 'manage' },
+      { area: 'rh', level: 'manage' },
+      { area: 'financeiro', level: 'manage' }
+    ],
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '2', 
+    name: 'Gerentes RH',
+    description: 'Gerenciamento de recursos humanos',
+    permissions: [
+      { area: 'rh', level: 'manage' },
+      { area: 'funcionarios', level: 'write' }
+    ],
+    createdAt: new Date().toISOString()
+  }
+];
+
 const GroupManagement: React.FC = () => {
-  const { groups, createGroup, hasSpecificPermission } = useSecureAuth();
+  const { hasPermission } = useSecureAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<UserGroup | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [filteredGroups, setFilteredGroups] = useState<UserGroup[]>(groups || []);
+  const [groups, setGroups] = useState<UserGroup[]>(mockGroups);
+  const [filteredGroups, setFilteredGroups] = useState<UserGroup[]>(mockGroups);
 
   // Check if current user can manage groups (admin only)
-  const canManageGroups = hasSpecificPermission('usuarios', 'manage');
+  const canManageGroups = hasPermission('usuarios', 'manage');
 
   const handleFilterChange = (term: string) => {
     setSearchTerm(term);

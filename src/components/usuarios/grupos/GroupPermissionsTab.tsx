@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -82,7 +83,7 @@ const GroupPermissionsTab: React.FC<GroupPermissionsTabProps> = ({
                         id={`${area.id}-${level.id}`}
                         checked={hasPermission(area.id, level.id)}
                         onCheckedChange={(checked) =>
-                          handlePermissionChange(area.id, level.id, checked)
+                          handlePermissionChange(area.id, level.id, checked === true)
                         }
                       />
                       <Label htmlFor={`${area.id}-${level.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">

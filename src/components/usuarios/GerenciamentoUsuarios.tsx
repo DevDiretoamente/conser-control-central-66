@@ -17,28 +17,31 @@ import UserDetails from './UserDetails';
 import UserActivationToggle from './UserActivationToggle';
 import UserPermissionsDialog from './UserPermissionsDialog';
 
-interface User {
+interface LocalUser {
   id: string;
   name: string;
   email: string;
   role: string;
   is_active: boolean;
+  isActive: boolean;
+  createdAt: string;
 }
 
 const GerenciamentoUsuarios: React.FC = () => {
   const { profile: currentUser, hasPermission, getAllUsers, createUser, updateUserProfile } = useSecureAuth();
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<LocalUser[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<LocalUser | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>(users);
-  const [newUser, setNewUser] = useState<Partial<User>>({
+  const [filteredUsers, setFilteredUsers] = useState<LocalUser[]>(users);
+  const [newUser, setNewUser] = useState<Partial<LocalUser>>({
     name: '',
     email: '',
     role: 'operator',
-    is_active: true
+    is_active: true,
+    isActive: true
   });
 
   // Check if current user is an administrator
@@ -62,7 +65,9 @@ const GerenciamentoUsuarios: React.FC = () => {
         name: profile.name,
         email: profile.email,
         role: profile.role,
-        is_active: profile.is_active
+        is_active: profile.is_active,
+        isActive: profile.is_active,
+        createdAt: profile.created_at
       }));
       setUsers(mappedUsers);
       setFilteredUsers(mappedUsers);
@@ -97,8 +102,8 @@ const GerenciamentoUsuarios: React.FC = () => {
     if (filters.sortField) {
       const direction = filters.sortDirection === 'asc' ? 1 : -1;
       results.sort((a, b) => {
-        const fieldA = a[filters.sortField] || '';
-        const fieldB = b[filters.sortField] || '';
+        const fieldA = a[filters.sortField as keyof LocalUser] || '';
+        const fieldB = b[filters.sortField as keyof LocalUser] || '';
         
         if (typeof fieldA === 'string' && typeof fieldB === 'string') {
           return fieldA.localeCompare(fieldB) * direction;
@@ -140,7 +145,8 @@ const GerenciamentoUsuarios: React.FC = () => {
         name: '',
         email: '',
         role: 'operator',
-        is_active: true
+        is_active: true,
+        isActive: true
       });
       setIsAddDialogOpen(false);
       loadUsers(); // Reload users list
@@ -150,12 +156,12 @@ const GerenciamentoUsuarios: React.FC = () => {
     }
   };
 
-  const handleEditUser = (user: User) => {
+  const handleEditUser = (user: LocalUser) => {
     setSelectedUser(user);
     // In a real app, you might want to open an edit dialog here
   };
 
-  const handleDeleteUser = (user: User) => {
+  const handleDeleteUser = (user: LocalUser) => {
     setSelectedUser(user);
     setIsDeleteDialogOpen(true);
   };
@@ -176,7 +182,7 @@ const GerenciamentoUsuarios: React.FC = () => {
     }
   };
 
-  const handleOpenPermissions = (user: User) => {
+  const handleOpenPermissions = (user: LocalUser) => {
     setSelectedUser(user);
     setIsPermissionsDialogOpen(true);
   };

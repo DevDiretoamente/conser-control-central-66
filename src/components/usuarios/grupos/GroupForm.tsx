@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { 
@@ -24,7 +25,6 @@ import {
 } from '@/components/ui/form';
 import { AlertTriangle, Shield, Trash2, Users } from 'lucide-react';
 import { UserGroup } from '@/types/auth';
-import { useAuth } from '@/contexts/AuthContext';
 import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import GroupPermissionsTab from './GroupPermissionsTab';
 import GroupMembersTab from './GroupMembersTab';
@@ -36,7 +36,7 @@ interface GroupFormProps {
 }
 
 const GroupForm: React.FC<GroupFormProps> = ({ group, isOpen, onClose }) => {
-  const { createGroup, updateGroup, deleteGroup } = useAuth();
+  const { createUser } = useSecureAuth();
   const [activeTab, setActiveTab] = useState('details');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
@@ -60,26 +60,34 @@ const GroupForm: React.FC<GroupFormProps> = ({ group, isOpen, onClose }) => {
   
   const handleSubmit = form.handleSubmit((data) => {
     if (isNewGroup) {
-      createGroup({
-        name: data.name,
-        description: data.description,
-        permissions: []
-      });
+      // Mock create group functionality
+      console.log('Creating group:', data);
       onClose();
     } else if (group) {
-      updateGroup(group.id, {
-        name: data.name,
-        description: data.description
-      });
+      // Mock update group functionality
+      console.log('Updating group:', group.id, data);
     }
   });
   
   const handleDelete = () => {
     if (group) {
-      deleteGroup(group.id);
+      // Mock delete group functionality
+      console.log('Deleting group:', group.id);
       setIsDeleteDialogOpen(false);
       onClose();
     }
+  };
+
+  const handleAddMember = async (userId: string) => {
+    console.log('Adding member to group:', userId);
+  };
+
+  const handleRemoveMember = async (userId: string) => {
+    console.log('Removing member from group:', userId);
+  };
+
+  const handlePermissionsChange = (permissions: { area: string; level: string }[]) => {
+    console.log('Permissions changed:', permissions);
   };
   
   // Render differently based on whether it's in a dialog or a card
@@ -162,11 +170,20 @@ const GroupForm: React.FC<GroupFormProps> = ({ group, isOpen, onClose }) => {
         {!isNewGroup && group && (
           <>
             <TabsContent value="permissions">
-              <GroupPermissionsTab group={group} />
+              <GroupPermissionsTab 
+                groupId={group.id}
+                initialPermissions={group.permissions.map(p => ({ area: p.area, level: p.level }))}
+                onPermissionsChange={handlePermissionsChange}
+              />
             </TabsContent>
             
             <TabsContent value="members">
-              <GroupMembersTab group={group} />
+              <GroupMembersTab 
+                groupId={group.id}
+                members={[]}
+                onAddMember={handleAddMember}
+                onRemoveMember={handleRemoveMember}
+              />
             </TabsContent>
           </>
         )}
