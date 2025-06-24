@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import CartaoPontoDetails from '@/components/cartaoponto/CartaoPontoDetails';
 import CartaoPontoDialog from '@/components/cartaoponto/CartaoPontoDialog';
 import { CartaoPontoFormValues } from '@/components/cartaoponto/CartaoPontoDialog';
@@ -12,13 +12,13 @@ import { Loader2 } from 'lucide-react';
 
 const CartaoPontoDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { hasSpecificPermission } = useAuth();
+  const { hasPermission } = useSecureAuth();
   
   const [registro, setRegistro] = useState<CartaoPonto | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
-  const canEdit = hasSpecificPermission('cartaoponto', 'write');
+  const canEdit = hasPermission('cartaoponto', 'update');
 
   useEffect(() => {
     if (id) {

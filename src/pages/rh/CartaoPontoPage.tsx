@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { format, subMonths, addMonths, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -43,7 +43,7 @@ const mockFuncionarios = [
 ];
 
 const CartaoPontoPage: React.FC = () => {
-  const { hasSpecificPermission } = useAuth();
+  const { hasPermission } = useSecureAuth();
   const navigate = useNavigate();
   
   const [registros, setRegistros] = useState<CartaoPonto[]>([]);
@@ -66,10 +66,10 @@ const CartaoPontoPage: React.FC = () => {
     elegibleValeAlimentacao: false,
   });
   
-  const canCreate = hasSpecificPermission('cartaoponto', 'create');
-  const canEdit = hasSpecificPermission('cartaoponto', 'write');
-  const canDelete = hasSpecificPermission('cartaoponto', 'delete');
-  const canManage = hasSpecificPermission('cartaoponto', 'manage');
+  const canCreate = hasPermission('cartaoponto', 'create');
+  const canEdit = hasPermission('cartaoponto', 'update');
+  const canDelete = hasPermission('cartaoponto', 'delete');
+  const canManage = hasPermission('cartaoponto', 'manage');
 
   useEffect(() => {
     // Only load records when an employee is selected
@@ -402,14 +402,184 @@ const CartaoPontoPage: React.FC = () => {
       )}
       
       {/* Main content area */}
-      {renderContent()}
+      {selectedFuncionario ? (
+        loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : viewMode === 'calendar' ? (
+          <ScrollArea className="h-[calc(100vh-280px)]">
+            <CartaoPontoCalendar 
+              registros={registros} 
+              date={currentDate}
+              onDateSelect={(dateStr: string) => {
+                const selected = registros.find(r => r.data === dateStr);
+                if (selected) {
+                  navigate(`/app/rh/cartao-ponto/${selected.id}`);
+                } else if (canCreate && selectedFuncionario) {
+                  setIsDialogOpen(true);
+                }
+              }}
+            />
+          </ScrollArea>
+        ) : (
+          <ScrollArea className="h-[calc(100vh-280px)]">
+            <CartaoPontoTable 
+              registros={registros}
+              onUpdate={async (id: string, data: CartaoPontoFormValues) => {
+                try {
+                  await cartaoPontoService.update(id, {
+                    ...data,
+                    status: data.status as CartaoPontoStatus,
+                  });
+                  
+                  toast({
+                    title: 'Sucesso',
+                    description: 'Registro atualizado com sucesso.',
+                  });
+                  
+                  // Reload records after update
+                  if (selectedFuncionario) {
+                    const filters: CartaoPontoFilterOptions = {
+                      dataInicio: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString().split('T')[0],
+                      dataFim: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0],
+                      funcionarioId: selectedFuncionario
+                    };
+                    const data = await cartaoPontoService.filter(filters);
+                    setRegistros(data);
+                  }
+                } catch (error) {
+                  console.error('Erro ao atualizar registro:', error);
+                  toast({
+                    title: 'Erro',
+                    description: 'Não foi possível atualizar o registro.',
+                    variant: 'destructive',
+                  });
+                }
+              }}
+              onDelete={async (id: string) => {
+                if (!confirm('Tem certeza que deseja excluir este registro?')) return;
+                
+                try {
+                  await cartaoPontoService.delete(id);
+                  
+                  toast({
+                    title: 'Sucesso',
+                    description: 'Registro excluído com sucesso.',
+                  });
+                  
+                  // Reload records after delete
+                  if (selectedFuncionario) {
+                    const filters: CartaoPontoFilterOptions = {
+                      dataInicio: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString().split('T')[0],
+                      dataFim: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0],
+                      funcionarioId: selectedFuncionario
+                    };
+                    const data = await cartaoPontoService.filter(filters);
+                    setRegistros(data);
+                  }
+                } catch (error) {
+                  console.error('Erro ao excluir registro:', error);
+                  toast({
+                    title: 'Erro',
+                    description: 'Não foi possível excluir o registro.',
+                    variant: 'destructive',
+                  });
+                }
+              }}
+              onStatusChange={async (id: string, status: string, observacao?: string) => {
+                try {
+                  await cartaoPontoService.updateStatus(id, status as CartaoPontoStatus, observacao);
+                  
+                  toast({
+                    title: 'Sucesso',
+                    description: `Status atualizado com sucesso.`,
+                  });
+                  
+                  // Reload records after status change
+                  if (selectedFuncionario) {
+                    const filters: CartaoPontoFilterOptions = {
+                      dataInicio: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString().split('T')[0],
+                      dataFim: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0],
+                      funcionarioId: selectedFuncionario
+                    };
+                    const data = await cartaoPontoService.filter(filters);
+                    setRegistros(data);
+                  }
+                } catch (error) {
+                  console.error('Erro ao atualizar status:', error);
+                  toast({
+                    title: 'Erro',
+                    description: 'Não foi possível atualizar o status do registro.',
+                    variant: 'destructive',
+                  });
+                }
+              }}
+              canEdit={canEdit}
+              canDelete={canDelete}
+              canApprove={canManage}
+            />
+          </ScrollArea>
+        )
+      ) : (
+        <Card className="border border-dashed border-gray-300 bg-gray-50">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <UserRound className="h-16 w-16 text-gray-400 mb-4" />
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">Selecione um funcionário</h3>
+            <p className="text-gray-500 text-center max-w-md">
+              Para visualizar os registros de ponto, selecione um funcionário no campo acima.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Create dialog */}
       {canCreate && selectedFuncionario && (
         <CartaoPontoDialog
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}
-          onSave={handleCreate}
+          onSave={async (data: CartaoPontoFormValues) => {
+            if (!data.funcionarioId) {
+              toast({
+                title: 'Erro',
+                description: 'ID do funcionário é obrigatório.',
+                variant: 'destructive',
+              });
+              return;
+            }
+            
+            try {
+              await cartaoPontoService.create({
+                ...data,
+                funcionarioId: data.funcionarioId,
+                data: data.data || new Date().toISOString().split('T')[0],
+                status: data.status as CartaoPontoStatus,
+              });
+              
+              toast({
+                title: 'Sucesso',
+                description: 'Registro criado com sucesso.',
+              });
+              
+              // Reload records after create
+              if (selectedFuncionario) {
+                const filters: CartaoPontoFilterOptions = {
+                  dataInicio: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString().split('T')[0],
+                  dataFim: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0],
+                  funcionarioId: selectedFuncionario
+                };
+                const data = await cartaoPontoService.filter(filters);
+                setRegistros(data);
+              }
+            } catch (error) {
+              console.error('Erro ao criar registro:', error);
+              toast({
+                title: 'Erro',
+                description: 'Não foi possível criar o registro.',
+                variant: 'destructive',
+              });
+            }
+          }}
           funcionarioId={selectedFuncionario}
           funcionarioNome={mockFuncionarios.find(f => f.id === selectedFuncionario)?.nome}
         />
