@@ -27,18 +27,18 @@ const AppSidebar = ({ isCollapsed = false }) => {
   // Styled navigation link component
   const NavItem = ({ to, icon: Icon, label, resource = null, action = 'read' }) => {
     // Se não tem resource, sempre mostra (como Dashboard)
-    // Se tem resource, verifica permissão (mas só se não estiver carregando)
-    const shouldShow = !resource || (!isLoading && hasPermission(resource, action));
+    // Se tem resource, verifica permissão
+    const shouldShow = !resource || hasPermission(resource, action);
     
-    if (!shouldShow && !isLoading) return null;
+    if (!shouldShow) return null;
     
     return (
       <NavLink
         to={to}
         className={({ isActive }) => cn(
           "flex items-center gap-3 px-4 py-3 mb-1 rounded-md transition-all",
-          "text-white hover:bg-sidebar-accent",
-          isActive ? "bg-sidebar-accent font-medium" : "bg-transparent"
+          "text-white hover:bg-slate-700/50",
+          isActive ? "bg-slate-700/70 font-medium" : "bg-transparent"
         )}
       >
         <Icon size={20} className="flex-shrink-0 text-white" />
@@ -69,14 +69,7 @@ const AppSidebar = ({ isCollapsed = false }) => {
       </div>
       
       {/* Navigation sections */}
-      <nav className="flex-1 space-y-2 px-2 py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-sidebar-accent scrollbar-track-transparent">
-        {/* Loading state */}
-        {isLoading && !isCollapsed && (
-          <div className="px-4 py-2 text-white/70 text-sm">
-            Carregando menus...
-          </div>
-        )}
-        
+      <nav className="flex-1 space-y-2 px-2 py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent">
         {/* Main Links - sempre mostra Dashboard */}
         <div className="mt-6">
           <div className="space-y-1">
@@ -146,7 +139,7 @@ const AppSidebar = ({ isCollapsed = false }) => {
             {!isCollapsed && (
               <div>
                 <p className="font-medium text-white text-sm">Usuário</p>
-                <p className="text-xs text-white/70">Carregando...</p>
+                <p className="text-xs text-white/70">Administrador</p>
               </div>
             )}
           </div>

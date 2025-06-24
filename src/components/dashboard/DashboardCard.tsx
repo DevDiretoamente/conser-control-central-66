@@ -26,13 +26,13 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   className
 }) => {
   const colorClass = {
-    primary: 'bg-conserv-primary text-white',
-    secondary: 'bg-conserv-secondary text-white',
-    accent: 'bg-conserv-accent text-black',
-    success: 'bg-conserv-success text-white',
-    warning: 'bg-conserv-warning text-black',
-    danger: 'bg-conserv-danger text-white',
-    info: 'bg-conserv-info text-white',
+    primary: 'bg-blue-600 text-white',
+    secondary: 'bg-slate-600 text-white',
+    accent: 'bg-orange-500 text-white',
+    success: 'bg-green-600 text-white',
+    warning: 'bg-yellow-500 text-black',
+    danger: 'bg-red-600 text-white',
+    info: 'bg-cyan-600 text-white',
   };
 
   return (

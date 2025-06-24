@@ -199,7 +199,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                       <div className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0" />
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground">{notification.description}z</p>
+                  <p className="text-sm text-muted-foreground">{notification.description}</p>
                 </div>
               </DropdownMenuItem>
             ))}

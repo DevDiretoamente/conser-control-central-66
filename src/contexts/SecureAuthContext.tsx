@@ -40,7 +40,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
   const [isLoading, setIsLoading] = useState(true);
 
   // Usuário está autenticado se tem session válida
-  const isAuthenticated = !!session && !!user;
+  const isAuthenticated = !!session?.user;
 
   console.log('SecureAuth State:', { 
     user: !!user, 
@@ -92,28 +92,15 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
               is_active: true
             });
           
-          if (insertError) {
-            console.error('Error creating profile:', insertError);
-            // Criar perfil básico local se falhar
-            setProfile({
-              id: user.id,
-              email: user.email || '',
-              name: user.user_metadata?.name || user.email || 'Usuário',
-              role: 'admin',
-              company_id: '',
-              is_active: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            });
-          } else {
+          if (!insertError) {
             // Tentar buscar novamente
-            const { data: newData, error: newError } = await supabase
+            const { data: newData } = await supabase
               .from('user_profiles')
               .select('*')
               .eq('id', user.id)
               .single();
             
-            if (!newError && newData) {
+            if (newData) {
               setProfile(newData);
               console.log('Profile created and fetched:', newData);
             }
@@ -229,7 +216,9 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         
         if (session?.user && event === 'SIGNED_IN') {
           console.log('User signed in, fetching profile...');
-          await refreshProfile();
+          setTimeout(() => {
+            refreshProfile();
+          }, 100);
         } else if (!session) {
           setProfile(null);
         }
@@ -247,7 +236,9 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        refreshProfile();
+        setTimeout(() => {
+          refreshProfile();
+        }, 100);
       }
       
       setIsLoading(false);
@@ -389,9 +380,78 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     hasRole,
     hasPermission,
     refreshProfile,
-    createUser,
-    updateUserProfile,
-    getAllUsers
+    createUser: async (userData: { email: string; password: string; name: string; role: 'admin' | 'manager' | 'operator' }) => {
+      try {
+        setIsLoading(true);
+        
+        const { data, error } = await supabase.auth.signUp({
+          email: userData.email,
+          password: userData.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/app`,
+            data: {
+              name: userData.name,
+              role: userData.role,
+              email_confirm: false
+            }
+          }
+        });
+
+        if (error) throw error;
+
+        if (data.user) {
+          console.log('Usuário criado:', data.user.id);
+          
+          // Login automático após criação
+          const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+            email: userData.email,
+            password: userData.password,
+          });
+
+          if (loginError) {
+            console.error('Erro no login automático:', loginError);
+            toast.success('Master Admin criado! Use as credenciais para fazer login.');
+          } else if (loginData.user) {
+            toast.success('Master Admin criado e login realizado com sucesso!');
+          }
+        }
+      } catch (error: any) {
+        console.error('Erro ao criar usuário:', error);
+        toast.error(error.message || 'Erro ao criar usuário');
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    updateUserProfile: async (userId: string, updates: Partial<UserProfile>) => {
+      try {
+        const { error } = await supabase
+          .from('user_profiles')
+          .update(updates)
+          .eq('id', userId);
+
+        if (error) throw error;
+        toast.success('Perfil atualizado com sucesso!');
+      } catch (error: any) {
+        console.error('Error updating profile:', error);
+        toast.error(error.message || 'Erro ao atualizar perfil');
+        throw error;
+      }
+    },
+    getAllUsers: async (): Promise<UserProfile[]> => {
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        return [];
+      }
+    }
   };
 
   return (

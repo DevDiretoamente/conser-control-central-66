@@ -24,7 +24,7 @@ const alertsData: AlertItem[] = [
     description: 'Agende os exames médicos o quanto antes para evitar não conformidades',
     expiry: '2023-06-15',
     severity: 'high',
-    link: '/funcionarios/1'
+    link: '/app/funcionarios/1'
   },
   {
     id: '2',
@@ -33,7 +33,7 @@ const alertsData: AlertItem[] = [
     description: 'O certificado de treinamento NR-35 venceu há 5 dias',
     expiry: '2023-06-01',
     severity: 'high',
-    link: '/funcionarios/2'
+    link: '/app/funcionarios/2'
   },
   {
     id: '3',
@@ -42,7 +42,7 @@ const alertsData: AlertItem[] = [
     description: 'A renovação deve ser iniciada com antecedência',
     expiry: '2023-07-08',
     severity: 'medium',
-    link: '/funcionarios/3'
+    link: '/app/funcionarios/3'
   },
   {
     id: '4',
@@ -57,26 +57,26 @@ const alertsData: AlertItem[] = [
 const getSeverityStyles = (severity: AlertItem['severity']) => {
   switch (severity) {
     case 'high':
-      return 'border-l-conserv-danger';
+      return 'border-l-red-500';
     case 'medium':
-      return 'border-l-conserv-warning';
+      return 'border-l-yellow-500';
     case 'low':
-      return 'border-l-conserv-info';
+      return 'border-l-blue-500';
     default:
-      return 'border-l-conserv-info';
+      return 'border-l-blue-500';
   }
 };
 
 const getAlertIcon = (type: AlertItem['type']) => {
   switch (type) {
     case 'aso':
-      return <AlertTriangle className="h-5 w-5 text-conserv-danger" />;
+      return <AlertTriangle className="h-5 w-5 text-red-500" />;
     case 'documento':
-      return <FileWarning className="h-5 w-5 text-conserv-warning" />;
+      return <FileWarning className="h-5 w-5 text-yellow-500" />;
     case 'cnh':
-      return <Calendar className="h-5 w-5 text-conserv-info" />;
+      return <Calendar className="h-5 w-5 text-blue-500" />;
     case 'manutencao':
-      return <TruckIcon className="h-5 w-5 text-conserv-primary" />;
+      return <TruckIcon className="h-5 w-5 text-blue-600" />;
     default:
       return <AlertTriangle className="h-5 w-5" />;
   }

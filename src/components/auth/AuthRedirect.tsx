@@ -1,26 +1,16 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import { Loader2 } from 'lucide-react';
 
 const AuthRedirect: React.FC = () => {
-  const { isAuthenticated, isLoading, session } = useSecureAuth();
-  const [timeoutReached, setTimeoutReached] = useState(false);
+  const { isAuthenticated, isLoading } = useSecureAuth();
 
-  // Timeout para evitar loading infinito
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setTimeoutReached(true);
-    }, 2000); // 2 segundos de timeout
+  console.log('AuthRedirect - isAuthenticated:', isAuthenticated, 'isLoading:', isLoading);
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  console.log('AuthRedirect - isAuthenticated:', isAuthenticated, 'isLoading:', isLoading, 'session:', !!session);
-
-  // Se ainda está carregando e não passou do timeout, mostra loading
-  if (isLoading && !timeoutReached) {
+  // Se ainda está carregando, mostra loading por pouco tempo
+  if (isLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
