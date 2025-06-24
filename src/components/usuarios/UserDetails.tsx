@@ -1,6 +1,4 @@
-
 import React from 'react';
-import { User } from '@/types/auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -9,8 +7,20 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import UserPermissionsSummary from './UserPermissionsSummary';
 
+interface LocalUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  is_active: boolean;
+  isActive?: boolean;
+  createdAt: string;
+  lastLogin?: string;
+  avatar?: string;
+}
+
 interface UserDetailsProps {
-  user: User;
+  user: LocalUser; // Use LocalUser instead of User from auth types
   className?: string;
 }
 

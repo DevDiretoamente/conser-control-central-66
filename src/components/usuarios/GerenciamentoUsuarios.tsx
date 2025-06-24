@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +20,7 @@ interface LocalUser {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: UserRole; // Changed from string to UserRole
   is_active: boolean;
   isActive: boolean;
   createdAt: string;
@@ -64,7 +63,7 @@ const GerenciamentoUsuarios: React.FC = () => {
         id: profile.id,
         name: profile.name,
         email: profile.email,
-        role: profile.role,
+        role: profile.role as UserRole, // Ensure proper type casting
         is_active: profile.is_active,
         isActive: profile.is_active,
         createdAt: profile.created_at
