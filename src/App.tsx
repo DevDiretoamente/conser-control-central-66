@@ -1,16 +1,14 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/contexts/ThemeProvider';
 import { SecureAuthProvider } from '@/contexts/SecureAuthContext';
-
-import PublicLanding from '@/components/PublicLanding';
+import { Toaster } from '@/components/ui/sonner';
+import ErrorBoundary from '@/hooks/useErrorBoundary';
 import SecureLogin from '@/components/auth/SecureLogin';
-import AuthRedirect from '@/components/auth/AuthRedirect';
 import SecureProtectedRoute from '@/components/auth/SecureProtectedRoute';
 import AppLayout from '@/components/layout/AppLayout';
+import PublicLanding from '@/components/PublicLanding';
 
 // Pages
 import Dashboard from '@/pages/Dashboard';
@@ -40,79 +38,101 @@ import Beneficios from '@/pages/configuracoes/Beneficios';
 import Usuarios from '@/pages/configuracoes/Usuarios';
 import NotFound from '@/pages/NotFound';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 3,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-        <SecureAuthProvider>
-          <Router>
-            <div className="App">
-              <Routes>
-                {/* Public routes */}
-                <Route path="/" element={<PublicLanding />} />
-                <Route path="/secure-login" element={<SecureLogin />} />
-                <Route path="/auth-redirect" element={<AuthRedirect />} />
-                
-                {/* Protected app routes */}
-                <Route path="/app" element={
-                  <SecureProtectedRoute>
-                    <AppLayout />
-                  </SecureProtectedRoute>
-                }>
-                  <Route index element={<Dashboard />} />
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+          <SecureAuthProvider>
+            <Router>
+              <div className="min-h-screen bg-background font-sans antialiased">
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/" element={<PublicLanding />} />
+                  <Route path="/secure-login" element={<SecureLogin />} />
                   
-                  {/* Funcionários */}
-                  <Route path="funcionarios" element={<ListaFuncionarios />} />
-                  <Route path="funcionarios/novo" element={<NovoFuncionario />} />
-                  <Route path="funcionarios/:id" element={<DetalheFuncionario />} />
-                  <Route path="funcionarios/:id/editar" element={<EditarFuncionario />} />
-                  <Route path="funcionarios/exames" element={<ExamesMedicosPage />} />
+                  {/* Protected app routes */}
+                  <Route path="/app" element={
+                    <SecureProtectedRoute>
+                      <AppLayout />
+                    </SecureProtectedRoute>
+                  }>
+                    <Route index element={<Dashboard />} />
+                    
+                    {/* Funcionários */}
+                    <Route path="funcionarios" element={<ListaFuncionarios />} />
+                    <Route path="funcionarios/novo" element={<NovoFuncionario />} />
+                    <Route path="funcionarios/:id" element={<DetalheFuncionario />} />
+                    <Route path="funcionarios/:id/editar" element={<EditarFuncionario />} />
+                    <Route path="funcionarios/exames" element={<ExamesMedicosPage />} />
+                    
+                    {/* Obras */}
+                    <Route path="obras" element={<Obras />} />
+                    
+                    {/* Frota */}
+                    <Route path="frota" element={<Frota />} />
+                    
+                    {/* Patrimônio */}
+                    <Route path="patrimonio" element={<Patrimonio />} />
+                    
+                    {/* Financeiro */}
+                    <Route path="financeiro" element={<Financeiro />} />
+                    
+                    {/* RH */}
+                    <Route path="rh" element={<RHPage />} />
+                    <Route path="rh/cartao-ponto" element={<CartaoPontoPage />} />
+                    <Route path="rh/cartao-ponto/:id" element={<CartaoPontoDetailPage />} />
+                    <Route path="rh/documentos" element={<DocumentosRHPage />} />
+                    <Route path="rh/relatorios" element={<RelatoriosPage />} />
+                    
+                    {/* Benefícios */}
+                    <Route path="beneficios" element={<Beneficios />} />
+                    
+                    {/* Configurações */}
+                    <Route path="configuracoes" element={<Configuracoes />} />
+                    <Route path="funcoes" element={<Funcoes />} />
+                    <Route path="funcoes/:id" element={<DetalheFuncao />} />
+                    <Route path="funcoes/:id/editar" element={<EditarFuncao />} />
+                    <Route path="setores" element={<Setores />} />
+                    <Route path="clinicas" element={<Clinicas />} />
+                    <Route path="exames" element={<Exames />} />
+                    <Route path="configuracoes/emails" element={<Emails />} />
+                    <Route path="configuracoes/usuarios" element={<Usuarios />} />
+                  </Route>
                   
-                  {/* Obras */}
-                  <Route path="obras" element={<Obras />} />
-                  
-                  {/* Frota */}
-                  <Route path="frota" element={<Frota />} />
-                  
-                  {/* Patrimônio */}
-                  <Route path="patrimonio" element={<Patrimonio />} />
-                  
-                  {/* Financeiro */}
-                  <Route path="financeiro" element={<Financeiro />} />
-                  
-                  {/* RH */}
-                  <Route path="rh" element={<RHPage />} />
-                  <Route path="rh/cartao-ponto" element={<CartaoPontoPage />} />
-                  <Route path="rh/cartao-ponto/:id" element={<CartaoPontoDetailPage />} />
-                  <Route path="rh/documentos" element={<DocumentosRHPage />} />
-                  <Route path="rh/relatorios" element={<RelatoriosPage />} />
-                  
-                  {/* Benefícios */}
-                  <Route path="beneficios" element={<Beneficios />} />
-                  
-                  {/* Configurações */}
-                  <Route path="configuracoes" element={<Configuracoes />} />
-                  <Route path="funcoes" element={<Funcoes />} />
-                  <Route path="funcoes/:id" element={<DetalheFuncao />} />
-                  <Route path="funcoes/:id/editar" element={<EditarFuncao />} />
-                  <Route path="setores" element={<Setores />} />
-                  <Route path="clinicas" element={<Clinicas />} />
-                  <Route path="exames" element={<Exames />} />
-                  <Route path="configuracoes/emails" element={<Emails />} />
-                  <Route path="configuracoes/usuarios" element={<Usuarios />} />
-                </Route>
-                
-                {/* Catch all */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <Toaster />
-            </div>
-          </Router>
-        </SecureAuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+                  {/* Catch all */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+                <Toaster 
+                  position="top-right"
+                  toastOptions={{
+                    duration: 4000,
+                    style: {
+                      background: 'hsl(var(--background))',
+                      color: 'hsl(var(--foreground))',
+                      border: '1px solid hsl(var(--border))',
+                    },
+                  }}
+                />
+              </div>
+            </Router>
+          </SecureAuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -20,14 +20,16 @@ import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, ChevronLeft, ChevronRight, CircleCheck, ShieldCheck } from 'lucide-react';
-import { validateCPF, formatCPF } from '@/utils/validators';
+import { CalendarIcon, ChevronLeft, ChevronRight, CircleCheck, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { validateCPF, formatCPF, emailSchema, phoneSchema } from '@/utils/validation';
+import { handleError } from '@/utils/errorHandling';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 import DocumentUploader from './DocumentUploader';
 import MultiDocumentUploader from './MultiDocumentUploader';
 import DependentesTab from './DependentesTab';
 import FuncaoTab from './FuncaoTab';
 import UniformeTab from './UniformeTab';
-import DadosProfissionaisTab from './DadosProfissionaisTab';
+import DadosProfissionaisTab from './DadosProfissionionaisTab';
 import CNHTab from './CNHTab';
 import { Funcionario } from '@/types/funcionario';
 import VerticalTabs from './VerticalTabs';
@@ -143,19 +145,22 @@ interface FuncionarioFormProps {
   funcionarioId?: string;
   defaultValues?: Partial<Funcionario>;
   onSuccess?: (data: any) => void;
-  isSubmitting?: boolean; // Nova propriedade
+  isSubmitting?: boolean;
 }
 
 const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
   funcionarioId,
   defaultValues,
   onSuccess,
-  isSubmitting = false, // Valor padrão
+  isSubmitting = false,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("dados-pessoais");
   const [completedSections, setCompletedSections] = useState<string[]>([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const isEditMode = !!funcionarioId;
+  
   const [documentFiles, setDocumentFiles] = useState({
     rgFile: null as File | null,
     cpfFile: null as File | null,
@@ -237,7 +242,16 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
       uniformesEntregues: [],
       examesRealizados: [],
     },
+    mode: 'onChange' // Enable real-time validation
   });
+
+  // Watch for form changes
+  React.useEffect(() => {
+    const subscription = form.watch(() => {
+      setHasUnsavedChanges(true);
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   const handleDocumentChange = (documentKey: keyof typeof documentFiles, file: File | null) => {
     setDocumentFiles(prev => ({
@@ -257,17 +271,35 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
     form.setValue('documentos.outrosDocumentos', files as any);
   };
 
+  // Enhanced CPF validation with better UX
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '');
     const formattedCpf = formatCPF(value);
     form.setValue('dadosPessoais.cpf', formattedCpf, { shouldValidate: true });
+    
+    // Real-time CPF validation feedback
+    if (value.length === 11) {
+      if (validateCPF(value)) {
+        setValidationErrors(prev => ({ ...prev, cpf: '' }));
+        toast.success('CPF válido', { duration: 1000 });
+      } else {
+        setValidationErrors(prev => ({ ...prev, cpf: 'CPF inválido' }));
+      }
+    }
   };
 
+  // Enhanced CEP lookup with error handling
   const buscarCep = async (cep: string) => {
     if (cep.length !== 8) return;
     
     try {
+      setIsLoading(true);
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      
+      if (!response.ok) {
+        throw new Error('Erro na consulta de CEP');
+      }
+      
       const data = await response.json();
       
       if (data.erro) {
@@ -275,12 +307,17 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
         return;
       }
       
+      // Auto-fill address fields
       form.setValue('endereco.rua', data.logradouro);
       form.setValue('endereco.bairro', data.bairro);
       form.setValue('endereco.cidade', data.localidade);
       form.setValue('endereco.uf', data.uf);
+      
+      toast.success('Endereço preenchido automaticamente');
     } catch (error) {
-      toast.error('Erro ao buscar CEP');
+      handleError(error, 'buscarCep');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -294,13 +331,42 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
     }
   };
 
-  const navigateToNextTab = () => {
+  // Enhanced navigation with validation
+  const validateCurrentTab = async (): Promise<boolean> => {
+    const fieldsToValidate = getFieldsForTab(activeTab);
+    const isValid = await form.trigger(fieldsToValidate as any);
+    
+    if (isValid) {
+      markSectionCompleted(activeTab);
+    }
+    
+    return isValid;
+  };
+
+  const getFieldsForTab = (tab: string): string[] => {
+    const fieldMap: Record<string, string[]> = {
+      'dados-pessoais': ['dadosPessoais.nome', 'dadosPessoais.cpf', 'dadosPessoais.rg'],
+      'endereco': ['endereco.cep', 'endereco.rua', 'endereco.numero', 'endereco.bairro'],
+      'contato': ['contato.telefone'],
+      // ... add other tabs as needed
+    };
+    
+    return fieldMap[tab] || [];
+  };
+
+  const navigateToNextTab = async () => {
+    const isCurrentTabValid = await validateCurrentTab();
+    
+    if (!isCurrentTabValid) {
+      toast.error('Por favor, corrija os erros antes de continuar');
+      return;
+    }
+    
     const tabs = ["dados-pessoais", "endereco", "contato", "funcao", "dados-profissionais", "cnh", 
                  "dados-bancarios", "uniformes", "documentos", "dependentes", "documentos-impressao", "exames-medicos"];
     const currentIndex = tabs.indexOf(activeTab);
     
     if (currentIndex < tabs.length - 1) {
-      markSectionCompleted(activeTab);
       setActiveTab(tabs[currentIndex + 1]);
     }
   };
@@ -315,34 +381,81 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
     }
   };
 
+  // Enhanced form submission with better error handling
   const onSubmit = async (data: Funcionario) => {
     try {
       setIsLoading(true);
       
+      // Final validation
+      const isFormValid = await form.trigger();
+      if (!isFormValid) {
+        toast.error('Por favor, corrija todos os erros antes de salvar');
+        return;
+      }
+      
       // Add document files to data
       data.documentos = documentFiles as any;
       
+      // Show progress feedback
+      toast.loading('Salvando funcionário...', { id: 'save-funcionario' });
+      
       if (onSuccess) {
-        onSuccess(data);
+        await onSuccess(data);
+        setHasUnsavedChanges(false);
+        toast.success('Funcionário salvo com sucesso!', { id: 'save-funcionario' });
       }
     } catch (error) {
-      toast.error('Erro ao salvar funcionário');
-      console.error(error);
+      toast.dismiss('save-funcionario');
+      handleError(error, 'onSubmit FuncionarioForm');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Atualizando o botão de submit para usar a propriedade isSubmitting
+  // Prevent navigation with unsaved changes
+  React.useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = 'Você tem alterações não salvas. Deseja sair mesmo assim?';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  // Show loading state
+  if (isSubmitting && !isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <LoadingSpinner size="lg" className="mx-auto mb-4" />
+          <p className="text-muted-foreground">Salvando funcionário...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Unsaved changes warning */}
+        {hasUnsavedChanges && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <span className="text-sm text-amber-700">
+              Você tem alterações não salvas
+            </span>
+          </div>
+        )}
+        
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar with vertical tabs */}
           <div className="w-full lg:w-1/4 bg-card p-4 rounded-lg border shadow-sm">
             <VerticalTabs 
               defaultValue={activeTab} 
-              onChange={handleTabChange} 
+              onChange={setActiveTab} 
               completedSections={completedSections}
             />
           </div>
@@ -909,7 +1022,7 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
                 type="button"
                 variant="outline"
                 onClick={navigateToPreviousTab}
-                disabled={activeTab === "dados-pessoais"}
+                disabled={activeTab === "dados-pessoais" || isLoading}
               >
                 <ChevronLeft className="mr-2 h-4 w-4" />
                 Anterior
@@ -917,10 +1030,14 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
               
               <div className="space-x-2">
                 {activeTab === "dependentes" ? (
-                  <Button type="submit" disabled={isLoading || isSubmitting}>
+                  <Button 
+                    type="submit" 
+                    disabled={isLoading || isSubmitting}
+                    className="min-w-[200px]"
+                  >
                     {(isLoading || isSubmitting) ? (
                       <div className="flex items-center">
-                        <span className="animate-spin mr-2">⌛</span>
+                        <LoadingSpinner size="sm" className="mr-2" />
                         Salvando...
                       </div>
                     ) : (
@@ -935,6 +1052,7 @@ const FuncionarioForm: React.FC<FuncionarioFormProps> = ({
                     type="button"
                     onClick={navigateToNextTab}
                     variant="default"
+                    disabled={isLoading}
                   >
                     Próximo
                     <ChevronRight className="ml-2 h-4 w-4" />
