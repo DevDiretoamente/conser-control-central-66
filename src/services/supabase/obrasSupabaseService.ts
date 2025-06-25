@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Obra, EtapaObra, MaterialObra, ObrasFilter, ObrasDashboardData } from '@/types/obras';
+import { Obra, ObrasFilter, ObrasDashboardData } from '@/types/obras';
 import { toast } from 'sonner';
 
 export const obrasSupabaseService = {
@@ -17,7 +17,7 @@ export const obrasSupabaseService = {
         throw new Error('Erro ao carregar obras');
       }
 
-      return data || [];
+      return data?.map(mapSupabaseToObra) || [];
     } catch (error) {
       console.error('Erro no serviço de obras:', error);
       throw error;
@@ -37,7 +37,7 @@ export const obrasSupabaseService = {
         throw new Error('Erro ao carregar obra');
       }
 
-      return data;
+      return data ? mapSupabaseToObra(data) : null;
     } catch (error) {
       console.error('Erro no serviço de obras:', error);
       throw error;
@@ -46,12 +46,7 @@ export const obrasSupabaseService = {
 
   create: async (obra: Omit<Obra, 'id' | 'criadoEm' | 'atualizadoEm' | 'historicoAlteracoes'>): Promise<Obra> => {
     try {
-      const obraData = {
-        ...obra,
-        historico_alteracoes: [],
-        criado_em: new Date().toISOString(),
-        atualizado_em: new Date().toISOString()
-      };
+      const obraData = mapObraToSupabase(obra);
 
       const { data, error } = await supabase
         .from('obras')
@@ -64,7 +59,7 @@ export const obrasSupabaseService = {
         throw new Error('Erro ao criar obra');
       }
 
-      return data;
+      return mapSupabaseToObra(data);
     } catch (error) {
       console.error('Erro no serviço de obras:', error);
       throw error;
@@ -73,12 +68,11 @@ export const obrasSupabaseService = {
 
   update: async (id: string, updates: Partial<Obra>): Promise<Obra | null> => {
     try {
+      const updateData = mapObraToSupabase(updates);
+
       const { data, error } = await supabase
         .from('obras')
-        .update({
-          ...updates,
-          atualizado_em: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -88,7 +82,7 @@ export const obrasSupabaseService = {
         throw new Error('Erro ao atualizar obra');
       }
 
-      return data;
+      return mapSupabaseToObra(data);
     } catch (error) {
       console.error('Erro no serviço de obras:', error);
       throw error;
@@ -190,10 +184,85 @@ export const obrasSupabaseService = {
         throw new Error('Erro ao filtrar obras');
       }
       
-      return data || [];
+      return data?.map(mapSupabaseToObra) || [];
     } catch (error) {
       console.error('Erro no serviço de obras:', error);
       throw error;
     }
   }
 };
+
+// Função para mapear dados do Supabase para o tipo Obra
+function mapSupabaseToObra(data: any): Obra {
+  return {
+    id: data.id,
+    nome: data.nome,
+    descricao: data.descricao || '',
+    tipo: data.tipo,
+    status: data.status,
+    prioridade: data.prioridade,
+    clienteId: data.cliente_id,
+    clienteNome: data.cliente_nome,
+    contrato: data.contrato,
+    valorContrato: data.valor_contrato || 0,
+    dataInicio: data.data_inicio,
+    dataFimPrevista: data.data_fim_prevista,
+    dataFimReal: data.data_fim_real,
+    endereco: data.endereco || {},
+    responsavelTecnico: data.responsavel_tecnico,
+    encarregado: data.encarregado,
+    funcionariosAlocados: data.funcionarios_alocados || [],
+    progressoPercentual: data.progresso_percentual || 0,
+    etapas: data.etapas || [],
+    materiais: data.materiais || [],
+    equipamentos: data.equipamentos || [],
+    documentos: data.documentos || [],
+    orcamentoTotal: data.orcamento_total || 0,
+    gastoTotal: data.gasto_total || 0,
+    receitas: data.receitas || [],
+    despesas: data.despesas || [],
+    observacoes: data.observacoes,
+    historicoAlteracoes: data.historico_alteracoes || [],
+    inspecoes: data.inspecoes || [],
+    ocorrencias: data.ocorrencias || [],
+    criadoPor: data.criado_por,
+    criadoEm: data.criado_em,
+    atualizadoEm: data.atualizado_em
+  };
+}
+
+// Função para mapear dados do tipo Obra para o formato do Supabase
+function mapObraToSupabase(obra: any): any {
+  return {
+    nome: obra.nome,
+    descricao: obra.descricao,
+    tipo: obra.tipo,
+    status: obra.status,
+    prioridade: obra.prioridade,
+    cliente_id: obra.clienteId,
+    cliente_nome: obra.clienteNome,
+    contrato: obra.contrato,
+    valor_contrato: obra.valorContrato,
+    data_inicio: obra.dataInicio,
+    data_fim_prevista: obra.dataFimPrevista,
+    data_fim_real: obra.dataFimReal,
+    endereco: obra.endereco,
+    responsavel_tecnico: obra.responsavelTecnico,
+    encarregado: obra.encarregado,
+    funcionarios_alocados: obra.funcionariosAlocados,
+    progresso_percentual: obra.progressoPercentual,
+    etapas: obra.etapas,
+    materiais: obra.materiais,
+    equipamentos: obra.equipamentos,
+    documentos: obra.documentos,
+    orcamento_total: obra.orcamentoTotal,
+    gasto_total: obra.gastoTotal,
+    receitas: obra.receitas,
+    despesas: obra.despesas,
+    observacoes: obra.observacoes,
+    historico_alteracoes: obra.historicoAlteracoes,
+    inspecoes: obra.inspecoes,
+    ocorrencias: obra.ocorrencias,
+    criado_por: obra.criadoPor || 'system'
+  };
+}

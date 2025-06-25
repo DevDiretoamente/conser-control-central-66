@@ -268,6 +268,120 @@ export type Database = {
         }
         Relationships: []
       }
+      obras: {
+        Row: {
+          atualizado_em: string
+          cliente_id: string | null
+          cliente_nome: string
+          contrato: string | null
+          created_at: string
+          criado_em: string
+          criado_por: string
+          data_fim_prevista: string
+          data_fim_real: string | null
+          data_inicio: string | null
+          descricao: string | null
+          despesas: Json | null
+          documentos: Json | null
+          encarregado: string | null
+          endereco: Json
+          equipamentos: Json | null
+          etapas: Json | null
+          funcionarios_alocados: Json | null
+          gasto_total: number | null
+          historico_alteracoes: Json | null
+          id: string
+          inspecoes: Json | null
+          materiais: Json | null
+          nome: string
+          observacoes: string | null
+          ocorrencias: Json | null
+          orcamento_total: number | null
+          prioridade: string
+          progresso_percentual: number | null
+          receitas: Json | null
+          responsavel_tecnico: string | null
+          status: string
+          tipo: string
+          updated_at: string
+          valor_contrato: number
+        }
+        Insert: {
+          atualizado_em?: string
+          cliente_id?: string | null
+          cliente_nome: string
+          contrato?: string | null
+          created_at?: string
+          criado_em?: string
+          criado_por?: string
+          data_fim_prevista: string
+          data_fim_real?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          despesas?: Json | null
+          documentos?: Json | null
+          encarregado?: string | null
+          endereco?: Json
+          equipamentos?: Json | null
+          etapas?: Json | null
+          funcionarios_alocados?: Json | null
+          gasto_total?: number | null
+          historico_alteracoes?: Json | null
+          id?: string
+          inspecoes?: Json | null
+          materiais?: Json | null
+          nome: string
+          observacoes?: string | null
+          ocorrencias?: Json | null
+          orcamento_total?: number | null
+          prioridade?: string
+          progresso_percentual?: number | null
+          receitas?: Json | null
+          responsavel_tecnico?: string | null
+          status?: string
+          tipo: string
+          updated_at?: string
+          valor_contrato?: number
+        }
+        Update: {
+          atualizado_em?: string
+          cliente_id?: string | null
+          cliente_nome?: string
+          contrato?: string | null
+          created_at?: string
+          criado_em?: string
+          criado_por?: string
+          data_fim_prevista?: string
+          data_fim_real?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          despesas?: Json | null
+          documentos?: Json | null
+          encarregado?: string | null
+          endereco?: Json
+          equipamentos?: Json | null
+          etapas?: Json | null
+          funcionarios_alocados?: Json | null
+          gasto_total?: number | null
+          historico_alteracoes?: Json | null
+          id?: string
+          inspecoes?: Json | null
+          materiais?: Json | null
+          nome?: string
+          observacoes?: string | null
+          ocorrencias?: Json | null
+          orcamento_total?: number | null
+          prioridade?: string
+          progresso_percentual?: number | null
+          receitas?: Json | null
+          responsavel_tecnico?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+          valor_contrato?: number
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           company_id: string | null
