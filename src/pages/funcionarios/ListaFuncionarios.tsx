@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import FuncionarioListItem, { Funcionario as FuncionarioListItemType } from '@/components/funcionarios/FuncionarioListItem';
 import FuncionarioFilter, { FuncionarioFilterValues } from '@/components/funcionarios/FuncionarioFilter';
-import { Users, PlusCircle, FileOutput, FileText, UserPlus, Edit, Trash } from 'lucide-react';
+import { Users, PlusCircle, FileOutput, UserPlus } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -135,19 +136,19 @@ const ListaFuncionarios: React.FC = () => {
   };
   
   const handleEdit = (id: string) => {
-    navigate(`/funcionarios/${id}/edit`);
+    navigate(`/app/funcionarios/${id}/editar`);
   };
   
   const handleViewDetails = (id: string) => {
-    navigate(`/funcionarios/${id}`);
+    navigate(`/app/funcionarios/${id}`);
   };
   
   const handleViewDocuments = (id: string) => {
-    navigate(`/funcionarios/${id}?tab=documentos`);
+    navigate(`/app/funcionarios/${id}?tab=documentos`);
   };
   
   const handleViewDependentes = (id: string) => {
-    navigate(`/funcionarios/${id}?tab=dependentes`);
+    navigate(`/app/funcionarios/${id}?tab=dependentes`);
   };
 
   return (
@@ -167,7 +168,7 @@ const ListaFuncionarios: React.FC = () => {
             </Link>
           </Button>
           <Button asChild>
-            <Link to="/funcionarios/novo">
+            <Link to="/app/funcionarios/novo">
               <PlusCircle className="mr-2 h-4 w-4" />
               Novo Funcionário
             </Link>
@@ -207,7 +208,7 @@ const ListaFuncionarios: React.FC = () => {
             <h3 className="mb-1 text-lg font-medium">Nenhum funcionário encontrado</h3>
             <p>Tente ajustar os filtros ou cadastre um novo funcionário.</p>
             <Button className="mt-4" asChild>
-              <Link to="/funcionarios/novo">
+              <Link to="/app/funcionarios/novo">
                 <UserPlus className="mr-2 h-4 w-4" />
                 Novo Funcionário
               </Link>

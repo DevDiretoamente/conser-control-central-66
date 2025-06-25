@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -72,7 +73,7 @@ function App() {
                   }>
                     <Route index element={<Dashboard />} />
                     
-                    {/* Funcionários */}
+                    {/* Funcionários - Rotas corrigidas */}
                     <Route path="funcionarios" element={<ListaFuncionarios />} />
                     <Route path="funcionarios/novo" element={<NovoFuncionario />} />
                     <Route path="funcionarios/:id" element={<DetalheFuncionario />} />
