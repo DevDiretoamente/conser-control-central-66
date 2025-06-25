@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -38,7 +37,18 @@ const Obras: React.FC = () => {
     mutationFn: (data: ObraFormValues) => {
       // Convert form data to Obra format with all required fields
       const obraData: Omit<Obra, 'id' | 'criadoEm' | 'atualizadoEm'> = {
-        ...data,
+        nome: data.nome || '',
+        descricao: data.descricao || '',
+        tipo: data.tipo || 'construcao',
+        status: data.status || 'planejamento',
+        prioridade: data.prioridade || 'media',
+        clienteNome: data.clienteNome || '',
+        contrato: data.contrato,
+        valorContrato: data.valorContrato || 0,
+        dataInicio: data.dataInicio,
+        dataFimPrevista: data.dataFimPrevista || '',
+        dataFimReal: undefined,
+        clienteId: undefined,
         // Ensure endereco has all required fields
         endereco: {
           cep: data.endereco?.cep || '',
@@ -50,6 +60,10 @@ const Obras: React.FC = () => {
           uf: data.endereco?.uf || '',
           coordenadas: undefined // Optional field
         },
+        responsavelTecnico: data.responsavelTecnico,
+        encarregado: data.encarregado,
+        orcamentoTotal: data.orcamentoTotal || 0,
+        observacoes: data.observacoes,
         // Set default values for complex fields not in form
         funcionariosAlocados: [],
         etapas: [],
