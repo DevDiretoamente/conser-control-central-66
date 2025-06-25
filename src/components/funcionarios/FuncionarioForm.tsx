@@ -29,7 +29,7 @@ import MultiDocumentUploader from './MultiDocumentUploader';
 import DependentesTab from './DependentesTab';
 import FuncaoTab from './FuncaoTab';
 import UniformeTab from './UniformeTab';
-import DadosProfissionaisTab from './DadosProfissionionaisTab';
+import DadosProfissionaisTab from './DadosProfissionaisTab';
 import CNHTab from './CNHTab';
 import { Funcionario } from '@/types/funcionario';
 import VerticalTabs from './VerticalTabs';
