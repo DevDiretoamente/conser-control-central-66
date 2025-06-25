@@ -42,6 +42,74 @@ export type Database = {
         }
         Relationships: []
       }
+      cartao_ponto: {
+        Row: {
+          aprovado_por: string | null
+          created_at: string
+          data: string
+          data_aprovacao: string | null
+          funcionario_id: string | null
+          funcionario_nome: string
+          hora_almoco_retorno: string | null
+          hora_almoco_saida: string | null
+          hora_entrada: string | null
+          hora_saida: string | null
+          horas_extras: number | null
+          id: string
+          observacoes: string | null
+          status: string
+          taxa_hora_extra: number | null
+          total_horas: number | null
+          updated_at: string
+        }
+        Insert: {
+          aprovado_por?: string | null
+          created_at?: string
+          data: string
+          data_aprovacao?: string | null
+          funcionario_id?: string | null
+          funcionario_nome: string
+          hora_almoco_retorno?: string | null
+          hora_almoco_saida?: string | null
+          hora_entrada?: string | null
+          hora_saida?: string | null
+          horas_extras?: number | null
+          id?: string
+          observacoes?: string | null
+          status?: string
+          taxa_hora_extra?: number | null
+          total_horas?: number | null
+          updated_at?: string
+        }
+        Update: {
+          aprovado_por?: string | null
+          created_at?: string
+          data?: string
+          data_aprovacao?: string | null
+          funcionario_id?: string | null
+          funcionario_nome?: string
+          hora_almoco_retorno?: string | null
+          hora_almoco_saida?: string | null
+          hora_entrada?: string | null
+          hora_saida?: string | null
+          horas_extras?: number | null
+          id?: string
+          observacoes?: string | null
+          status?: string
+          taxa_hora_extra?: number | null
+          total_horas?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cartao_ponto_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       certificacoes: {
         Row: {
           arquivo: string | null

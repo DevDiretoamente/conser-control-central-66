@@ -1,324 +1,251 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import { Plus, Eye, Edit, Trash } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { toast } from 'sonner';
-import { 
-  Building, 
-  PlusCircle, 
-  Search, 
-  Eye, 
-  Edit, 
-  Trash2,
-  MapPin,
-  Calendar,
-  Users,
-  DollarSign,
-  TrendingUp,
-  AlertTriangle
-} from 'lucide-react';
-import { Obra, ObrasFilter, ObrasDashboardData } from '@/types/obras';
+import { ObrasDashboard } from '@/components/obras/ObrasDashboard';
+import ObraDialog from '@/components/obras/ObraDialog';
+import ObraDetails from '@/components/obras/ObraDetails';
+import ObraDeleteDialog from '@/components/obras/ObraDeleteDialog';
+import { ObraFormValues } from '@/components/obras/ObraForm';
 import { obrasService } from '@/services/obrasService';
-import ObrasDashboard from '@/components/obras/ObrasDashboard';
+import { Obra } from '@/types/obras';
+import { toast } from 'sonner';
 
 const Obras: React.FC = () => {
-  const [obras, setObras] = useState<Obra[]>([]);
-  const [filteredObras, setFilteredObras] = useState<Obra[]>([]);
-  const [dashboardData, setDashboardData] = useState<ObrasDashboardData | null>(null);
-  const [filter, setFilter] = useState<ObrasFilter>({});
-  const [loading, setLoading] = useState(true);
+  const [selectedObra, setSelectedObra] = useState<Obra | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    applyFilters();
-  }, [obras, filter]);
+  const { data: obras = [], isLoading } = useQuery({
+    queryKey: ['obras'],
+    queryFn: obrasService.getAll
+  });
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [obrasData, dashboard] = await Promise.all([
-        obrasService.getAll(),
-        obrasService.getDashboardData()
-      ]);
-      setObras(obrasData);
-      setDashboardData(dashboard);
-    } catch (error) {
-      console.error('Erro ao carregar dados:', error);
-      toast.error('Erro ao carregar dados das obras');
-    } finally {
-      setLoading(false);
+  const createMutation = useMutation({
+    mutationFn: (data: ObraFormValues) => obrasService.create(data as Omit<Obra, 'id' | 'criadoEm' | 'atualizadoEm' | 'historicoAlteracoes'>),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['obras'] });
+      toast.success('Obra criada com sucesso!');
+      setIsCreateDialogOpen(false);
+    },
+    onError: () => {
+      toast.error('Erro ao criar obra');
     }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Obra> }) => 
+      obrasService.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['obras'] });
+      toast.success('Obra atualizada com sucesso!');
+      setIsEditDialogOpen(false);
+      setSelectedObra(null);
+    },
+    onError: () => {
+      toast.error('Erro ao atualizar obra');
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => obrasService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['obras'] });
+      toast.success('Obra excluída com sucesso!');
+      setIsDeleteDialogOpen(false);
+      setSelectedObra(null);
+    },
+    onError: () => {
+      toast.error('Erro ao excluir obra');
+    }
+  });
+
+  const handleCreate = async (data: ObraFormValues) => {
+    await createMutation.mutateAsync(data);
   };
 
-  const applyFilters = async () => {
-    try {
-      const filtered = await obrasService.search(filter);
-      setFilteredObras(filtered);
-    } catch (error) {
-      console.error('Erro ao filtrar obras:', error);
-    }
+  const handleEdit = async (data: ObraFormValues) => {
+    if (!selectedObra) return;
+    await updateMutation.mutateAsync({ id: selectedObra.id, data });
   };
 
-  const getStatusBadge = (status: Obra['status']) => {
+  const handleDelete = async () => {
+    if (!selectedObra) return;
+    await deleteMutation.mutateAsync(selectedObra.id);
+  };
+
+  const getStatusBadge = (status: string) => {
     const statusMap = {
-      planejamento: { label: 'Planejamento', className: 'bg-blue-500' },
-      aprovacao: { label: 'Aprovação', className: 'bg-yellow-500' },
-      execucao: { label: 'Execução', className: 'bg-green-500' },
-      pausada: { label: 'Pausada', className: 'bg-orange-500' },
-      concluida: { label: 'Concluída', className: 'bg-gray-500' },
-      cancelada: { label: 'Cancelada', className: 'bg-red-500' }
+      planejamento: { variant: 'secondary' as const, label: 'Planejamento' },
+      aprovacao: { variant: 'outline' as const, label: 'Aprovação' },
+      execucao: { variant: 'default' as const, label: 'Execução' },
+      pausada: { variant: 'destructive' as const, label: 'Pausada' },
+      concluida: { variant: 'outline' as const, label: 'Concluída' },
+      cancelada: { variant: 'destructive' as const, label: 'Cancelada' }
     };
-    const config = statusMap[status];
-    return <Badge className={config.className}>{config.label}</Badge>;
+    
+    const config = statusMap[status as keyof typeof statusMap] || statusMap.planejamento;
+    return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const getPrioridadeBadge = (prioridade: Obra['prioridade']) => {
-    const prioridadeMap = {
-      baixa: { label: 'Baixa', className: 'bg-gray-400' },
-      media: { label: 'Média', className: 'bg-blue-400' },
-      alta: { label: 'Alta', className: 'bg-orange-400' },
-      urgente: { label: 'Urgente', className: 'bg-red-500' }
-    };
-    const config = prioridadeMap[prioridade];
-    return <Badge variant="outline" className={config.className}>{config.label}</Badge>;
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
   };
 
-  const getTipoName = (tipo: Obra['tipo']) => {
-    const tipoMap = {
-      pavimentacao: 'Pavimentação',
-      construcao: 'Construção',
-      reforma: 'Reforma',
-      manutencao: 'Manutenção',
-      infraestrutura: 'Infraestrutura',
-      outros: 'Outros'
-    };
-    return tipoMap[tipo];
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Building className="h-10 w-10 text-muted-foreground mx-auto mb-4 animate-pulse" />
-          <p className="text-muted-foreground">Carregando obras...</p>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Carregando obras...</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Gestão de Obras</h1>
+          <h1 className="text-3xl font-bold">Gestão de Obras</h1>
           <p className="text-muted-foreground">
-            Gerencie projetos, cronogramas e recursos
+            Gerencie todas as obras e projetos da empresa
           </p>
         </div>
-        <Button onClick={() => toast.info("Formulário de nova obra será implementado")}>
-          <PlusCircle className="mr-2 h-4 w-4" />
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
           Nova Obra
         </Button>
       </div>
 
-      <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList>
-          <TabsTrigger value="dashboard">
-            <TrendingUp className="mr-2 h-4 w-4" />
-            Dashboard
-          </TabsTrigger>
-          <TabsTrigger value="obras">
-            <Building className="mr-2 h-4 w-4" />
-            Obras
-          </TabsTrigger>
-        </TabsList>
+      <ObrasDashboard />
 
-        <TabsContent value="dashboard">
-          {dashboardData && <ObrasDashboard data={dashboardData} />}
-        </TabsContent>
-
-        <TabsContent value="obras">
-          <Card>
-            <CardHeader>
-              <CardTitle>Lista de Obras</CardTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {obras.map((obra) => (
+          <Card key={obra.id} className="hover:shadow-lg transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex justify-between items-start">
+                <CardTitle className="text-lg line-clamp-2">{obra.nome}</CardTitle>
+                <div className="flex gap-1 ml-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setSelectedObra(obra);
+                      setIsDetailsDialogOpen(true);
+                    }}
+                    title="Ver detalhes"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setSelectedObra(obra);
+                      setIsEditDialogOpen(true);
+                    }}
+                    title="Editar"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setSelectedObra(obra);
+                      setIsDeleteDialogOpen(true);
+                    }}
+                    title="Excluir"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                {getStatusBadge(obra.status)}
+                <Badge variant="outline" className="capitalize">
+                  {obra.tipo}
+                </Badge>
+              </div>
             </CardHeader>
-            <CardContent>
-              {/* Filtros */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar obras..."
-                    value={filter.search || ''}
-                    onChange={(e) => setFilter({ ...filter, search: e.target.value })}
-                    className="pl-9"
-                  />
-                </div>
 
-                <Select
-                  value={filter.tipo || 'all'}
-                  onValueChange={(value) => setFilter({ ...filter, tipo: value === 'all' ? undefined : value as Obra['tipo'] })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tipo de obra" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os tipos</SelectItem>
-                    <SelectItem value="pavimentacao">Pavimentação</SelectItem>
-                    <SelectItem value="construcao">Construção</SelectItem>
-                    <SelectItem value="reforma">Reforma</SelectItem>
-                    <SelectItem value="manutencao">Manutenção</SelectItem>
-                    <SelectItem value="infraestrutura">Infraestrutura</SelectItem>
-                    <SelectItem value="outros">Outros</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={filter.status || 'all'}
-                  onValueChange={(value) => setFilter({ ...filter, status: value === 'all' ? undefined : value as Obra['status'] })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os status</SelectItem>
-                    <SelectItem value="planejamento">Planejamento</SelectItem>
-                    <SelectItem value="aprovacao">Aprovação</SelectItem>
-                    <SelectItem value="execucao">Execução</SelectItem>
-                    <SelectItem value="pausada">Pausada</SelectItem>
-                    <SelectItem value="concluida">Concluída</SelectItem>
-                    <SelectItem value="cancelada">Cancelada</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={filter.prioridade || 'all'}
-                  onValueChange={(value) => setFilter({ ...filter, prioridade: value === 'all' ? undefined : value as Obra['prioridade'] })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Prioridade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as prioridades</SelectItem>
-                    <SelectItem value="baixa">Baixa</SelectItem>
-                    <SelectItem value="media">Média</SelectItem>
-                    <SelectItem value="alta">Alta</SelectItem>
-                    <SelectItem value="urgente">Urgente</SelectItem>
-                  </SelectContent>
-                </Select>
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Cliente</p>
+                <p className="font-medium">{obra.clienteNome}</p>
               </div>
 
-              {/* Lista de Obras */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredObras.map((obra) => (
-                  <Card key={obra.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <CardTitle className="text-base">{obra.nome}</CardTitle>
-                          <p className="text-sm text-muted-foreground">
-                            {getTipoName(obra.tipo)} • {obra.clienteNome}
-                          </p>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          {getStatusBadge(obra.status)}
-                          {getPrioridadeBadge(obra.prioridade)}
-                        </div>
-                      </div>
-                    </CardHeader>
-                    
-                    <CardContent className="space-y-3">
-                      <p className="text-sm line-clamp-2">{obra.descricao}</p>
-                      
-                      {/* Progresso */}
-                      <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm text-muted-foreground">Progresso</span>
-                          <span className="text-sm font-medium">{obra.progressoPercentual}%</span>
-                        </div>
-                        <Progress value={obra.progressoPercentual} className="h-2" />
-                      </div>
-
-                      {/* Informações básicas */}
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3 text-muted-foreground" />
-                          <span className="truncate">{obra.endereco.cidade}/{obra.endereco.uf}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3 text-muted-foreground" />
-                          <span className="truncate">
-                            {obra.valorContrato.toLocaleString('pt-BR', {
-                              style: 'currency',
-                              currency: 'BRL',
-                              minimumFractionDigits: 0
-                            })}
-                          </span>
-                        </div>
-                        {obra.dataFimPrevista && (
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3 text-muted-foreground" />
-                            <span className="truncate">
-                              {new Date(obra.dataFimPrevista).toLocaleDateString('pt-BR')}
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1">
-                          <Users className="h-3 w-3 text-muted-foreground" />
-                          <span className="truncate">{obra.funcionariosAlocados.length} pessoas</span>
-                        </div>
-                      </div>
-
-                      {/* Alertas */}
-                      {obra.dataFimPrevista && new Date(obra.dataFimPrevista) < new Date() && obra.status !== 'concluida' && (
-                        <div className="flex items-center gap-2 p-2 bg-red-50 rounded-md">
-                          <AlertTriangle className="h-4 w-4 text-red-600" />
-                          <span className="text-sm text-red-800">Obra atrasada</span>
-                        </div>
-                      )}
-
-                      {/* Ações */}
-                      <div className="flex justify-between items-center pt-2 border-t">
-                        <div className="text-xs text-muted-foreground">
-                          {obra.etapas.length} etapa(s)
-                        </div>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+              <div>
+                <p className="text-sm text-muted-foreground">Valor do Contrato</p>
+                <p className="font-medium">{formatCurrency(obra.valorContrato)}</p>
               </div>
 
-              {filteredObras.length === 0 && (
-                <div className="text-center py-8">
-                  <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">
-                    {obras.length === 0 ? 'Nenhuma obra cadastrada' : 'Nenhuma obra encontrada com os filtros selecionados'}
-                  </p>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Progresso</span>
+                  <span>{obra.progressoPercentual}%</span>
                 </div>
-              )}
+                <Progress value={obra.progressoPercentual} className="h-2" />
+              </div>
+
+              <div>
+                <p className="text-sm text-muted-foreground">Término Previsto</p>
+                <p className="text-sm">
+                  {obra.dataFimPrevista ? 
+                    new Date(obra.dataFimPrevista).toLocaleDateString('pt-BR') : 
+                    'Não definido'
+                  }
+                </p>
+              </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        ))}
+      </div>
+
+      {obras.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-lg">Nenhuma obra encontrada</p>
+          <p className="text-muted-foreground">Clique em "Nova Obra" para começar</p>
+        </div>
+      )}
+
+      <ObraDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSave={handleCreate}
+        isLoading={createMutation.isPending}
+      />
+
+      <ObraDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        obra={selectedObra || undefined}
+        onSave={handleEdit}
+        isLoading={updateMutation.isPending}
+      />
+
+      <ObraDetails
+        open={isDetailsDialogOpen}
+        onOpenChange={setIsDetailsDialogOpen}
+        obra={selectedObra}
+      />
+
+      <ObraDeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        obra={selectedObra}
+        onConfirm={handleDelete}
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 };
