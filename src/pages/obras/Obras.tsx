@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Plus, Eye, Edit, Trash } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ObrasDashboard } from '@/components/obras/ObrasDashboard';
+import ObrasDashboard from '@/components/obras/ObrasDashboard';
 import ObraDialog from '@/components/obras/ObraDialog';
 import ObraDetails from '@/components/obras/ObraDetails';
 import ObraDeleteDialog from '@/components/obras/ObraDeleteDialog';
@@ -29,10 +28,39 @@ const Obras: React.FC = () => {
     queryFn: obrasService.getAll
   });
 
+  const { data: dashboardData, isLoading: isDashboardLoading } = useQuery({
+    queryKey: ['obras-dashboard'],
+    queryFn: obrasService.getDashboardData
+  });
+
   const createMutation = useMutation({
-    mutationFn: (data: ObraFormValues) => obrasService.create(data as Omit<Obra, 'id' | 'criadoEm' | 'atualizadoEm' | 'historicoAlteracoes'>),
+    mutationFn: (data: ObraFormValues) => obrasService.create({
+      ...data,
+      endereco: {
+        cep: data.endereco?.cep || '',
+        rua: data.endereco?.rua || '',
+        numero: data.endereco?.numero || '',
+        complemento: data.endereco?.complemento,
+        bairro: data.endereco?.bairro || '',
+        cidade: data.endereco?.cidade || '',
+        uf: data.endereco?.uf || '',
+        coordenadas: data.endereco?.coordenadas
+      },
+      funcionariosAlocados: data.funcionariosAlocados || [],
+      etapas: data.etapas || [],
+      materiais: data.materiais || [],
+      equipamentos: data.equipamentos || [],
+      documentos: data.documentos || [],
+      receitas: data.receitas || [],
+      despesas: data.despesas || [],
+      historicoAlteracoes: [],
+      inspecoes: data.inspecoes || [],
+      ocorrencias: data.ocorrencias || [],
+      criadoPor: 'system'
+    } as Omit<Obra, 'id' | 'criadoEm' | 'atualizadoEm'>),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['obras'] });
+      queryClient.invalidateQueries({ queryKey: ['obras-dashboard'] });
       toast.success('Obra criada com sucesso!');
       setIsCreateDialogOpen(false);
     },
@@ -42,10 +70,23 @@ const Obras: React.FC = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Obra> }) => 
-      obrasService.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: ObraFormValues }) => 
+      obrasService.update(id, {
+        ...data,
+        endereco: {
+          cep: data.endereco?.cep || '',
+          rua: data.endereco?.rua || '',
+          numero: data.endereco?.numero || '',
+          complemento: data.endereco?.complemento,
+          bairro: data.endereco?.bairro || '',
+          cidade: data.endereco?.cidade || '',
+          uf: data.endereco?.uf || '',
+          coordenadas: data.endereco?.coordenadas
+        }
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['obras'] });
+      queryClient.invalidateQueries({ queryKey: ['obras-dashboard'] });
       toast.success('Obra atualizada com sucesso!');
       setIsEditDialogOpen(false);
       setSelectedObra(null);
@@ -59,6 +100,7 @@ const Obras: React.FC = () => {
     mutationFn: (id: string) => obrasService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['obras'] });
+      queryClient.invalidateQueries({ queryKey: ['obras-dashboard'] });
       toast.success('Obra excluída com sucesso!');
       setIsDeleteDialogOpen(false);
       setSelectedObra(null);
@@ -126,7 +168,7 @@ const Obras: React.FC = () => {
         </Button>
       </div>
 
-      <ObrasDashboard />
+      {dashboardData && <ObrasDashboard data={dashboardData} />}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {obras.map((obra) => (

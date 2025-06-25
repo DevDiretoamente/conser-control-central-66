@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { CartaoPonto, CartaoPontoFilterOptions, CartaoPontoSummary } from '@/types/cartaoPonto';
+import { CartaoPonto, CartaoPontoFilterOptions, CartaoPontoSummary, CartaoPontoStatus } from '@/types/cartaoPonto';
 import { toast } from 'sonner';
 
 export const cartaoPontoSupabaseService = {
@@ -122,6 +122,32 @@ export const cartaoPontoSupabaseService = {
       }
 
       return true;
+    } catch (error) {
+      console.error('Erro no serviço de cartão ponto:', error);
+      throw error;
+    }
+  },
+
+  updateStatus: async (id: string, status: CartaoPontoStatus, observacao?: string): Promise<CartaoPonto | null> => {
+    try {
+      const updateData: any = { status };
+      if (observacao) {
+        updateData.observacoes = observacao;
+      }
+
+      const { data, error } = await supabase
+        .from('cartao_ponto')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao atualizar status do registro:', error);
+        throw new Error('Erro ao atualizar status do registro');
+      }
+
+      return mapSupabaseToCartaoPonto(data);
     } catch (error) {
       console.error('Erro no serviço de cartão ponto:', error);
       throw error;
