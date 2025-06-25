@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -34,30 +35,40 @@ const Obras: React.FC = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: ObraFormValues) => obrasService.create({
-      ...data,
-      endereco: {
-        cep: data.endereco?.cep || '',
-        rua: data.endereco?.rua || '',
-        numero: data.endereco?.numero || '',
-        complemento: data.endereco?.complemento,
-        bairro: data.endereco?.bairro || '',
-        cidade: data.endereco?.cidade || '',
-        uf: data.endereco?.uf || '',
-        coordenadas: data.endereco?.coordenadas
-      },
-      funcionariosAlocados: data.funcionariosAlocados || [],
-      etapas: data.etapas || [],
-      materiais: data.materiais || [],
-      equipamentos: data.equipamentos || [],
-      documentos: data.documentos || [],
-      receitas: data.receitas || [],
-      despesas: data.despesas || [],
-      historicoAlteracoes: [],
-      inspecoes: data.inspecoes || [],
-      ocorrencias: data.ocorrencias || [],
-      criadoPor: 'system'
-    } as Omit<Obra, 'id' | 'criadoEm' | 'atualizadoEm'>),
+    mutationFn: (data: ObraFormValues) => {
+      // Convert form data to Obra format with all required fields
+      const obraData: Omit<Obra, 'id' | 'criadoEm' | 'atualizadoEm'> = {
+        ...data,
+        // Ensure endereco has all required fields
+        endereco: {
+          cep: data.endereco?.cep || '',
+          rua: data.endereco?.rua || '',
+          numero: data.endereco?.numero || '',
+          complemento: data.endereco?.complemento || undefined,
+          bairro: data.endereco?.bairro || '',
+          cidade: data.endereco?.cidade || '',
+          uf: data.endereco?.uf || '',
+          coordenadas: undefined // Optional field
+        },
+        // Set default values for complex fields not in form
+        funcionariosAlocados: [],
+        etapas: [],
+        materiais: [],
+        equipamentos: [],
+        documentos: [],
+        receitas: [],
+        despesas: [],
+        historicoAlteracoes: [],
+        inspecoes: [],
+        ocorrencias: [],
+        criadoPor: 'system',
+        // Set default financial values
+        gastoTotal: 0,
+        progressoPercentual: 0
+      };
+      
+      return obrasService.create(obraData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['obras'] });
       queryClient.invalidateQueries({ queryKey: ['obras-dashboard'] });
@@ -70,20 +81,25 @@ const Obras: React.FC = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: ObraFormValues }) => 
-      obrasService.update(id, {
+    mutationFn: ({ id, data }: { id: string; data: ObraFormValues }) => {
+      // Convert form data to partial Obra format for update
+      const updateData: Partial<Obra> = {
         ...data,
+        // Ensure endereco has all required fields for update
         endereco: {
           cep: data.endereco?.cep || '',
           rua: data.endereco?.rua || '',
           numero: data.endereco?.numero || '',
-          complemento: data.endereco?.complemento,
+          complemento: data.endereco?.complemento || undefined,
           bairro: data.endereco?.bairro || '',
           cidade: data.endereco?.cidade || '',
           uf: data.endereco?.uf || '',
-          coordenadas: data.endereco?.coordenadas
+          coordenadas: undefined // Keep existing or set undefined
         }
-      }),
+      };
+      
+      return obrasService.update(id, updateData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['obras'] });
       queryClient.invalidateQueries({ queryKey: ['obras-dashboard'] });
