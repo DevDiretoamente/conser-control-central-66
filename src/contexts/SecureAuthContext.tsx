@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,9 +30,34 @@ interface SecureAuthContextType {
   createUser: (userData: { email: string; password: string; name: string; role: 'admin' | 'manager' | 'operator' }) => Promise<void>;
   updateUserProfile: (userId: string, updates: Partial<UserProfile>) => Promise<void>;
   getAllUsers: () => Promise<UserProfile[]>;
+  checkFirstTimeSetup: () => Promise<boolean>;
 }
 
 const SecureAuthContext = createContext<SecureAuthContextType | undefined>(undefined);
+
+// Função para limpar estado de autenticação
+const cleanupAuthState = () => {
+  try {
+    // Remove standard auth tokens
+    localStorage.removeItem('supabase.auth.token');
+    // Remove all Supabase auth keys from localStorage
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+    // Remove from sessionStorage if in use
+    if (typeof sessionStorage !== 'undefined') {
+      Object.keys(sessionStorage || {}).forEach((key) => {
+        if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+          sessionStorage.removeItem(key);
+        }
+      });
+    }
+  } catch (error) {
+    console.warn('Error cleaning auth state:', error);
+  }
+};
 
 export function SecureAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<SupabaseUser | null>(null);
@@ -72,14 +98,21 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
       if (!data) {
         console.log('No profile found, creating default admin profile');
-        // Criar perfil padrão como admin
+        // Criar perfil padrão como admin se for o primeiro usuário
+        const { data: existingProfiles } = await supabase
+          .from('user_profiles')
+          .select('id')
+          .limit(1);
+
+        const isFirstUser = !existingProfiles || existingProfiles.length === 0;
+        
         const { data: newProfile, error: insertError } = await supabase
           .from('user_profiles')
           .insert({
             id: user.id,
             email: user.email || '',
-            name: user.user_metadata?.name || user.email || 'Admin',
-            role: 'admin',
+            name: user.user_metadata?.name || user.email || 'Usuário',
+            role: isFirstUser ? 'admin' : 'operator',
             is_active: true,
             company_id: 'default'
           })
@@ -118,6 +151,26 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     }
   };
 
+  const checkFirstTimeSetup = async (): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('role', 'admin')
+        .limit(1);
+
+      if (error) {
+        console.error('Error checking first time setup:', error);
+        return true; // Assume first time if error
+      }
+
+      return !data || data.length === 0;
+    } catch (error) {
+      console.error('Error in checkFirstTimeSetup:', error);
+      return true;
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -132,14 +185,15 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         
         if (session?.user && event === 'SIGNED_IN') {
           console.log('User signed in, fetching profile...');
-          // Aguardar um pouco antes de buscar o perfil
+          // Defer profile fetching to prevent deadlocks
           setTimeout(() => {
             if (mounted) {
               refreshProfile();
             }
-          }, 500);
+          }, 100);
         } else if (event === 'SIGNED_OUT') {
           setProfile(null);
+          cleanupAuthState();
         }
         
         setIsLoading(false);
@@ -159,7 +213,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
           if (mounted) {
             refreshProfile();
           }
-        }, 500);
+        }, 100);
       } else {
         setIsLoading(false);
       }
@@ -175,6 +229,17 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     try {
       setIsLoading(true);
       
+      // Clean up existing state
+      cleanupAuthState();
+      
+      // Attempt global sign out first
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+        console.warn('Sign out before sign in failed:', err);
+      }
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -185,6 +250,11 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       if (data.user) {
         console.log('Login successful for user:', data.user.id);
         toast.success('Login realizado com sucesso');
+        
+        // Force page reload to ensure clean state
+        setTimeout(() => {
+          window.location.href = '/app';
+        }, 500);
       }
     } catch (error: any) {
       console.error('Sign in error:', error);
@@ -227,11 +297,22 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut({ scope: 'global' });
+      // Clean up auth state first
+      cleanupAuthState();
+      
+      // Attempt global sign out
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        console.warn('Sign out error:', err);
+      }
+      
       setUser(null);
       setProfile(null);
       setSession(null);
       toast.success('Logout realizado com sucesso');
+      
+      // Force page reload for clean state
       window.location.href = '/secure-login';
     } catch (error: any) {
       console.error('Sign out error:', error);
@@ -307,22 +388,36 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     try {
       setIsLoading(true);
       
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.admin.createUser({
         email: userData.email,
         password: userData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/app`,
-          data: {
-            name: userData.name,
-            role: userData.role,
-            email_confirm: false
-          }
-        }
+        user_metadata: {
+          name: userData.name,
+          role: userData.role
+        },
+        email_confirm: true
       });
 
       if (error) throw error;
 
       if (data.user) {
+        // Create user profile
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .insert({
+            id: data.user.id,
+            email: userData.email,
+            name: userData.name,
+            role: userData.role,
+            is_active: true,
+            company_id: 'default'
+          });
+
+        if (profileError) {
+          console.error('Error creating user profile:', profileError);
+          // Don't throw error, profile might be created by trigger
+        }
+
         console.log('Usuário criado:', data.user.id);
         toast.success('Usuário criado com sucesso!');
       }
@@ -380,7 +475,8 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     refreshProfile,
     createUser,
     updateUserProfile,
-    getAllUsers
+    getAllUsers,
+    checkFirstTimeSetup
   };
 
   return (

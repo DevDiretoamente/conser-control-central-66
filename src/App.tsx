@@ -10,6 +10,7 @@ import SecureLogin from '@/components/auth/SecureLogin';
 import SecureProtectedRoute from '@/components/auth/SecureProtectedRoute';
 import AppLayout from '@/components/layout/AppLayout';
 import PublicLanding from '@/components/PublicLanding';
+import MasterAdminSetup from '@/pages/MasterAdminSetup';
 
 // Pages
 import Dashboard from '@/pages/Dashboard';
@@ -64,6 +65,7 @@ function App() {
                   {/* Public routes */}
                   <Route path="/" element={<PublicLanding />} />
                   <Route path="/secure-login" element={<SecureLogin />} />
+                  <Route path="/master-admin-setup" element={<MasterAdminSetup />} />
                   
                   {/* Protected app routes */}
                   <Route path="/app" element={
