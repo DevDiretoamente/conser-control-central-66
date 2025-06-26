@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
 import { UserProfile, SecureAuthContextType } from '@/types/secureAuth';
 import { authService } from '@/services/authService';
 import { userService } from '@/services/userService';
@@ -15,7 +14,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
   const isAuthenticated = !!session?.user;
@@ -26,7 +24,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     session: !!session, 
     isAuthenticated,
     isLoading,
-    isProfileLoading,
     isInitialized
   });
 
@@ -37,7 +34,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     }
 
     console.log('SecureAuthContext.refreshProfile: Starting profile refresh');
-    setIsProfileLoading(true);
     
     try {
       const profileData = await userService.refreshProfile(user.id);
@@ -59,18 +55,58 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         };
         setProfile(fallbackProfile);
       }
-    } finally {
-      setIsProfileLoading(false);
     }
   };
 
   useEffect(() => {
     let mounted = true;
+    let initTimeout: NodeJS.Timeout;
 
     const initializeAuth = async () => {
       console.log('SecureAuthContext: Initializing auth...');
       
       try {
+        // Timeout de segurança para evitar loading infinito
+        initTimeout = setTimeout(() => {
+          if (mounted && !isInitialized) {
+            console.log('SecureAuthContext: Initialization timeout, forcing completion');
+            setIsLoading(false);
+            setIsInitialized(true);
+          }
+        }, 5000);
+
+        // Configurar listener de mudanças de estado primeiro
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            console.log('SecureAuthContext: Auth state changed:', event, session?.user?.id);
+            
+            if (!mounted) return;
+
+            setSession(session);
+            setUser(session?.user ?? null);
+            
+            if (session?.user && event === 'SIGNED_IN') {
+              console.log('SecureAuthContext: User signed in, fetching profile...');
+              // Usar setTimeout para evitar deadlock
+              setTimeout(() => {
+                if (mounted) {
+                  refreshProfile();
+                }
+              }, 100);
+            } else if (event === 'SIGNED_OUT') {
+              console.log('SecureAuthContext: User signed out, clearing state');
+              setProfile(null);
+              cleanupAuthState();
+            }
+
+            // Marcar como inicializado após qualquer evento
+            if (!isInitialized) {
+              setIsLoading(false);
+              setIsInitialized(true);
+            }
+          }
+        );
+
         // Verificar sessão inicial
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         
@@ -78,24 +114,31 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
           console.error('SecureAuthContext: Error getting initial session:', error);
         }
 
-        if (!mounted) return;
-
         console.log('SecureAuthContext: Initial session check:', !!initialSession);
-        setSession(initialSession);
-        setUser(initialSession?.user ?? null);
         
-        if (initialSession?.user) {
-          // Carregar perfil de forma assíncrona
-          refreshProfile().finally(() => {
-            if (mounted) {
-              setIsLoading(false);
-              setIsInitialized(true);
-            }
-          });
-        } else {
+        if (mounted) {
+          setSession(initialSession);
+          setUser(initialSession?.user ?? null);
+          
+          if (initialSession?.user) {
+            // Carregar perfil de forma assíncrona
+            setTimeout(() => {
+              if (mounted) {
+                refreshProfile();
+              }
+            }, 100);
+          }
+          
           setIsLoading(false);
           setIsInitialized(true);
         }
+
+        return () => {
+          subscription.unsubscribe();
+          if (initTimeout) {
+            clearTimeout(initTimeout);
+          }
+        };
       } catch (error) {
         console.error('SecureAuthContext: Error during initialization:', error);
         if (mounted) {
@@ -105,40 +148,13 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       }
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('SecureAuthContext: Auth state changed:', event, session?.user?.id);
-        
-        if (!mounted) return;
-
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user && event === 'SIGNED_IN') {
-          console.log('SecureAuthContext: User signed in, fetching profile...');
-          refreshProfile().finally(() => {
-            if (mounted) {
-              setIsLoading(false);
-            }
-          });
-        } else if (event === 'SIGNED_OUT') {
-          console.log('SecureAuthContext: User signed out, clearing state');
-          setProfile(null);
-          cleanupAuthState();
-          setIsLoading(false);
-        } else if (isInitialized) {
-          // Só alterar loading se já foi inicializado
-          setIsLoading(false);
-        }
-      }
-    );
-
-    // Inicializar autenticação
     initializeAuth();
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      if (initTimeout) {
+        clearTimeout(initTimeout);
+      }
     };
   }, []);
 
@@ -189,7 +205,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     user,
     profile,
     session,
-    isLoading: isLoading || isProfileLoading,
+    isLoading,
     isAuthenticated,
     signIn,
     signUp,

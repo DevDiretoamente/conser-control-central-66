@@ -67,20 +67,28 @@ export const authService = {
 
   async checkFirstTimeSetup(): Promise<boolean> {
     try {
+      console.log('authService.checkFirstTimeSetup: Starting check...');
+      
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id')
+        .select('id, role, is_active')
         .eq('role', 'admin')
+        .eq('is_active', true)
         .limit(1);
 
       if (error) {
-        console.error('Error checking first time setup:', error);
+        console.error('authService.checkFirstTimeSetup: Error checking:', error);
+        // Em caso de erro, assumir que precisa de setup
         return true;
       }
 
-      return !data || data.length === 0;
+      const hasActiveAdmin = data && data.length > 0;
+      console.log('authService.checkFirstTimeSetup: Has active admin:', hasActiveAdmin);
+      
+      return !hasActiveAdmin;
     } catch (error) {
-      console.error('Error in checkFirstTimeSetup:', error);
+      console.error('authService.checkFirstTimeSetup: Unexpected error:', error);
+      // Em caso de erro, assumir que precisa de setup
       return true;
     }
   }

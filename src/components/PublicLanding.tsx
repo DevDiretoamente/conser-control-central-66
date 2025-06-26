@@ -11,46 +11,56 @@ import { Loader2 } from 'lucide-react';
 const PublicLanding: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading, checkFirstTimeSetup } = useSecureAuth();
-  const [isCheckingSetup, setIsCheckingSetup] = useState(true);
+  const [isCheckingSetup, setIsCheckingSetup] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+
     const checkSetup = async () => {
       try {
-        setIsCheckingSetup(true);
+        console.log('PublicLanding: Checking setup...', { isAuthenticated, isLoading });
         
-        // Se já está autenticado, redireciona para app
+        // Se já está autenticado e não está carregando, redireciona
         if (isAuthenticated && !isLoading) {
-          console.log('User authenticated, redirecting to app');
-          navigate('/app', { replace: true });
+          console.log('PublicLanding: User authenticated, redirecting to app');
+          setTimeout(() => {
+            navigate('/app', { replace: true });
+          }, 100);
           return;
         }
 
         // Se não está carregando e não está autenticado, verifica primeiro acesso
         if (!isLoading && !isAuthenticated) {
+          setIsCheckingSetup(true);
           const firstTime = await checkFirstTimeSetup();
-          console.log('First time setup needed:', firstTime);
-          setIsFirstTime(firstTime);
+          console.log('PublicLanding: First time setup needed:', firstTime);
           
-          if (firstTime) {
-            // Se é primeiro acesso, redireciona para setup
-            navigate('/master-admin-setup', { replace: true });
-            return;
+          if (mounted) {
+            setIsFirstTime(firstTime);
+            setIsCheckingSetup(false);
           }
         }
       } catch (error) {
-        console.error('Error checking setup:', error);
-        // Em caso de erro, assume que precisa de setup
-        setIsFirstTime(true);
-      } finally {
-        setIsCheckingSetup(false);
+        console.error('PublicLanding: Error checking setup:', error);
+        if (mounted) {
+          setIsFirstTime(true);
+          setIsCheckingSetup(false);
+        }
       }
     };
 
-    checkSetup();
+    // Só verificar se não está carregando
+    if (!isLoading) {
+      checkSetup();
+    }
+
+    return () => {
+      mounted = false;
+    };
   }, [isAuthenticated, isLoading, navigate, checkFirstTimeSetup]);
 
-  // Mostra loading enquanto verifica autenticação ou setup
+  // Mostra loading enquanto verifica autenticação
   if (isLoading || isCheckingSetup) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -115,6 +125,24 @@ const PublicLanding: React.FC = () => {
                 Acessar Sistema
               </Button>
             )}
+            
+            {/* Botões de emergência para debug */}
+            <div className="flex gap-2 opacity-50">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate('/secure-login')}
+              >
+                Login
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate('/master-admin-setup')}
+              >
+                Setup
+              </Button>
+            </div>
           </div>
         </div>
       </header>
