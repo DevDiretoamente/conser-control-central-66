@@ -2,29 +2,22 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useSecureAuth } from '@/contexts/SecureAuthContext';
-import { Loader2, Shield, AlertTriangle } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 interface SecureProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: string;
-  requiredResource?: string;
-  requiredAction?: string;
 }
 
-const SecureProtectedRoute: React.FC<SecureProtectedRouteProps> = ({ 
-  children, 
-  requiredRole,
-  requiredResource,
-  requiredAction = 'read'
-}) => {
-  const { isAuthenticated, isLoading, profile, hasRole, hasPermission, signOut } = useSecureAuth();
+const SecureProtectedRoute: React.FC<SecureProtectedRouteProps> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useSecureAuth();
   const location = useLocation();
 
+  console.log('SecureProtectedRoute - State:', { isAuthenticated, isLoading, path: location.pathname });
+
+  // Enquanto está carregando, mostra spinner
   if (isLoading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center">
+      <div className="h-screen w-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-muted-foreground">Verificando autenticação...</p>
@@ -33,93 +26,13 @@ const SecureProtectedRoute: React.FC<SecureProtectedRouteProps> = ({
     );
   }
 
+  // Se não está autenticado, redireciona para login
   if (!isAuthenticated) {
+    console.log('SecureProtectedRoute - Redirecting to login');
     return <Navigate to="/secure-login" state={{ from: location }} replace />;
   }
 
-  // Check if the user profile is active
-  if (profile && !profile.is_active) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-slate-50">
-        <Card className="w-[400px]">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <AlertTriangle className="h-12 w-12 text-amber-500" />
-            </div>
-            <CardTitle>Conta Inativa</CardTitle>
-            <CardDescription>
-              Sua conta foi desativada. Entre em contato com o administrador.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <Button variant="outline" onClick={signOut}>
-              Fazer Logout
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Para admin, sempre permitir acesso (não verificar permissões específicas)
-  if (profile && profile.role === 'admin') {
-    return <>{children}</>;
-  }
-
-  // Check role-based access para não-admins
-  if (requiredRole && !hasRole(requiredRole)) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-slate-50">
-        <Card className="w-[400px]">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <Shield className="h-12 w-12 text-red-500" />
-            </div>
-            <CardTitle>Acesso Negado</CardTitle>
-            <CardDescription>
-              Você não tem permissão para acessar esta página.
-              <br />
-              Função necessária: {requiredRole}
-              <br />
-              Sua função: {profile?.role}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <Button variant="outline" onClick={() => window.history.back()}>
-              Voltar
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Check resource-based permissions para não-admins
-  if (requiredResource && !hasPermission(requiredResource, requiredAction)) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-slate-50">
-        <Card className="w-[400px]">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <Shield className="h-12 w-12 text-red-500" />
-            </div>
-            <CardTitle>Permissão Insuficiente</CardTitle>
-            <CardDescription>
-              Você não tem permissão para {requiredAction} em {requiredResource}.
-              <br />
-              Entre em contato com o administrador para solicitar acesso.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <Button variant="outline" onClick={() => window.history.back()}>
-              Voltar
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
+  // Se está autenticado, renderiza os children
   return <>{children}</>;
 };
 

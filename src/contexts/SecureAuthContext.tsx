@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +16,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const isAuthenticated = !!session?.user;
 
@@ -24,7 +26,8 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     session: !!session, 
     isAuthenticated,
     isLoading,
-    isProfileLoading
+    isProfileLoading,
+    isInitialized
   });
 
   const refreshProfile = async () => {
@@ -42,6 +45,20 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       setProfile(profileData);
     } catch (error) {
       console.error('SecureAuthContext.refreshProfile: Error loading profile:', error);
+      // Em caso de erro, criar um perfil fallback básico
+      if (user) {
+        const fallbackProfile: UserProfile = {
+          id: user.id,
+          email: user.email || '',
+          name: user.user_metadata?.name || 'Usuário',
+          role: 'admin',
+          company_id: 'default',
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        setProfile(fallbackProfile);
+      }
     } finally {
       setIsProfileLoading(false);
     }
@@ -49,6 +66,44 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     let mounted = true;
+
+    const initializeAuth = async () => {
+      console.log('SecureAuthContext: Initializing auth...');
+      
+      try {
+        // Verificar sessão inicial
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('SecureAuthContext: Error getting initial session:', error);
+        }
+
+        if (!mounted) return;
+
+        console.log('SecureAuthContext: Initial session check:', !!initialSession);
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+        
+        if (initialSession?.user) {
+          // Carregar perfil de forma assíncrona
+          refreshProfile().finally(() => {
+            if (mounted) {
+              setIsLoading(false);
+              setIsInitialized(true);
+            }
+          });
+        } else {
+          setIsLoading(false);
+          setIsInitialized(true);
+        }
+      } catch (error) {
+        console.error('SecureAuthContext: Error during initialization:', error);
+        if (mounted) {
+          setIsLoading(false);
+          setIsInitialized(true);
+        }
+      }
+    };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -60,51 +115,26 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         setUser(session?.user ?? null);
         
         if (session?.user && event === 'SIGNED_IN') {
-          console.log('SecureAuthContext: User signed in, will fetch profile...');
-          // Não aguardar o profile para não bloquear a UI
-          setTimeout(() => {
+          console.log('SecureAuthContext: User signed in, fetching profile...');
+          refreshProfile().finally(() => {
             if (mounted) {
-              refreshProfile().finally(() => {
-                if (mounted) {
-                  setIsLoading(false);
-                }
-              });
+              setIsLoading(false);
             }
-          }, 100);
+          });
         } else if (event === 'SIGNED_OUT') {
           console.log('SecureAuthContext: User signed out, clearing state');
           setProfile(null);
           cleanupAuthState();
           setIsLoading(false);
-        } else {
+        } else if (isInitialized) {
+          // Só alterar loading se já foi inicializado
           setIsLoading(false);
         }
       }
     );
 
-    // Verificar sessão inicial
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      
-      console.log('SecureAuthContext: Initial session check:', session?.user?.id);
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Carregar perfil de forma assíncrona
-        setTimeout(() => {
-          if (mounted) {
-            refreshProfile().finally(() => {
-              if (mounted) {
-                setIsLoading(false);
-              }
-            });
-          }
-        }, 100);
-      } else {
-        setIsLoading(false);
-      }
-    });
+    // Inicializar autenticação
+    initializeAuth();
 
     return () => {
       mounted = false;

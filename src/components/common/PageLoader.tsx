@@ -1,6 +1,6 @@
 
 import React from 'react';
-import LoadingSpinner from '@/components/ui/loading-spinner';
+import { Loader2 } from 'lucide-react';
 
 interface PageLoaderProps {
   message?: string;
@@ -10,9 +10,9 @@ const PageLoader: React.FC<PageLoaderProps> = ({
   message = 'Carregando...' 
 }) => {
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center">
-        <LoadingSpinner size="lg" className="mx-auto mb-4" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
         <p className="text-muted-foreground">{message}</p>
       </div>
     </div>

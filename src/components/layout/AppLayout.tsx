@@ -24,21 +24,22 @@ const AppLayout: React.FC = () => {
   // Se ainda está carregando a autenticação, mostra loading
   if (isLoading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center">
+      <div className="h-screen w-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Carregando autenticação...</p>
+          <p className="text-muted-foreground">Carregando...</p>
         </div>
       </div>
     );
   }
 
-  // Se não está autenticado, não renderiza o layout
+  // Se não está autenticado, não renderiza o layout (deixa o roteamento lidar com isso)
   if (!isAuthenticated) {
-    console.log('AppLayout - User not authenticated, returning null');
-    return null;
+    console.log('AppLayout - User not authenticated, rendering outlet');
+    return <Outlet />;
   }
 
+  // Renderiza o layout completo para usuários autenticados
   return (
     <div className="flex min-h-screen bg-background overflow-hidden">
       <AppSidebar isCollapsed={isSidebarCollapsed} />
