@@ -1,56 +1,15 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, Truck, FileText, Calculator, Settings, Shield, Crown } from 'lucide-react';
 import Logo from '@/components/Logo';
-import { Loader2 } from 'lucide-react';
 
 const PublicLanding: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading, checkFirstTimeSetup } = useSecureAuth();
-  const [isFirstTime, setIsFirstTime] = useState(false);
-  const [checkingSetup, setCheckingSetup] = useState(false);
 
-  console.log('PublicLanding - State:', { isAuthenticated, isLoading, isFirstTime, checkingSetup });
-
-  useEffect(() => {
-    const checkSetup = async () => {
-      if (isLoading) return;
-      
-      if (isAuthenticated) {
-        console.log('User authenticated, redirecting...');
-        navigate('/app', { replace: true });
-        return;
-      }
-
-      try {
-        setCheckingSetup(true);
-        const firstTime = await checkFirstTimeSetup();
-        setIsFirstTime(firstTime);
-      } catch (error) {
-        console.error('Error checking setup:', error);
-        setIsFirstTime(true);
-      } finally {
-        setCheckingSetup(false);
-      }
-    };
-
-    checkSetup();
-  }, [isAuthenticated, isLoading, navigate, checkFirstTimeSetup]);
-
-  if (isLoading || checkingSetup) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Carregando sistema...</p>
-        </div>
-      </div>
-    );
-  }
+  console.log('PublicLanding: Rendered');
 
   const features = [
     {
@@ -128,17 +87,15 @@ const PublicLanding: React.FC = () => {
               Acessar Sistema
             </Button>
             
-            {isFirstTime && (
-              <Button 
-                size="lg" 
-                variant="outline"
-                onClick={() => navigate('/master-admin-setup')}
-                className="px-8 py-3 text-lg"
-              >
-                <Crown className="mr-2 h-5 w-5" />
-                Primeiro Acesso
-              </Button>
-            )}
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={() => navigate('/master-admin-setup')}
+              className="px-8 py-3 text-lg"
+            >
+              <Crown className="mr-2 h-5 w-5" />
+              Primeiro Acesso
+            </Button>
           </div>
         </div>
       </section>
@@ -184,17 +141,15 @@ const PublicLanding: React.FC = () => {
               <Shield className="mr-2 h-5 w-5" />
               Fazer Login
             </Button>
-            {isFirstTime && (
-              <Button 
-                size="lg" 
-                variant="outline"
-                onClick={() => navigate('/master-admin-setup')}
-                className="px-8 py-3 text-lg text-white border-white hover:bg-white hover:text-primary"
-              >
-                <Crown className="mr-2 h-5 w-5" />
-                Configurar Agora
-              </Button>
-            )}
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={() => navigate('/master-admin-setup')}
+              className="px-8 py-3 text-lg text-white border-white hover:bg-white hover:text-primary"
+            >
+              <Crown className="mr-2 h-5 w-5" />
+              Configurar Agora
+            </Button>
           </div>
         </div>
       </section>

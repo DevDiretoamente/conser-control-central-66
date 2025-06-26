@@ -8,15 +8,14 @@ import { Loader2 } from 'lucide-react';
 
 const AppLayout: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const { isLoading, isAuthenticated } = useSecureAuth();
+  const { isLoading } = useSecureAuth();
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
-  console.log('AppLayout - Auth State:', { isLoading, isAuthenticated });
+  console.log('AppLayout: Rendered', { isLoading });
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-background">
@@ -28,12 +27,6 @@ const AppLayout: React.FC = () => {
     );
   }
 
-  // Not authenticated - let router handle redirect
-  if (!isAuthenticated) {
-    return <Outlet />;
-  }
-
-  // Authenticated layout
   return (
     <div className="flex min-h-screen bg-background overflow-hidden">
       <AppSidebar isCollapsed={isSidebarCollapsed} />

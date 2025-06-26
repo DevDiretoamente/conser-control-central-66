@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle, Shield, ArrowLeft } from 'lucide-react';
@@ -14,37 +14,16 @@ const SecureLogin: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { signIn, isLoading, isAuthenticated, checkFirstTimeSetup } = useSecureAuth();
-  
+  const { signIn, isLoading } = useSecureAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  
-  const from = location.state?.from?.pathname || '/app';
 
-  useEffect(() => {
-    const checkSetup = async () => {
-      try {
-        if (isAuthenticated) {
-          console.log('User already authenticated, redirecting to:', from);
-          navigate(from, { replace: true });
-          return;
-        }
-
-        const isFirstTime = await checkFirstTimeSetup();
-        if (isFirstTime) {
-          navigate('/master-admin-setup', { replace: true });
-        }
-      } catch (error) {
-        console.error('Error checking setup:', error);
-      }
-    };
-
-    checkSetup();
-  }, [isAuthenticated, navigate, from, checkFirstTimeSetup]);
+  console.log('SecureLogin: Rendered', { email, isLoading });
   
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    console.log('SecureLogin: Attempting sign in');
     
     if (!email || !password) {
       setError('Por favor, preencha todos os campos');
@@ -53,12 +32,10 @@ const SecureLogin: React.FC = () => {
     
     try {
       await signIn(email, password);
-      // Aguardar um pouco para o perfil carregar completamente
-      setTimeout(() => {
-        console.log('Redirecting to:', from);
-        navigate(from, { replace: true });
-      }, 500);
+      console.log('SecureLogin: Sign in successful, navigating to /app');
+      navigate('/app');
     } catch (err: any) {
+      console.error('SecureLogin: Sign in error:', err);
       setError(err.message || 'Erro ao fazer login');
     }
   };
@@ -101,12 +78,7 @@ const SecureLogin: React.FC = () => {
             </div>
             
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="password">Senha</Label>
-                <a href="#" className="text-sm text-primary hover:underline">
-                  Esqueceu a senha?
-                </a>
-              </div>
+              <Label htmlFor="password">Senha</Label>
               <Input
                 id="password"
                 type="password"
@@ -132,24 +104,24 @@ const SecureLogin: React.FC = () => {
               )}
             </Button>
           </form>
+
+          <div className="mt-4 p-3 bg-blue-50 rounded border">
+            <p className="text-sm text-blue-800 mb-2">Para teste:</p>
+            <p className="text-xs text-blue-600">Email: suporte@conserviaspg.com.br</p>
+            <p className="text-xs text-blue-600">Senha: sua_senha_aqui</p>
+          </div>
         </CardContent>
         
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="flex items-center justify-center">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/')}
-              className="text-sm"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar à página inicial
-            </Button>
-          </div>
-          
-          <div className="text-sm text-center text-muted-foreground">
-            <p>Sistema protegido com autenticação segura</p>
-          </div>
-        </CardFooter>
+        <div className="p-6 pt-0 flex justify-center">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/')}
+            className="text-sm"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar à página inicial
+          </Button>
+        </div>
       </Card>
     </div>
   );
