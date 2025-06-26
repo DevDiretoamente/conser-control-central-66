@@ -10,10 +10,9 @@ import SecureProtectedRoute from '@/components/auth/SecureProtectedRoute';
 import AppLayout from '@/components/layout/AppLayout';
 import PublicLanding from '@/components/PublicLanding';
 import MasterAdminSetup from '@/pages/MasterAdminSetup';
-
-// Pages
 import Dashboard from '@/pages/Dashboard';
 import ListaFuncionarios from '@/pages/funcionarios/ListaFuncionarios';
+import RootErrorBoundary from '@/components/RootErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,49 +25,44 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  console.log('App: Rendering...');
+  console.log('App: Starting application...');
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-        <SecureAuthProvider>
-          <Router>
-            <div className="min-h-screen bg-background font-sans antialiased">
-              <Routes>
-                {/* Public routes */}
-                <Route path="/" element={<PublicLanding />} />
-                <Route path="/secure-login" element={<SecureLogin />} />
-                <Route path="/master-admin-setup" element={<MasterAdminSetup />} />
+    <RootErrorBoundary>
+      <div className="min-h-screen bg-background">
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+            <SecureAuthProvider>
+              <Router>
+                <Routes>
+                  <Route path="/" element={<PublicLanding />} />
+                  <Route path="/secure-login" element={<SecureLogin />} />
+                  <Route path="/master-admin-setup" element={<MasterAdminSetup />} />
+                  
+                  <Route path="/app" element={
+                    <SecureProtectedRoute>
+                      <AppLayout />
+                    </SecureProtectedRoute>
+                  }>
+                    <Route index element={<Dashboard />} />
+                    <Route path="funcionarios" element={<ListaFuncionarios />} />
+                  </Route>
+                  
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
                 
-                {/* Protected app routes */}
-                <Route path="/app" element={
-                  <SecureProtectedRoute>
-                    <AppLayout />
-                  </SecureProtectedRoute>
-                }>
-                  <Route index element={<Dashboard />} />
-                  <Route path="funcionarios" element={<ListaFuncionarios />} />
-                </Route>
-                
-                {/* Catch all */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-              <Toaster 
-                position="top-right"
-                toastOptions={{
-                  duration: 4000,
-                  style: {
-                    background: 'hsl(var(--background))',
-                    color: 'hsl(var(--foreground))',
-                    border: '1px solid hsl(var(--border))',
-                  },
-                }}
-              />
-            </div>
-          </Router>
-        </SecureAuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+                <Toaster 
+                  position="top-right"
+                  toastOptions={{
+                    duration: 4000,
+                  }}
+                />
+              </Router>
+            </SecureAuthProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </div>
+    </RootErrorBoundary>
   );
 }
 
