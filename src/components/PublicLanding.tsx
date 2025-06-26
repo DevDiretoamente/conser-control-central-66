@@ -11,57 +11,37 @@ import { Loader2 } from 'lucide-react';
 const PublicLanding: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading, checkFirstTimeSetup } = useSecureAuth();
-  const [isCheckingSetup, setIsCheckingSetup] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(false);
+  const [checkingSetup, setCheckingSetup] = useState(false);
+
+  console.log('PublicLanding - State:', { isAuthenticated, isLoading, isFirstTime, checkingSetup });
 
   useEffect(() => {
-    let mounted = true;
-
     const checkSetup = async () => {
-      try {
-        console.log('PublicLanding: Checking setup...', { isAuthenticated, isLoading });
-        
-        // Se já está autenticado e não está carregando, redireciona
-        if (isAuthenticated && !isLoading) {
-          console.log('PublicLanding: User authenticated, redirecting to app');
-          setTimeout(() => {
-            navigate('/app', { replace: true });
-          }, 100);
-          return;
-        }
+      if (isLoading) return;
+      
+      if (isAuthenticated) {
+        console.log('User authenticated, redirecting...');
+        navigate('/app', { replace: true });
+        return;
+      }
 
-        // Se não está carregando e não está autenticado, verifica primeiro acesso
-        if (!isLoading && !isAuthenticated) {
-          setIsCheckingSetup(true);
-          const firstTime = await checkFirstTimeSetup();
-          console.log('PublicLanding: First time setup needed:', firstTime);
-          
-          if (mounted) {
-            setIsFirstTime(firstTime);
-            setIsCheckingSetup(false);
-          }
-        }
+      try {
+        setCheckingSetup(true);
+        const firstTime = await checkFirstTimeSetup();
+        setIsFirstTime(firstTime);
       } catch (error) {
-        console.error('PublicLanding: Error checking setup:', error);
-        if (mounted) {
-          setIsFirstTime(true);
-          setIsCheckingSetup(false);
-        }
+        console.error('Error checking setup:', error);
+        setIsFirstTime(true);
+      } finally {
+        setCheckingSetup(false);
       }
     };
 
-    // Só verificar se não está carregando
-    if (!isLoading) {
-      checkSetup();
-    }
-
-    return () => {
-      mounted = false;
-    };
+    checkSetup();
   }, [isAuthenticated, isLoading, navigate, checkFirstTimeSetup]);
 
-  // Mostra loading enquanto verifica autenticação
-  if (isLoading || isCheckingSetup) {
+  if (isLoading || checkingSetup) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-4">
@@ -114,35 +94,14 @@ const PublicLanding: React.FC = () => {
             <Logo />
           </div>
           <div className="flex gap-4">
-            {isFirstTime ? (
-              <Button onClick={() => navigate('/master-admin-setup')} variant="default">
-                <Crown className="mr-2 h-4 w-4" />
-                Configurar Sistema
-              </Button>
-            ) : (
-              <Button onClick={() => navigate('/secure-login')} variant="default">
-                <Shield className="mr-2 h-4 w-4" />
-                Acessar Sistema
-              </Button>
-            )}
-            
-            {/* Botões de emergência para debug */}
-            <div className="flex gap-2 opacity-50">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate('/secure-login')}
-              >
-                Login
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate('/master-admin-setup')}
-              >
-                Setup
-              </Button>
-            </div>
+            <Button onClick={() => navigate('/secure-login')} variant="default">
+              <Shield className="mr-2 h-4 w-4" />
+              Fazer Login
+            </Button>
+            <Button onClick={() => navigate('/master-admin-setup')} variant="outline">
+              <Crown className="mr-2 h-4 w-4" />
+              Configurar Sistema
+            </Button>
           </div>
         </div>
       </header>
@@ -159,21 +118,7 @@ const PublicLanding: React.FC = () => {
             Controle total da sua empresa em uma única plataforma.
           </p>
           
-          {isFirstTime ? (
-            <div className="flex flex-col items-center gap-4">
-              <Button 
-                size="lg" 
-                onClick={() => navigate('/master-admin-setup')}
-                className="px-8 py-3 text-lg"
-              >
-                <Crown className="mr-2 h-5 w-5" />
-                Configurar Sistema Agora
-              </Button>
-              <p className="text-sm text-slate-500">
-                Primeira instalação - Configure o administrador principal
-              </p>
-            </div>
-          ) : (
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
               onClick={() => navigate('/secure-login')}
@@ -182,7 +127,19 @@ const PublicLanding: React.FC = () => {
               <Shield className="mr-2 h-5 w-5" />
               Acessar Sistema
             </Button>
-          )}
+            
+            {isFirstTime && (
+              <Button 
+                size="lg" 
+                variant="outline"
+                onClick={() => navigate('/master-admin-setup')}
+                className="px-8 py-3 text-lg"
+              >
+                <Crown className="mr-2 h-5 w-5" />
+                Primeiro Acesso
+              </Button>
+            )}
+          </div>
         </div>
       </section>
 
@@ -215,22 +172,9 @@ const PublicLanding: React.FC = () => {
             Pronto para começar?
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            {isFirstTime 
-              ? "Configure o sistema agora e comece a gerenciar sua empresa de forma eficiente."
-              : "Acesse o sistema e gerencie sua empresa de forma eficiente."
-            }
+            Acesse o sistema e gerencie sua empresa de forma eficiente.
           </p>
-          {isFirstTime ? (
-            <Button 
-              size="lg" 
-              variant="secondary"
-              onClick={() => navigate('/master-admin-setup')}
-              className="px-8 py-3 text-lg"
-            >
-              <Crown className="mr-2 h-5 w-5" />
-              Configurar Agora
-            </Button>
-          ) : (
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
               variant="secondary"
@@ -240,7 +184,18 @@ const PublicLanding: React.FC = () => {
               <Shield className="mr-2 h-5 w-5" />
               Fazer Login
             </Button>
-          )}
+            {isFirstTime && (
+              <Button 
+                size="lg" 
+                variant="outline"
+                onClick={() => navigate('/master-admin-setup')}
+                className="px-8 py-3 text-lg text-white border-white hover:bg-white hover:text-primary"
+              >
+                <Crown className="mr-2 h-5 w-5" />
+                Configurar Agora
+              </Button>
+            )}
+          </div>
         </div>
       </section>
 

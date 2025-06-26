@@ -12,7 +12,6 @@ import AppLayout from '@/components/layout/AppLayout';
 import PublicLanding from '@/components/PublicLanding';
 import MasterAdminSetup from '@/pages/MasterAdminSetup';
 import PageErrorBoundary from '@/components/common/PageErrorBoundary';
-import FuncionariosErrorBoundary from '@/components/funcionarios/FuncionariosErrorBoundary';
 
 // Pages
 import Dashboard from '@/pages/Dashboard';
@@ -40,14 +39,13 @@ import Exames from '@/pages/configuracoes/Exames';
 import Emails from '@/pages/configuracoes/Emails';
 import Beneficios from '@/pages/configuracoes/Beneficios';
 import Usuarios from '@/pages/configuracoes/Usuarios';
-import NotFound from '@/pages/NotFound';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 3,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
+      retry: 1,
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
     },
     mutations: {
       retry: 1,
@@ -56,6 +54,8 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  console.log('App component rendering...');
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -84,32 +84,12 @@ function App() {
                   }>
                     <Route index element={<Dashboard />} />
                     
-                    {/* Funcionários - Rotas com ErrorBoundary específico */}
-                    <Route path="funcionarios" element={
-                      <FuncionariosErrorBoundary>
-                        <ListaFuncionarios />
-                      </FuncionariosErrorBoundary>
-                    } />
-                    <Route path="funcionarios/novo" element={
-                      <FuncionariosErrorBoundary>
-                        <NovoFuncionario />
-                      </FuncionariosErrorBoundary>
-                    } />
-                    <Route path="funcionarios/:id" element={
-                      <FuncionariosErrorBoundary>
-                        <DetalheFuncionario />
-                      </FuncionariosErrorBoundary>
-                    } />
-                    <Route path="funcionarios/:id/editar" element={
-                      <FuncionariosErrorBoundary>
-                        <EditarFuncionario />
-                      </FuncionariosErrorBoundary>
-                    } />
-                    <Route path="funcionarios/exames" element={
-                      <FuncionariosErrorBoundary>
-                        <ExamesMedicosPage />
-                      </FuncionariosErrorBoundary>
-                    } />
+                    {/* Funcionários */}
+                    <Route path="funcionarios" element={<ListaFuncionarios />} />
+                    <Route path="funcionarios/novo" element={<NovoFuncionario />} />
+                    <Route path="funcionarios/:id" element={<DetalheFuncionario />} />
+                    <Route path="funcionarios/:id/editar" element={<EditarFuncionario />} />
+                    <Route path="funcionarios/exames" element={<ExamesMedicosPage />} />
                     
                     {/* Outras rotas */}
                     <Route path="obras" element={<Obras />} />

@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Outlet } from 'react-router-dom';
 import AppSidebar from './AppSidebar';
 import Header from './Header';
 import { useSecureAuth } from '@/contexts/SecureAuthContext';
@@ -8,20 +8,15 @@ import { Loader2 } from 'lucide-react';
 
 const AppLayout: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const location = useLocation();
-  const { isLoading, isAuthenticated, profile } = useSecureAuth();
+  const { isLoading, isAuthenticated } = useSecureAuth();
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
-  useEffect(() => {
-    console.log('AppLayout - Current route:', location.pathname);
-  }, [location]);
+  console.log('AppLayout - Auth State:', { isLoading, isAuthenticated });
 
-  console.log('AppLayout - Auth State:', { isLoading, isAuthenticated, hasProfile: !!profile });
-
-  // Se ainda está carregando a autenticação, mostra loading
+  // Loading state
   if (isLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-background">
@@ -33,13 +28,12 @@ const AppLayout: React.FC = () => {
     );
   }
 
-  // Se não está autenticado, não renderiza o layout (deixa o roteamento lidar com isso)
+  // Not authenticated - let router handle redirect
   if (!isAuthenticated) {
-    console.log('AppLayout - User not authenticated, rendering outlet');
     return <Outlet />;
   }
 
-  // Renderiza o layout completo para usuários autenticados
+  // Authenticated layout
   return (
     <div className="flex min-h-screen bg-background overflow-hidden">
       <AppSidebar isCollapsed={isSidebarCollapsed} />

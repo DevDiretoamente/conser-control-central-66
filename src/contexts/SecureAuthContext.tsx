@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,71 +13,54 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
 
   const isAuthenticated = !!session?.user;
 
   console.log('SecureAuth State:', { 
     user: !!user, 
-    profile: profile ? { name: profile.name, role: profile.role, active: profile.is_active } : null, 
+    profile: profile ? { name: profile.name, role: profile.role } : null, 
     session: !!session, 
     isAuthenticated,
-    isLoading,
-    isInitialized
+    isLoading
   });
 
   const refreshProfile = async () => {
     if (!user?.id) {
-      console.log('SecureAuthContext.refreshProfile: No user ID available');
+      console.log('No user ID available for profile refresh');
       return;
     }
 
-    console.log('SecureAuthContext.refreshProfile: Starting profile refresh');
-    
     try {
       const profileData = await userService.refreshProfile(user.id);
-      console.log('SecureAuthContext.refreshProfile: Profile loaded:', !!profileData);
       setProfile(profileData);
     } catch (error) {
-      console.error('SecureAuthContext.refreshProfile: Error loading profile:', error);
-      // Em caso de erro, criar um perfil fallback básico
-      if (user) {
-        const fallbackProfile: UserProfile = {
-          id: user.id,
-          email: user.email || '',
-          name: user.user_metadata?.name || 'Usuário',
-          role: 'admin',
-          company_id: 'default',
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        setProfile(fallbackProfile);
-      }
+      console.error('Error refreshing profile:', error);
+      // Fallback profile
+      const fallbackProfile: UserProfile = {
+        id: user.id,
+        email: user.email || '',
+        name: user.user_metadata?.name || 'Admin',
+        role: 'admin',
+        company_id: 'default',
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      setProfile(fallbackProfile);
     }
   };
 
   useEffect(() => {
     let mounted = true;
-    let initTimeout: NodeJS.Timeout;
 
-    const initializeAuth = async () => {
-      console.log('SecureAuthContext: Initializing auth...');
-      
+    const initialize = async () => {
       try {
-        // Timeout de segurança para evitar loading infinito
-        initTimeout = setTimeout(() => {
-          if (mounted && !isInitialized) {
-            console.log('SecureAuthContext: Initialization timeout, forcing completion');
-            setIsLoading(false);
-            setIsInitialized(true);
-          }
-        }, 5000);
-
-        // Configurar listener de mudanças de estado primeiro
+        console.log('Initializing auth...');
+        
+        // Setup auth listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
-            console.log('SecureAuthContext: Auth state changed:', event, session?.user?.id);
+            console.log('Auth state changed:', event, !!session);
             
             if (!mounted) return;
 
@@ -86,42 +68,26 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
             setUser(session?.user ?? null);
             
             if (session?.user && event === 'SIGNED_IN') {
-              console.log('SecureAuthContext: User signed in, fetching profile...');
-              // Usar setTimeout para evitar deadlock
               setTimeout(() => {
                 if (mounted) {
                   refreshProfile();
                 }
               }, 100);
             } else if (event === 'SIGNED_OUT') {
-              console.log('SecureAuthContext: User signed out, clearing state');
               setProfile(null);
               cleanupAuthState();
-            }
-
-            // Marcar como inicializado após qualquer evento
-            if (!isInitialized) {
-              setIsLoading(false);
-              setIsInitialized(true);
             }
           }
         );
 
-        // Verificar sessão inicial
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('SecureAuthContext: Error getting initial session:', error);
-        }
-
-        console.log('SecureAuthContext: Initial session check:', !!initialSession);
+        // Check initial session
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
         
         if (mounted) {
           setSession(initialSession);
           setUser(initialSession?.user ?? null);
           
           if (initialSession?.user) {
-            // Carregar perfil de forma assíncrona
             setTimeout(() => {
               if (mounted) {
                 refreshProfile();
@@ -130,31 +96,32 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
           }
           
           setIsLoading(false);
-          setIsInitialized(true);
         }
 
         return () => {
           subscription.unsubscribe();
-          if (initTimeout) {
-            clearTimeout(initTimeout);
-          }
         };
       } catch (error) {
-        console.error('SecureAuthContext: Error during initialization:', error);
+        console.error('Auth initialization error:', error);
         if (mounted) {
           setIsLoading(false);
-          setIsInitialized(true);
         }
       }
     };
 
-    initializeAuth();
+    initialize();
+
+    // Safety timeout
+    const timeout = setTimeout(() => {
+      if (mounted && isLoading) {
+        console.log('Auth initialization timeout, forcing completion');
+        setIsLoading(false);
+      }
+    }, 3000);
 
     return () => {
       mounted = false;
-      if (initTimeout) {
-        clearTimeout(initTimeout);
-      }
+      clearTimeout(timeout);
     };
   }, []);
 

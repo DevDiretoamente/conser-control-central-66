@@ -1,17 +1,17 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { UserProfile } from '@/types/secureAuth';
 import { cleanupAuthState } from '@/utils/authUtils';
 
 export const authService = {
   async signIn(email: string, password: string) {
-    cleanupAuthState();
+    console.log('authService.signIn: Starting sign in process');
     
     try {
+      cleanupAuthState();
       await supabase.auth.signOut({ scope: 'global' });
     } catch (err) {
-      console.warn('Sign out before sign in failed:', err);
+      console.warn('Pre-signin cleanup failed:', err);
     }
     
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -19,12 +19,14 @@ export const authService = {
       password,
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error('authService.signIn: Error:', error);
+      throw error;
+    }
 
     if (data.user) {
-      console.log('Login successful for user:', data.user.id);
+      console.log('authService.signIn: Login successful');
       toast.success('Login realizado com sucesso');
-      await new Promise(resolve => setTimeout(resolve, 1000));
       return;
     }
   },
@@ -50,6 +52,7 @@ export const authService = {
 
   async signOut() {
     try {
+      console.log('authService.signOut: Starting sign out');
       cleanupAuthState();
       
       try {
@@ -67,19 +70,18 @@ export const authService = {
 
   async checkFirstTimeSetup(): Promise<boolean> {
     try {
-      console.log('authService.checkFirstTimeSetup: Starting check...');
+      console.log('authService.checkFirstTimeSetup: Checking for admin users');
       
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id, role, is_active')
+        .select('id')
         .eq('role', 'admin')
         .eq('is_active', true)
         .limit(1);
 
       if (error) {
-        console.error('authService.checkFirstTimeSetup: Error checking:', error);
-        // Em caso de erro, assumir que precisa de setup
-        return true;
+        console.error('authService.checkFirstTimeSetup: Database error:', error);
+        return true; // Assume first time on error
       }
 
       const hasActiveAdmin = data && data.length > 0;
@@ -88,8 +90,7 @@ export const authService = {
       return !hasActiveAdmin;
     } catch (error) {
       console.error('authService.checkFirstTimeSetup: Unexpected error:', error);
-      // Em caso de erro, assumir que precisa de setup
-      return true;
+      return true; // Assume first time on error
     }
   }
 };
