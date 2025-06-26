@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 const AppLayout: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const location = useLocation();
-  const { isLoading, isAuthenticated } = useSecureAuth();
+  const { isLoading, isAuthenticated, profile } = useSecureAuth();
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -19,13 +19,15 @@ const AppLayout: React.FC = () => {
     console.log('AppLayout - Current route:', location.pathname);
   }, [location]);
 
+  console.log('AppLayout - Auth State:', { isLoading, isAuthenticated, hasProfile: !!profile });
+
   // Se ainda está carregando a autenticação, mostra loading
   if (isLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Carregando...</p>
+          <p className="text-muted-foreground">Carregando autenticação...</p>
         </div>
       </div>
     );
@@ -33,6 +35,7 @@ const AppLayout: React.FC = () => {
 
   // Se não está autenticado, não renderiza o layout
   if (!isAuthenticated) {
+    console.log('AppLayout - User not authenticated, returning null');
     return null;
   }
 

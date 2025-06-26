@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +14,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
 
   const isAuthenticated = !!session?.user;
 
@@ -23,17 +23,28 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     profile: profile ? { name: profile.name, role: profile.role, active: profile.is_active } : null, 
     session: !!session, 
     isAuthenticated,
-    isLoading
+    isLoading,
+    isProfileLoading
   });
 
   const refreshProfile = async () => {
     if (!user?.id) {
-      console.log('No user ID for profile refresh');
+      console.log('SecureAuthContext.refreshProfile: No user ID available');
       return;
     }
 
-    const profileData = await userService.refreshProfile(user.id);
-    setProfile(profileData);
+    console.log('SecureAuthContext.refreshProfile: Starting profile refresh');
+    setIsProfileLoading(true);
+    
+    try {
+      const profileData = await userService.refreshProfile(user.id);
+      console.log('SecureAuthContext.refreshProfile: Profile loaded:', !!profileData);
+      setProfile(profileData);
+    } catch (error) {
+      console.error('SecureAuthContext.refreshProfile: Error loading profile:', error);
+    } finally {
+      setIsProfileLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -41,7 +52,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
+        console.log('SecureAuthContext: Auth state changed:', event, session?.user?.id);
         
         if (!mounted) return;
 
@@ -49,15 +60,19 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         setUser(session?.user ?? null);
         
         if (session?.user && event === 'SIGNED_IN') {
-          console.log('User signed in, fetching profile...');
+          console.log('SecureAuthContext: User signed in, will fetch profile...');
+          // Não aguardar o profile para não bloquear a UI
           setTimeout(() => {
             if (mounted) {
               refreshProfile().finally(() => {
-                setIsLoading(false);
+                if (mounted) {
+                  setIsLoading(false);
+                }
               });
             }
           }, 100);
         } else if (event === 'SIGNED_OUT') {
+          console.log('SecureAuthContext: User signed out, clearing state');
           setProfile(null);
           cleanupAuthState();
           setIsLoading(false);
@@ -67,18 +82,22 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       }
     );
 
+    // Verificar sessão inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
       
-      console.log('Initial session check:', session?.user?.id);
+      console.log('SecureAuthContext: Initial session check:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        // Carregar perfil de forma assíncrona
         setTimeout(() => {
           if (mounted) {
             refreshProfile().finally(() => {
-              setIsLoading(false);
+              if (mounted) {
+                setIsLoading(false);
+              }
             });
           }
         }, 100);
@@ -140,7 +159,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     user,
     profile,
     session,
-    isLoading,
+    isLoading: isLoading || isProfileLoading,
     isAuthenticated,
     signIn,
     signUp,

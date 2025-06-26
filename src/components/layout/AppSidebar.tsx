@@ -58,28 +58,6 @@ const AppSidebar = ({ isCollapsed = false }) => {
     )
   );
 
-  if (isLoading) {
-    return (
-      <div 
-        className={cn(
-          "bg-gradient-to-b from-[#051630] to-[#02080f] fixed inset-y-0 left-0 z-40 flex flex-col border-r border-slate-800/50 overflow-hidden",
-          isCollapsed ? "w-16" : "w-64"
-        )}
-      >
-        <div className="flex h-16 items-center border-b border-slate-700/50 px-4">
-          <Logo />
-        </div>
-        <nav className="flex-1 space-y-2 px-2 py-4 overflow-y-auto">
-          <div className="animate-pulse">
-            <div className="h-10 bg-slate-700 rounded mb-2"></div>
-            <div className="h-10 bg-slate-700 rounded mb-2"></div>
-            <div className="h-10 bg-slate-700 rounded mb-2"></div>
-          </div>
-        </nav>
-      </div>
-    );
-  }
-
   return (
     <div 
       className={cn(
