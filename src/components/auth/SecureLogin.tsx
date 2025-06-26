@@ -21,11 +21,11 @@ const SecureLogin: React.FC = () => {
   
   const from = location.state?.from?.pathname || '/app';
 
-  // Verificar se é primeiro acesso
   useEffect(() => {
     const checkSetup = async () => {
       try {
         if (isAuthenticated) {
+          console.log('User already authenticated, redirecting to:', from);
           navigate(from, { replace: true });
           return;
         }
@@ -53,7 +53,11 @@ const SecureLogin: React.FC = () => {
     
     try {
       await signIn(email, password);
-      // Navigation will be handled automatically by the auth context
+      // Aguardar um pouco para o perfil carregar completamente
+      setTimeout(() => {
+        console.log('Redirecting to:', from);
+        navigate(from, { replace: true });
+      }, 500);
     } catch (err: any) {
       setError(err.message || 'Erro ao fazer login');
     }

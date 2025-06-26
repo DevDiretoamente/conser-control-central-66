@@ -25,11 +25,15 @@ const AppSidebar = ({ isCollapsed = false }) => {
   const { profile, isLoading } = useSecureAuth();
 
   console.log('AppSidebar - Debug Info:', { 
-    profile: profile ? { role: profile.role, active: profile.is_active } : null, 
+    profile: profile ? { 
+      name: profile.name, 
+      role: profile.role, 
+      active: profile.is_active,
+      email: profile.email 
+    } : null, 
     isLoading
   });
 
-  // Componente de item de navegação
   const NavItem = ({ to, icon: Icon, label }) => {
     return (
       <NavLink
@@ -46,7 +50,6 @@ const AppSidebar = ({ isCollapsed = false }) => {
     );
   };
   
-  // Cabeçalho de seção
   const SectionHeading = ({ children }) => (
     !isCollapsed && (
       <h2 className="px-4 pt-6 pb-2 text-xs font-semibold text-white/70 uppercase tracking-wider">
@@ -55,7 +58,6 @@ const AppSidebar = ({ isCollapsed = false }) => {
     )
   );
 
-  // Se ainda está carregando, mostra skeleton básico
   if (isLoading) {
     return (
       <div 
@@ -85,14 +87,11 @@ const AppSidebar = ({ isCollapsed = false }) => {
         isCollapsed ? "w-16" : "w-64"
       )}
     >
-      {/* Logo section */}
       <div className="flex h-16 items-center border-b border-slate-700/50 px-4">
         <Logo />
       </div>
       
-      {/* Navigation sections */}
       <nav className="flex-1 space-y-2 px-2 py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent">
-        {/* Main Links */}
         <div className="mt-6">
           <div className="space-y-1">
             <NavItem to="/app" icon={LayoutDashboard} label="Dashboard" />
@@ -104,7 +103,6 @@ const AppSidebar = ({ isCollapsed = false }) => {
           </div>
         </div>
 
-        {/* RH Section */}
         <div className="mt-2">
           <SectionHeading>Recursos Humanos</SectionHeading>
           <div className="space-y-1">
@@ -115,7 +113,6 @@ const AppSidebar = ({ isCollapsed = false }) => {
           </div>
         </div>
 
-        {/* Config Section - Sempre mostra para admin, mas com verificação para outros roles */}
         {(!profile || profile.role === 'admin' || profile.role === 'manager') && (
           <div className="mt-2">
             <SectionHeading>Configurações</SectionHeading>
@@ -135,9 +132,8 @@ const AppSidebar = ({ isCollapsed = false }) => {
         )}
       </nav>
 
-      {/* User info */}
       <div className="mt-auto border-t border-slate-700/50 p-4 bg-slate-800/30">
-        {profile ? (
+        {profile && profile.name ? (
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center font-medium text-white">
               {profile.name.charAt(0).toUpperCase()}

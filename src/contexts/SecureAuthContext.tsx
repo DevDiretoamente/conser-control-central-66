@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface UserProfile {
   id: string;
@@ -31,6 +32,8 @@ interface SecureAuthContextType {
   updateUserProfile: (userId: string, updates: Partial<UserProfile>) => Promise<void>;
   getAllUsers: () => Promise<UserProfile[]>;
   checkFirstTimeSetup: () => Promise<boolean>;
+  resetUserPassword: (userId: string, newPassword: string) => Promise<void>;
+  toggleUserActivation: (userId: string, isActive: boolean) => Promise<void>;
 }
 
 const SecureAuthContext = createContext<SecureAuthContextType | undefined>(undefined);
@@ -38,15 +41,12 @@ const SecureAuthContext = createContext<SecureAuthContextType | undefined>(undef
 // Função para limpar estado de autenticação
 const cleanupAuthState = () => {
   try {
-    // Remove standard auth tokens
     localStorage.removeItem('supabase.auth.token');
-    // Remove all Supabase auth keys from localStorage
     Object.keys(localStorage).forEach((key) => {
       if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
         localStorage.removeItem(key);
       }
     });
-    // Remove from sessionStorage if in use
     if (typeof sessionStorage !== 'undefined') {
       Object.keys(sessionStorage || {}).forEach((key) => {
         if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
@@ -69,12 +69,10 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
   console.log('SecureAuth State:', { 
     user: !!user, 
-    profile: !!profile, 
+    profile: profile ? { name: profile.name, role: profile.role, active: profile.is_active } : null, 
     session: !!session, 
     isAuthenticated,
-    isLoading,
-    userId: user?.id,
-    profileRole: profile?.role
+    isLoading
   });
 
   const refreshProfile = async () => {
@@ -98,7 +96,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
       if (!data) {
         console.log('No profile found, creating default admin profile');
-        // Criar perfil padrão como admin se for o primeiro usuário
         const { data: existingProfiles } = await supabase
           .from('user_profiles')
           .select('id')
@@ -134,7 +131,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     } catch (error) {
       console.error('Error in refreshProfile:', error);
       
-      // Em caso de erro, criar perfil admin como fallback
       const fallbackProfile: UserProfile = {
         id: user.id,
         email: user.email || '',
@@ -161,7 +157,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
       if (error) {
         console.error('Error checking first time setup:', error);
-        return true; // Assume first time if error
+        return true;
       }
 
       return !data || data.length === 0;
@@ -185,22 +181,23 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         
         if (session?.user && event === 'SIGNED_IN') {
           console.log('User signed in, fetching profile...');
-          // Defer profile fetching to prevent deadlocks
           setTimeout(() => {
             if (mounted) {
-              refreshProfile();
+              refreshProfile().finally(() => {
+                setIsLoading(false);
+              });
             }
           }, 100);
         } else if (event === 'SIGNED_OUT') {
           setProfile(null);
           cleanupAuthState();
+          setIsLoading(false);
+        } else {
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
       }
     );
 
-    // Verificar sessão inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
       
@@ -211,7 +208,9 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       if (session?.user) {
         setTimeout(() => {
           if (mounted) {
-            refreshProfile();
+            refreshProfile().finally(() => {
+              setIsLoading(false);
+            });
           }
         }, 100);
       } else {
@@ -229,14 +228,11 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     try {
       setIsLoading(true);
       
-      // Clean up existing state
       cleanupAuthState();
       
-      // Attempt global sign out first
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
-        // Continue even if this fails
         console.warn('Sign out before sign in failed:', err);
       }
       
@@ -251,10 +247,11 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         console.log('Login successful for user:', data.user.id);
         toast.success('Login realizado com sucesso');
         
-        // Force page reload to ensure clean state
-        setTimeout(() => {
-          window.location.href = '/app';
-        }, 500);
+        // Aguardar carregamento do perfil antes de redirecionar
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Não usar window.location.href - deixar o React Router lidar com isso
+        return;
       }
     } catch (error: any) {
       console.error('Sign in error:', error);
@@ -297,10 +294,8 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
   const signOut = async () => {
     try {
-      // Clean up auth state first
       cleanupAuthState();
       
-      // Attempt global sign out
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
@@ -312,8 +307,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       setSession(null);
       toast.success('Logout realizado com sucesso');
       
-      // Force page reload for clean state
-      window.location.href = '/secure-login';
     } catch (error: any) {
       console.error('Sign out error:', error);
       toast.error('Erro ao fazer logout');
@@ -326,7 +319,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       return false;
     }
     
-    // Admin sempre tem acesso
     if (profile.role === 'admin') {
       console.log('hasRole: Admin user, always has access');
       return true;
@@ -343,13 +335,11 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       return false;
     }
     
-    // Admin sempre tem permissão total
     if (profile.role === 'admin') {
       console.log('hasPermission: Admin user, allowing access to', resource);
       return true;
     }
     
-    // Para outros roles, implementar lógica específica conforme necessário
     const permissions = {
       manager: {
         funcionarios: ['read', 'create', 'update'],
@@ -401,7 +391,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       if (error) throw error;
 
       if (data.user) {
-        // Create user profile
         const { error: profileError } = await supabase
           .from('user_profiles')
           .insert({
@@ -415,7 +404,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
         if (profileError) {
           console.error('Error creating user profile:', profileError);
-          // Don't throw error, profile might be created by trigger
         }
 
         console.log('Usuário criado:', data.user.id);
@@ -461,6 +449,33 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     }
   };
 
+  const resetUserPassword = async (userId: string, newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.admin.updateUserById(
+        userId,
+        { password: newPassword }
+      );
+
+      if (error) throw error;
+      toast.success('Senha resetada com sucesso!');
+    } catch (error: any) {
+      console.error('Error resetting password:', error);
+      toast.error(error.message || 'Erro ao resetar senha');
+      throw error;
+    }
+  };
+
+  const toggleUserActivation = async (userId: string, isActive: boolean) => {
+    try {
+      await updateUserProfile(userId, { is_active: isActive });
+      toast.success(`Usuário ${isActive ? 'ativado' : 'desativado'} com sucesso!`);
+    } catch (error: any) {
+      console.error('Error toggling user activation:', error);
+      toast.error(error.message || 'Erro ao alterar status do usuário');
+      throw error;
+    }
+  };
+
   const value = {
     user,
     profile,
@@ -476,7 +491,9 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     createUser,
     updateUserProfile,
     getAllUsers,
-    checkFirstTimeSetup
+    checkFirstTimeSetup,
+    resetUserPassword,
+    toggleUserActivation
   };
 
   return (
