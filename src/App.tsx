@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -11,6 +10,7 @@ import SecureProtectedRoute from '@/components/auth/SecureProtectedRoute';
 import AppLayout from '@/components/layout/AppLayout';
 import PublicLanding from '@/components/PublicLanding';
 import MasterAdminSetup from '@/pages/MasterAdminSetup';
+import PageErrorBoundary from '@/components/common/PageErrorBoundary';
 
 // Pages
 import Dashboard from '@/pages/Dashboard';
@@ -65,7 +65,14 @@ function App() {
                   {/* Public routes */}
                   <Route path="/" element={<PublicLanding />} />
                   <Route path="/secure-login" element={<SecureLogin />} />
-                  <Route path="/master-admin-setup" element={<MasterAdminSetup />} />
+                  <Route path="/master-admin-setup" element={
+                    <PageErrorBoundary 
+                      fallbackTitle="Erro na Configuração"
+                      fallbackMessage="Ocorreu um erro ao carregar a página de configuração do Master Admin."
+                    >
+                      <MasterAdminSetup />
+                    </PageErrorBoundary>
+                  } />
                   
                   {/* Protected app routes */}
                   <Route path="/app" element={

@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSecureAuth } from '@/contexts/SecureAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,11 +17,55 @@ const MasterAdminSetup: React.FC = () => {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { createUser } = useSecureAuth();
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [hasExistingAdmins, setHasExistingAdmins] = useState(false);
   const navigate = useNavigate();
+
+  console.log('MasterAdminSetup - Component mounted');
+
+  useEffect(() => {
+    console.log('MasterAdminSetup - Starting initialization check...');
+    
+    const checkFirstTimeSetup = async () => {
+      try {
+        console.log('MasterAdminSetup - Checking for existing admins...');
+        
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('id')
+          .eq('role', 'admin')
+          .limit(1);
+
+        if (error) {
+          console.error('MasterAdminSetup - Error checking admins:', error);
+          // Continuar mesmo com erro para permitir setup
+        } else {
+          console.log('MasterAdminSetup - Admin check result:', data);
+          const hasAdmins = data && data.length > 0;
+          setHasExistingAdmins(hasAdmins);
+          
+          if (hasAdmins) {
+            console.log('MasterAdminSetup - Admins exist, redirecting to login...');
+            navigate('/secure-login');
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('MasterAdminSetup - Unexpected error during check:', err);
+        // Continuar para permitir setup mesmo com erro
+      } finally {
+        console.log('MasterAdminSetup - Initialization complete');
+        setIsInitializing(false);
+      }
+    };
+
+    checkFirstTimeSetup();
+  }, [navigate]);
 
   const handleMasterAdminSetup = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('MasterAdminSetup - Starting admin creation process...');
+    
     setError('');
     setIsLoading(true);
 
@@ -38,22 +82,91 @@ const MasterAdminSetup: React.FC = () => {
     }
 
     try {
-      await createUser({
+      console.log('MasterAdminSetup - Creating user with Supabase auth...');
+      
+      // Criar usuário diretamente com Supabase
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
-        name,
-        role: 'admin'
+        options: {
+          data: {
+            name,
+            role: 'admin'
+          },
+          emailRedirectTo: `${window.location.origin}/secure-login`
+        }
       });
+
+      if (authError) {
+        console.error('MasterAdminSetup - Auth signup error:', authError);
+        throw authError;
+      }
+
+      if (authData.user) {
+        console.log('MasterAdminSetup - User created, creating profile...');
+        
+        // Criar perfil diretamente na tabela user_profiles
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .insert({
+            id: authData.user.id,
+            email,
+            name,
+            role: 'admin',
+            is_active: true,
+            company_id: 'default'
+          });
+
+        if (profileError) {
+          console.error('MasterAdminSetup - Profile creation error:', profileError);
+          // Não falhar completamente se o perfil não foi criado
+          toast.error('Usuário criado, mas erro ao criar perfil. Tente fazer login.');
+        } else {
+          console.log('MasterAdminSetup - Profile created successfully');
+          toast.success('Master Admin criado com sucesso! Verifique seu email para confirmar a conta.');
+        }
+      }
       
-      toast.success('Master Admin criado com sucesso!');
-      navigate('/secure-login');
+      // Redirecionar para login
+      setTimeout(() => {
+        navigate('/secure-login');
+      }, 2000);
+      
     } catch (err: any) {
-      console.error('Master admin setup error:', err);
-      setError(err.message || 'Erro ao criar master admin');
+      console.error('MasterAdminSetup - Final error:', err);
+      
+      // Mensagens de erro mais específicas
+      if (err.message?.includes('User already registered')) {
+        setError('Este email já está em uso');
+      } else if (err.message?.includes('Invalid email')) {
+        setError('Email inválido');
+      } else {
+        setError('Erro ao criar master admin: ' + (err.message || 'Erro desconhecido'));
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
+  console.log('MasterAdminSetup - Render state:', { 
+    isInitializing, 
+    hasExistingAdmins, 
+    isLoading,
+    email: !!email,
+    name: !!name 
+  });
+
+  // Loading inicial
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Verificando configuração...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
