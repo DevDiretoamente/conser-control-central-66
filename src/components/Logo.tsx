@@ -1,52 +1,27 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
 const Logo: React.FC<LogoProps> = ({ size = 'md' }) => {
-  const [imageError, setImageError] = useState(false);
-  
-  const sizeClasses = {
-    sm: 'h-6',
-    md: 'h-8', 
-    lg: 'h-12',
-  };
-
   const textSizeClasses = {
     sm: 'text-lg',
     md: 'text-xl',
     lg: 'text-3xl',
   };
 
-  console.log('Logo: Rendered', { size, imageError });
-
-  // Se houve erro na imagem ou como fallback principal, usar logo em texto
-  if (imageError) {
-    return (
-      <div className="flex flex-col items-center">
-        <div className={`font-bold text-primary ${textSizeClasses[size]}`}>
-          CONSERVIAS
-        </div>
-      </div>
-    );
-  }
+  console.log('Logo - Rendered with size:', size);
 
   return (
     <div className="flex flex-col items-center">
-      <img 
-        src="/lovable-uploads/141d5ab2-f175-4b0d-8b75-05c5affa10bd.png" 
-        alt="CONSERVIAS" 
-        className={sizeClasses[size]}
-        onError={() => {
-          console.log('Logo: Image failed to load, using text fallback');
-          setImageError(true);
-        }}
-        onLoad={() => {
-          console.log('Logo: Image loaded successfully');
-        }}
-      />
+      <div className={`font-bold text-blue-600 ${textSizeClasses[size]} select-none`}>
+        CONSERVIAS
+      </div>
+      <div className="text-xs text-gray-500 mt-1">
+        Sistema de Gestão
+      </div>
     </div>
   );
 };

@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle, Shield, Crown } from 'lucide-react';
-import Logo from '@/components/Logo';
+import RobustLogo from '@/components/RobustLogo';
 import { toast } from 'sonner';
 
 const MasterAdminSetup: React.FC = () => {
@@ -173,7 +173,7 @@ const MasterAdminSetup: React.FC = () => {
       <Card className="w-[450px] shadow-lg">
         <CardHeader className="space-y-2 flex flex-col items-center">
           <div className="w-48 mx-auto mb-6">
-            <Logo size="lg" />
+            <RobustLogo size="lg" />
           </div>
           <div className="flex items-center gap-2">
             <Crown className="h-6 w-6 text-yellow-500" />
