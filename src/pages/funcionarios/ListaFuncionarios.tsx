@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import FuncionarioListItem, { Funcionario as FuncionarioListItemType } from '@/components/funcionarios/FuncionarioListItem';
 import FuncionarioFilter, { FuncionarioFilterValues } from '@/components/funcionarios/FuncionarioFilter';
-import { Users, PlusCircle, FileOutput, UserPlus } from 'lucide-react';
+import { Users, PlusCircle, FileOutput, UserPlus, AlertCircle } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,9 +15,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { Funcionario } from '@/types/funcionario';
 import { funcionariosService } from '@/services/funcionariosService';
+import PageLoader from '@/components/common/PageLoader';
 
 const availableCargos = [
   { id: 'motorista', nome: 'Motorista' },
@@ -54,6 +56,7 @@ const ListaFuncionarios: React.FC = () => {
   const [funcionarios, setFuncionarios] = useState<FuncionarioListItemType[]>([]);
   const [filteredFuncionarios, setFilteredFuncionarios] = useState<FuncionarioListItemType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   
   const [filterValues, setFilterValues] = useState<FuncionarioFilterValues>({
@@ -65,26 +68,61 @@ const ListaFuncionarios: React.FC = () => {
   
   const [funcionarioToDelete, setFuncionarioToDelete] = useState<string | null>(null);
 
+  console.log('ListaFuncionarios - Component mounted');
+
   useEffect(() => {
+    console.log('ListaFuncionarios - useEffect triggered, calling loadFuncionarios');
     loadFuncionarios();
   }, []);
   
   const loadFuncionarios = async () => {
     try {
+      console.log('ListaFuncionarios - Starting to load funcionarios...');
       setLoading(true);
-      const data = await funcionariosService.getAll();
+      setError(null);
+      
+      // Implementar timeout para evitar loading infinito
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout: Carregamento demorou mais de 10 segundos')), 10000);
+      });
+      
+      const loadPromise = funcionariosService.getAll();
+      
+      const data = await Promise.race([loadPromise, timeoutPromise]) as Funcionario[];
+      
+      console.log('ListaFuncionarios - Raw data received:', data);
+      console.log('ListaFuncionarios - Data length:', data?.length || 0);
+      
+      if (!data) {
+        console.warn('ListaFuncionarios - No data received from service');
+        setFuncionarios([]);
+        setFilteredFuncionarios([]);
+        return;
+      }
+      
       const mappedFuncionarios = data.map(mapFuncionarioToListItem);
+      console.log('ListaFuncionarios - Mapped funcionarios:', mappedFuncionarios);
+      
       setFuncionarios(mappedFuncionarios);
       setFilteredFuncionarios(mappedFuncionarios);
-    } catch (error) {
-      console.error('Erro ao carregar funcionários:', error);
+      
+      console.log('ListaFuncionarios - Successfully loaded funcionarios');
+    } catch (error: any) {
+      console.error('ListaFuncionarios - Error loading funcionarios:', error);
+      setError(error.message || 'Erro ao carregar funcionários');
       toast.error('Erro ao carregar lista de funcionários');
+      
+      // Mesmo com erro, parar o loading
+      setFuncionarios([]);
+      setFilteredFuncionarios([]);
     } finally {
+      console.log('ListaFuncionarios - Finished loading attempt');
       setLoading(false);
     }
   };
   
   const handleFilterChange = (values: FuncionarioFilterValues) => {
+    console.log('ListaFuncionarios - Filter changed:', values);
     setFilterValues(values);
     
     // Filter funcionarios based on criteria
@@ -113,6 +151,7 @@ const ListaFuncionarios: React.FC = () => {
       return true;
     });
     
+    console.log('ListaFuncionarios - Filtered results:', filtered.length);
     setFilteredFuncionarios(filtered);
   };
   
@@ -151,6 +190,52 @@ const ListaFuncionarios: React.FC = () => {
     navigate(`/app/funcionarios/${id}?tab=dependentes`);
   };
 
+  const handleRetry = () => {
+    console.log('ListaFuncionarios - Retry button clicked');
+    loadFuncionarios();
+  };
+
+  console.log('ListaFuncionarios - Render state:', { 
+    loading, 
+    error: !!error, 
+    funcionariosCount: funcionarios.length,
+    filteredCount: filteredFuncionarios.length 
+  });
+
+  // Show loading state
+  if (loading) {
+    return <PageLoader message="Carregando funcionários..." />;
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="container mx-auto p-6 max-w-7xl">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold">Lista de Funcionários</h1>
+            <p className="text-muted-foreground">
+              Gerencie todos os funcionários da empresa
+            </p>
+          </div>
+        </div>
+
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            <div className="space-y-2">
+              <p><strong>Erro ao carregar funcionários:</strong></p>
+              <p>{error}</p>
+              <Button onClick={handleRetry} className="mt-2">
+                Tentar Novamente
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -183,11 +268,7 @@ const ListaFuncionarios: React.FC = () => {
         availableDepartamentos={availableDepartamentos}
       />
 
-      {loading ? (
-        <div className="flex justify-center items-center py-12">
-          <p className="text-muted-foreground">Carregando funcionários...</p>
-        </div>
-      ) : filteredFuncionarios.length > 0 ? (
+      {filteredFuncionarios.length > 0 ? (
         <div className="space-y-4">
           {filteredFuncionarios.map((funcionario) => (
             <FuncionarioListItem
@@ -206,7 +287,12 @@ const ListaFuncionarios: React.FC = () => {
           <div className="flex flex-col items-center justify-center text-muted-foreground">
             <Users className="h-12 w-12 mb-4" />
             <h3 className="mb-1 text-lg font-medium">Nenhum funcionário encontrado</h3>
-            <p>Tente ajustar os filtros ou cadastre um novo funcionário.</p>
+            <p>
+              {funcionarios.length === 0 
+                ? "Nenhum funcionário cadastrado no sistema."
+                : "Tente ajustar os filtros para encontrar o funcionário desejado."
+              }
+            </p>
             <Button className="mt-4" asChild>
               <Link to="/app/funcionarios/novo">
                 <UserPlus className="mr-2 h-4 w-4" />

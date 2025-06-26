@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Funcionario } from '@/types/funcionario';
 import { Database } from '@/integrations/supabase/types';
@@ -57,32 +56,78 @@ const deserializeDateFromJson = (obj: any): any => {
 export const funcionariosSupabaseService = {
   getAll: async (): Promise<Funcionario[]> => {
     try {
+      console.log('funcionariosSupabaseService.getAll - Starting query...');
+      
       const { data, error } = await supabase
         .from('funcionarios')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('funcionariosSupabaseService.getAll - Query result:', { 
+        data: data ? `${data.length} records` : 'null', 
+        error: error ? error.message : 'none' 
+      });
 
-      return data?.map((item: FuncionarioRow) => ({
-        id: item.id,
-        dadosPessoais: deserializeDateFromJson(item.dados_pessoais as unknown) as Funcionario['dadosPessoais'],
-        endereco: item.endereco as unknown as Funcionario['endereco'],
-        contato: item.contato as unknown as Funcionario['contato'],
-        dadosProfissionais: deserializeDateFromJson(item.dados_profissionais as unknown) as Funcionario['dadosProfissionais'],
-        cnh: deserializeDateFromJson(item.cnh || {} as unknown) as Funcionario['cnh'],
-        dadosBancarios: item.dados_bancarios as unknown as Funcionario['dadosBancarios'],
-        documentos: (item.documentos || {} as unknown) as Funcionario['documentos'],
-        dependentes: deserializeDateFromJson(item.dependentes || [] as unknown) as Funcionario['dependentes'],
-        tamanhoUniforme: (item.tamanho_uniforme || { camisa: '', calca: '', calcado: 0 } as unknown) as Funcionario['tamanhoUniforme'],
-        episEntregues: deserializeDateFromJson(item.epis_entregues || [] as unknown) as Funcionario['episEntregues'],
-        uniformesEntregues: deserializeDateFromJson(item.uniformes_entregues || [] as unknown) as Funcionario['uniformesEntregues'],
-        examesRealizados: deserializeDateFromJson(item.exames_realizados || [] as unknown) as Funcionario['examesRealizados'],
-        documentosGerados: deserializeDateFromJson(item.documentos_gerados || [] as unknown) as Funcionario['documentosGerados']
-      })) || [];
-    } catch (error) {
-      console.error('Erro ao carregar funcionários:', error);
-      return [];
+      if (error) {
+        console.error('funcionariosSupabaseService.getAll - Supabase error:', error);
+        throw new Error(`Erro ao consultar funcionários: ${error.message}`);
+      }
+
+      if (!data) {
+        console.warn('funcionariosSupabaseService.getAll - No data returned');
+        return [];
+      }
+
+      console.log('funcionariosSupabaseService.getAll - Processing data...');
+      
+      const result = data.map((item: FuncionarioRow, index: number) => {
+        try {
+          const funcionario = {
+            id: item.id,
+            dadosPessoais: deserializeDateFromJson(item.dados_pessoais as unknown) as Funcionario['dadosPessoais'],
+            endereco: item.endereco as unknown as Funcionario['endereco'],
+            contato: item.contato as unknown as Funcionario['contato'],
+            dadosProfissionais: deserializeDateFromJson(item.dados_profissionais as unknown) as Funcionario['dadosProfissionais'],
+            cnh: deserializeDateFromJson(item.cnh || {} as unknown) as Funcionario['cnh'],
+            dadosBancarios: item.dados_bancarios as unknown as Funcionario['dadosBancarios'],
+            documentos: (item.documentos || {} as unknown) as Funcionario['documentos'],
+            dependentes: deserializeDateFromJson(item.dependentes || [] as unknown) as Funcionario['dependentes'],
+            tamanhoUniforme: (item.tamanho_uniforme || { camisa: '', calca: '', calcado: 0 } as unknown) as Funcionario['tamanhoUniforme'],
+            episEntregues: deserializeDateFromJson(item.epis_entregues || [] as unknown) as Funcionario['episEntregues'],
+            uniformesEntregues: deserializeDateFromJson(item.uniformes_entregues || [] as unknown) as Funcionario['uniformesEntregues'],
+            examesRealizados: deserializeDateFromJson(item.exames_realizados || [] as unknown) as Funcionario['examesRealizados'],
+            documentosGerados: deserializeDateFromJson(item.documentos_gerados || [] as unknown) as Funcionario['documentosGerados']
+          };
+          
+          console.log(`funcionariosSupabaseService.getAll - Processed record ${index + 1}:`, {
+            id: funcionario.id,
+            nome: funcionario.dadosPessoais?.nome || 'N/A'
+          });
+          
+          return funcionario;
+        } catch (processingError) {
+          console.error(`funcionariosSupabaseService.getAll - Error processing record ${index + 1}:`, processingError);
+          throw new Error(`Erro ao processar funcionário ${index + 1}: ${processingError}`);
+        }
+      });
+      
+      console.log('funcionariosSupabaseService.getAll - Successfully processed all records:', result.length);
+      return result;
+      
+    } catch (error: any) {
+      console.error('funcionariosSupabaseService.getAll - Final error:', error);
+      
+      // Verificar se é erro de autenticação
+      if (error.message?.includes('JWT') || error.message?.includes('auth')) {
+        throw new Error('Erro de autenticação. Faça login novamente.');
+      }
+      
+      // Verificar se é erro de conexão
+      if (error.message?.includes('fetch') || error.message?.includes('network')) {
+        throw new Error('Erro de conexão. Verifique sua internet.');
+      }
+      
+      throw error;
     }
   },
 
