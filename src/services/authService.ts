@@ -72,6 +72,7 @@ export const authService = {
     try {
       console.log('authService.checkFirstTimeSetup: Checking for admin users');
       
+      // Use the regular client instead of admin client for checking user profiles
       const { data, error } = await supabase
         .from('user_profiles')
         .select('id')
